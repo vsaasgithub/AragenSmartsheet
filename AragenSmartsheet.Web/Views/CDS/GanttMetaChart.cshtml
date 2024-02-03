@@ -1,0 +1,126 @@
+﻿@model List<AragenSmartsheet.Entities.CDS.MetaDataTask>
+@{
+   
+    ViewBag.Title = "MetaData Tasks";
+}
+<head>
+    <style>
+        .Project-Plan{
+            padding:10px 0px;
+        }
+
+        .Project-Plan button{
+            margin-left:20px;
+        }
+
+        .table th, .table td {
+            padding: 5px;
+            vertical-align: top;
+            border: 1px solid #dee2e6;
+        }
+
+        .table th{
+            background: #c8f7ad;
+        }
+    </style>
+
+</head>
+<body>
+    <div class="container-fluid">
+            <div class="row">
+            <div class="col-sm-4 Project-Plan">
+                <button class="btn btn-primary btn-sm" type="submit" onclick="projectPlan()">Project Plan</button>                
+            </div>
+        </div>
+ </div>
+          
+    <table class="table ">
+        <thead>
+            <tr>
+                <th>SNO</th>
+                <th>ProjectName</th>
+                <th>Customer</th>
+                <th>PlannedStartDate</th>
+                <th>PlannedEndDate</th>
+                <th>Qty</th>
+                <th>ProjectType</th>
+                <th>GMPNon</th>
+                <th>Deliverable</th>
+                <th>Molecules</th>
+                <th>Phase</th>
+                <th>Region</th>
+                <th>Country</th>
+                <th>ProjectValue</th>
+                <th>ManufacturingUnit</th>
+                <th>Plant</th>
+                <th>BudgetAvailable</th>
+                <th>BudgetConsumed</th>
+                <th>BudgetUtilized</th>
+                <th>Scientist</th>
+                <th>ProjectManager</th>
+                <th>ProjectHealth</th>
+                <th>ActualStartDate</th>
+                <th>ActualEndDate</th>
+                <th>ProjectStatus</th>
+                <th>ProjectClosureHelper</th>
+                <th>PercentageComplete</th>
+                <th>Variance</th>
+                <th>Duration</th>
+                <th>DelayReason</th>
+        </tr>
+        </thead>
+
+        <tbody>
+             @{
+                            int sno = 1;
+               }
+                        @foreach (var item in Model)
+                        {
+                          <tr>
+                              <td>@(sno++)</td>
+                              <td>@item.ProjectName</td>
+                              <td>@item.Customer</td>
+                              <td>@item.PlannedStartDate</td>
+                              <td>@item.PlannedEndDate</td>
+                              <td>@item.Qty</td>
+                              <td>@item.ProjectType</td>
+                              <td>@item.GMPNon</td>
+                              <td>@item.Deliverable</td>
+                              <td>@item.Molecules</td>
+                              <td>@item.Phase</td>
+                              <td>@item.Region</td>
+                              <td>@item.Country</td>
+                              <td>@item.ProjectValue</td>
+                              <td>@item.ManufacturingUnit</td>
+                              <td>@item.Plant</td>
+                              <td>@item.BudgetAvailable</td>
+                              <td>@item.BudgetConsumed</td>
+                              <td>@item.BudgetUtilized</td>
+                              <td>@item.Scientist</td>
+                              <td>@item.ProjectManager</td>
+                              <td>@item.ProjectHealth</td>
+                              <td>@item.ActualStartDate</td>
+                              <td>@item.ActualEndDate</td>                            
+                              <td>@item.ProjectStatus</td>
+                              <td>@item.ProjectClosureHelper</td>
+                              <td>@item.PercentageComplete</td>
+                              <td>@item.Variance</td>
+                              <td>@item.Duration</td>
+                              <td>@item.DelayReason</td>
+                        </tr>
+                        }
+        </tbody>
+    </table>
+    <script>
+        function projectPlan() {
+            $.ajax({
+                dataType: 'json',
+                type: 'POST',
+                url: '/CDS/GetChartData',
+                success: function (json) {
+                    window.location.href = '/CDS/GanttChart'
+                }
+            });
+        }
+    </script>
+</body>

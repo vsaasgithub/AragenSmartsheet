@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AragenSmartsheet.Entities\AragenSmartsheet.Entities.csproj" />
+    <ProjectReference Include="..\AragenSmartsheet.Integration\AragenSmartsheet.Integration.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,504 @@
+﻿@{
+    ViewData["Title"] = "Gantt Chart";
+    Layout = "";
+}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<link href="~/css/gantt-style.css" rel="stylesheet" />
+
+
+<div class="gantt"></div>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>
+<script src="~/lib/jquery-gantt/jquery.fn.gantt.js"></script>
+
+<script type="text/javascript">
+
+
+    function getdata() {
+
+        //for (var i = 0; i < arrayGantt.length; i++) {
+
+        //    arrayGantt[i].duration = "5d";
+        //    arrayGantt[i].endDate = "";
+        //}
+        var datalist = arrayGantt;
+      
+        $.ajax({
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            type: 'POST',
+            url: '/Home/InsertData',
+            data: JSON.stringify(datalist),
+
+            success: function (json) {
+
+            }
+        });
+    }
+    var arrayGantt = [];
+
+    $(function () {
+        "use strict";
+        $.ajax({
+            url: '/Home/GetChartData',
+            dataType: 'json',
+            success: function (json) {
+                if (json != null && json != undefined && json != '') {
+                    arrayGantt = json[0];
+                    CalculateEndDate();
+                }
+            }
+        });
+    });
+   
+        function DateCalculation(rowNo, id, parentId, headId, input) {
+            var sDay = $("#daySelect_" + rowNo + " option:selected").val();
+            var startDate = $("#dpStDate_" + rowNo).val();
+            var endDate = $("#dpEndDate_" + rowNo).val();
+            
+            for (var selectedIndex = 0; selectedIndex < arrayGantt.length; selectedIndex++) {
+                if (arrayGantt[selectedIndex].id == headId && arrayGantt[selectedIndex].subTask.length > 0) {
+                    if (arrayGantt[selectedIndex].subTask.length > 0) {
+                        for (var i = 0; i < arrayGantt[selectedIndex].subTask.length; i++) {
+                        arrayGantt[selectedIndex].subTask[i] = SubTaskTree(arrayGantt[selectedIndex].subTask[i], sDay, startDate, endDate, rowNo, "ganttLightBlue", input);
+                        }
+                        arrayGantt[selectedIndex] = BindDates(arrayGantt[selectedIndex], "ganttBlue");
+                    }
+                }
+                else if (headId == null && parentId == null && id != null) {
+                    if (arrayGantt[selectedIndex].id == id && arrayGantt[selectedIndex].subTask.length == 0) {
+                        arrayGantt[selectedIndex].slDate = sDay;
+                        arrayGantt[selectedIndex].startDate = startDate;
+                        arrayGantt[selectedIndex].endDate = endDate;
+                        arrayGantt[selectedIndex] = CalculateSelectedObj(arrayGantt[selectedIndex], "ganttBlue", 1);
+                    }
+                }
+            } 
+            LoadChart();
+        }
+   
+    function SubTaskTree(arr, sDay, startDate, endDate, rowNo, color) {
+        if (arr.subTask.length > 0) {
+            for (var i = 0; i < arr.subTask.length; i++) {
+                arr.subTask[i] = SubTaskTree(arr.subTask[i], sDay, startDate, endDate, rowNo, "ganttGreen", selectedInput);
+            }
+            arr = BindDates(arr, color, selectedInput);
+        }
+        else {
+            if (rowNo == arr.rowNo) {
+                arr.slDate = sDay;
+                arr.startDate = startDate;
+                arr.endDate = endDate;
+                arr = CalculateSelectedObj(arr, color, 1, selectedInput);
+            }
+        }
+        //console.log(arr);
+        return arr;
+    }
+    function BindDates(arrG, color, selectedInput) {
+        var earliestDate = [];
+        var latestDate = [];
+        $.each(arrG.subTask, function (index, value) {
+            if (arrG.subTask[index].startDate != null && arrG.subTask[index].startDate != '' && arrG.subTask[index].startDate != undefined)
+                earliestDate.push(toDate(arrG.subTask[index].startDate));
+            if (arrG.subTask[index].endDate != null && arrG.subTask[index].endDate != '' && arrG.subTask[index].endDate != undefined)
+                latestDate.push(toDate(arrG.subTask[index].endDate));
+        });
+
+        if (earliestDate.length > 0) {
+            var earliest = new Date(Math.min.apply(null, earliestDate));
+            arrG.startDate = trimDate(earliest);
+        }
+        if (latestDate.length > 0) {
+            var latest = new Date(Math.max.apply(null, latestDate));
+            arrG.endDate = trimDate(latest);
+        }
+        arrG = CalculateSelectedObj(arrG, color, 0, selectedInput);
+        return arrG;
+    }
+    function CalculateSelectedObj(currentObj, color, input, selectedInput) {
+        if (currentObj.startDate != null && currentObj.startDate != '' && currentObj.startDate != undefined
+            && currentObj.endDate != null && currentObj.endDate != '' && currentObj.endDate != undefined) {
+            if (selectedInput == 0) {
+                var sDate = toDate(currentObj.startDate);
+                var eDate = toDate(currentObj.endDate);
+                currentObj.duration = GetDuration(sDate, eDate) + "d";
+                currentObj.noofdays = (GetDuration(sDate, eDate)) - 1;
+                
+                var obj = {
+                    from: "/Date(" + new Date(sDate).getTime() + ")/",
+                    to: "/Date(" + new Date(eDate).getTime() + ")/",
+                    label: currentObj.desc,
+                    desc: "Task: " + currentObj.desc + " <br/>Date: " + trimDate(sDate) + " to " + trimDate(eDate),
+                    customClass: color
+                }
+                currentObj.values.push(obj);
+            }
+            else {
+                if (input == 1 && currentObj.noofdays > 0) {
+                    var sDate = toDate(currentObj.startDate);
+                    var endDate = sDate;
+                    var tDays = currentObj.noofdays;
+                    var sDay = currentObj.slDate;
+
+                    if (parseInt(sDay) == 5) {
+                        if (endDate.getDay() == 6)
+                            endDate.setDate(endDate.getDate() + 2);
+                    }
+                    else if (parseInt(sDay) == 6) {
+                        if (endDate.getDay() == 0)
+                            endDate.setDate(endDate.getDate() + 1);
+                    }
+                    currentObj.startDate = trimDate(endDate);
+                    while (tDays > 1) {
+                        endDate.setDate(endDate.getDate() + 1);
+                        if (parseInt(sDay) == 5) {
+                            if (endDate.getDay() == 6)
+                                endDate.setDate(endDate.getDate() + 2);
+                        }
+                        else if (parseInt(sDay) == 6) {
+                            if (endDate.getDay() == 0)
+                                endDate.setDate(endDate.getDate() + 1);
+                        }
+                        tDays--;
+                    }
+                    currentObj.values = [];
+                    currentObj.endDate = trimDate(endDate);
+                    var fDate = "/Date(" + new Date(toDate(currentObj.startDate)).getTime() + ")/";
+                    var tDate = "/Date(" + new Date(endDate).getTime() + ")/";
+
+                    currentObj.duration = GetDuration(new Date(toDate(currentObj.startDate)), new Date(endDate)) + "d";
+                    currentObj.noofdays = (GetDuration(new Date(toDate(currentObj.startDate)), new Date(endDate))) - 1;
+                    var obj = {
+                        from: fDate,
+                        to: tDate,
+                        label: currentObj.desc,
+                        desc: "Task: " + currentObj.desc + " <br/>Date: " + trimDate(toDate(currentObj.startDate)) + " to " + trimDate(endDate),
+                        customClass: color
+                    }
+                    currentObj.values.push(obj);
+                }
+                else {
+                    var sDate = toDate(currentObj.startDate);
+                    var eDate = toDate(currentObj.endDate);
+                    currentObj.duration = GetDuration(sDate, eDate) + "d";
+                    currentObj.noofdays = (GetDuration(sDate, eDate)) - 1;
+                    currentObj.values = [];
+                    var obj = {
+                        from: "/Date(" + new Date(sDate).getTime() + ")/",
+                        to: "/Date(" + new Date(eDate).getTime() + ")/",
+                        label: currentObj.desc,
+                        desc: "Task: " + currentObj.desc + " <br/>Date: " + trimDate(sDate) + " to " + trimDate(eDate),
+                        customClass: color
+                    }
+                    currentObj.values.push(obj);
+                }
+            }
+        }
+        return currentObj;
+    }
+   
+    //    function LoadChart() {
+            
+    //        $(".gantt").gantt({
+    //            source: arrayGantt,
+    //            navigate: "scroll",
+    //            scale: "days",
+    //            maxScale: "months",
+    //            minScale: "days",
+    //            itemsPerPage: 10,
+    //            onItemClick: function (data) {
+    //                alert("Item clicked - show some details");
+    //            },
+    //            onAddClick: function (dt, rowId) {
+    //                alert("Empty space clicked - add an item!");
+    //            },
+    //            onRender: function () {
+    //                if (window.console && typeof console.log === "function") {
+    //                    $(".datepicker").datepicker({
+    //                        dateFormat: 'dd-mm-yy'
+    //                    });
+    //                }
+    //            }
+    //        });
+    //}
+    //function getdata() {
+       
+    //    //for (var i = 0; i < arrayGantt.length; i++) {
+    //    //    arrayGantt[i].duration = "5d";
+    //    //    arrayGantt[i].endDate = "05-02-2022";
+           
+    //    //}
+    //    var datalist = arrayGantt;
+    //    console.log(datalist)
+    //    $.ajax({
+    //        contentType: 'application/json; charset=utf-8',
+    //        dataType: 'json',
+    //        type: 'POST',
+    //        url: '/Home/InsertData',
+    //        data: JSON.stringify(datalist),       
+                     
+    //        success: function (json) {
+               
+    //        }
+    //    });
+    //}
+  
+    //function CalculateEndDate() {
+
+    //    var sDay = 0;
+    //    for (var selectedIndex = 0; selectedIndex < arrayGantt.length; selectedIndex++) {
+    //        if ($("#daySelect_" + selectedIndex + " option:selected").val() != undefined) {
+    //            sDay = $("#daySelect_" + selectedIndex + " option:selected").val();
+    //            var parentId = arrayGantt[selectedIndex].id;
+    //            arrayGantt.forEach((element, index) => {
+    //                if (parentId == arrayGantt[index].parentId) {
+    //                    arrayGantt[index].slDate = sDay;
+    //                }
+    //            });
+    //        }
+    //        else {
+    //            sDay = arrayGantt[selectedIndex].slDate;
+    //        }
+    //        if (arrayGantt[selectedIndex].startDate != "" && arrayGantt[selectedIndex].startDate != null && arrayGantt[selectedIndex].startDate != undefined) {
+    //            var taskDates = [];
+    //            var sDate = toDate(arrayGantt[selectedIndex].startDate);
+    //            var endDate = sDate;
+    //            var tDays = arrayGantt[selectedIndex].noofdays;
+    //            if (parseInt(sDay) == 5) {
+    //                if (endDate.getDay() == 6)
+    //                    endDate.setDate(endDate.getDate() + 2);
+    //            }
+    //            else if (parseInt(sDay) == 6) {
+    //                if (endDate.getDay() == 0)
+    //                    endDate.setDate(endDate.getDate() + 1);
+    //            }
+    //            arrayGantt[selectedIndex].startDate = trimDate(endDate);
+    //            taskDates.push(endDate);
+
+    //            while (tDays > 1) {
+    //                endDate.setDate(endDate.getDate() + 1);
+    //                if (parseInt(sDay) == 5) {
+    //                    if (endDate.getDay() == 6)
+    //                        endDate.setDate(endDate.getDate() + 2);
+    //                }
+    //                else if (parseInt(sDay) == 6) {
+    //                    if (endDate.getDay() == 0)
+    //                        endDate.setDate(endDate.getDate() + 1);
+    //                }
+    //                tDays--;
+    //                taskDates.push(new Date(endDate));
+    //            }
+
+    //            arrayGantt[selectedIndex].values = [];
+    //            var fDate = "/Date(" + new Date(toDate(arrayGantt[selectedIndex].startDate)).getTime() + ")/";
+    //            var tDate = "/Date(" + new Date(endDate).getTime() + ")/";
+    //            var obj = {
+    //                from: fDate,
+    //                to: tDate,
+    //                label: arrayGantt[selectedIndex].desc,
+    //                desc: "Task: " + arrayGantt[selectedIndex].desc + " <br/>Date: " + trimDate(toDate(arrayGantt[selectedIndex].startDate)) + " to " + trimDate(endDate),
+    //                customClass: "ganttBlue"
+    //            }
+    //            arrayGantt[selectedIndex].values.push(obj);
+    //            arrayGantt[selectedIndex].endDate = trimDate(endDate);
+    //            arrayGantt[selectedIndex].slDate = sDay;
+    //            if (arrayGantt[selectedIndex].subTask.length > 0)
+    //                arrayGantt[selectedIndex].subTask = CalculateSubTask(arrayGantt[selectedIndex].subTask, "ganttLightBlue");
+    //        }
+    //        else {
+    //            arrayGantt[selectedIndex].startDate = "";
+    //            arrayGantt[selectedIndex].endDate = "";
+    //        }
+    //    }
+    //    LoadChart();
+    //}
+
+    //function CalculateSubTask(subtask, color) {
+    //    var sDay = 0;
+    //    for (var selectedIndex = 0; selectedIndex < subtask.length; selectedIndex++) {
+            
+    //        sDay = subtask[selectedIndex].slDate;
+    //        if (subtask[selectedIndex].startDate != "" && subtask[selectedIndex].startDate != null && subtask[selectedIndex].startDate != undefined) {
+    //            var taskDates = [];
+    //            var sDate = toDate(subtask[selectedIndex].startDate);
+    //            var endDate = sDate;
+    //            var tDays = subtask[selectedIndex].noofdays;
+
+    //            if (parseInt(sDay) == 5) {
+    //                if (endDate.getDay() == 6)
+    //                    endDate.setDate(endDate.getDate() + 2);
+    //            }
+    //            else if (parseInt(sDay) == 6) {
+    //                if (endDate.getDay() == 0)
+    //                    endDate.setDate(endDate.getDate() + 1);
+    //            }
+    //            subtask[selectedIndex].startDate = trimDate(endDate);
+    //            taskDates.push(endDate);
+
+    //            while (tDays > 1) {
+    //                endDate.setDate(endDate.getDate() + 1);
+    //                if (parseInt(sDay) == 5) {
+    //                    if (endDate.getDay() == 6)
+    //                        endDate.setDate(endDate.getDate() + 2);
+    //                }
+    //                else if (parseInt(sDay) == 6) {
+    //                    if (endDate.getDay() == 0)
+    //                        endDate.setDate(endDate.getDate() + 1);
+    //                }
+    //                tDays--;
+    //                taskDates.push(new Date(endDate));
+    //            }
+
+    //            subtask[selectedIndex].values = [];
+    //            var fDate = "/Date(" + new Date(toDate(subtask[selectedIndex].startDate)).getTime() + ")/";
+    //            var tDate = "/Date(" + new Date(endDate).getTime() + ")/";
+    //            var obj = {
+    //                from: fDate,
+    //                to: tDate,
+    //                label: subtask[selectedIndex].desc,
+    //                desc: "Task: " + subtask[selectedIndex].desc + " <br/>Date: " + trimDate(toDate(subtask[selectedIndex].startDate)) + " to " + trimDate(endDate),
+    //                customClass: color
+    //            }
+    //            subtask[selectedIndex].values.push(obj);
+    //            subtask[selectedIndex].endDate = trimDate(endDate);
+    //            subtask[selectedIndex].slDate = sDay;
+    //            if (subtask[selectedIndex].subTask.length > 0)
+    //                subtask[selectedIndex].subTask = CalculateSubTask(subtask[selectedIndex].subTask, "ganttGreen");
+    //        }
+    //        else {
+    //            subtask[selectedIndex].startDate = "";
+    //            subtask[selectedIndex].endDate = "";
+    //        }
+    //    }
+    //    return subtask;
+    //}
+
+    function AddSubTask(indexId) {
+        var count = 0;
+        var selectedTask = [];
+        var lastIndex = arrayGantt.findLastIndex(element => element.parentId == indexId || element.id == indexId);
+        var subTask = {
+            id: 0,
+            subid: 0,
+            parentId: indexId,
+            name: " ",
+            desc: "",
+            startDate: trimDate(new Date()),
+            endDate: "",
+            slDate: 5,
+            noofdays: "",
+            health: "",
+            duration: "",
+            scientist: "",
+            projectManager: "",
+            predecessors: "",
+            percentageComplete: "",
+            taskStatus: "",
+            projectStartDate: "",
+            commitedEndDate: "",
+            delayReason: "",
+            delayComments: "",
+            variance: "",
+            allocation: "",
+            values: [
+                {
+                    from: "/Date(" + new Date().getTime() + ")/",
+                    to: "/Date(" + new Date().getTime() + ")/",
+                    label: "Scoping",
+                    customClass: "ganttRed"
+                }
+            ]
+        }
+        arrayGantt.splice((lastIndex + 1), 0, subTask);
+        arrayGantt.join();
+        CalculateEndDate();
+    }
+
+    function RemoveSubTask(subTaskId, indexId) {
+
+        if (indexId == 0) {
+            arrayGantt = arrayGantt.filter(function (obj) {
+                return obj.id != indexId;
+            });
+        }
+        else {
+            var selectedIndex = arrayGantt.findIndex(element => element.id == indexId && element.subid == subTaskId);
+            arrayGantt.splice(selectedIndex, 1);
+        }
+        LoadChart();
+    }
+
+    function toDate(dateStr) {
+        var parts = dateStr.split("-")
+        return new Date(parts[2], parts[1] - 1, parts[0])
+    }
+
+    function trimDate(today) {
+        const yyyy = today.getFullYear();
+        let mm = today.getMonth() + 1; // Months start at 0!
+        let dd = today.getDate();
+        if (dd < 10) dd = '0' + dd;
+        if (mm < 10) mm = '0' + mm;
+        return dd + '-' + mm + '-' + yyyy;
+    }
+
+    function GetDuration(startDate, endDate) {
+       
+        var duration = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
+        
+        return duration + 1;
+    }
+
+
+                        //function CalculationOnLoad() {
+                        //    //var sDay = $("#daySelect_" + rowNo + " option:selected").val();
+                        //    //var startDate = $("#dpStDate_" + rowNo).val();
+                        //    //var endDate = $("#dpEndDate_" + rowNo).val();
+
+                        //    for (var selectedIndex = 0; selectedIndex < arrayGantt.length; selectedIndex++) {
+                        //        if (arrayGantt[selectedIndex].subTask.length > 0) {
+                        //            for (var i = 0; i < arrayGantt[selectedIndex].subTask.length; i++) {
+                        //                arrayGantt[selectedIndex].subTask[i] = SubTaskTreeOnLoad(arrayGantt[selectedIndex].subTask[i], arrayGantt[selectedIndex].subTask[i].slDate, arrayGantt[selectedIndex].subTask[i].startDate, arrayGantt[selectedIndex].subTask[i].endDate, arrayGantt[selectedIndex].subTask[i].rowNo, "ganttLightBlue");
+                        //            }
+                        //            arrayGantt[selectedIndex] = BindDates(arrayGantt[selectedIndex], "ganttBlue");
+                        //        }
+                        //        else {
+                        //            arrayGantt[selectedIndex] = CalculateSelectedObjOnLoad(arrayGantt[selectedIndex], color);
+                        //        }
+                        //    }
+                        //    LoadChart();
+                        //}
+                        //function SubTaskTreeOnLoad(arr, sDay, startDate, endDate, rowNo, color) {
+                        //    if (arr.subTask.length > 0) {
+                        //        for (var i = 0; i < arr.subTask.length; i++) {
+                        //            arr.subTask[i] = SubTaskTree(arr.subTask[i], arr.subTask[i].sDay, arr.subTask[i].startDate, arr.subTask[i].endDate, arr.subTask[i].rowNo, "ganttGreen");
+                        //        }
+                        //        arr = BindDates(arr, color);
+                        //    }
+                        //    else {
+                        //        arr.slDate = sDay;
+                        //        arr.startDate = startDate;
+                        //        arr.endDate = endDate;
+                        //        arr = CalculateSelectedObjOnLoad(arr, color);
+                        //    }
+                        //    return arr;
+                        //}
+                        //function CalculateSelectedObjOnLoad(arr, color) {
+                        //    var sDate = toDate(arr.startDate);
+                        //    var eDate = toDate(arr.endDate);
+                        //    arr.duration = GetDuration(sDate, eDate) + "d";
+                        //    arr.values = [];
+                        //    var obj = {
+                        //        from: "/Date(" + new Date(sDate).getTime() + ")/",
+                        //        to: "/Date(" + new Date(eDate).getTime() + ")/",
+                        //        label: arr.desc,
+                        //        desc: "Task: " + arr.desc + " <br/>Date: " + trimDate(sDate) + " to " + trimDate(eDate),
+                        //        customClass: color
+                        //    }
+                        //    arr.values.push(obj);
+                        //}
+
+</script>

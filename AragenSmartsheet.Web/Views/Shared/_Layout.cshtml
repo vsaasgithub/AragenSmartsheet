@@ -1,0 +1,75 @@
+﻿@using Newtonsoft.Json;
+@using Microsoft.AspNetCore.Http;
+@using AragenSmartsheet.Entities.User;
+@inject IHttpContextAccessor HttpContextAccessor;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Aragen Smartsheet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link href="~/css/all.min.css" rel="stylesheet" />
+    <link href="~/cdnjs.cloudflare.com_ajax_libs_jqueryui_1.13.2_themes_base_jquery-ui.min.css" rel="stylesheet" />
+    <link href="~/cdnjs.cloudflare.com_ajax_libs_jqueryui_1.13.2_themes_base_theme.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/style.css">
+    <script src="~/js/jquery-3.6.0.js"></script>
+    <script src="~/js/jquery-ui.js"></script>
+
+
+    <style>
+        .footer {
+            background: #fff;
+            padding: 9px 0;
+            position: relative;
+            width: 100%;
+            bottom: -30px;
+            text-align: center;
+        }
+
+        .bg-light {
+            background-color: #fff !important;
+            box-shadow: 0 0 5px #ccc;
+        }
+
+    </style>
+
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="/Home/Index">
+            <img src="~/img/logo.png" style="width:130px" />
+
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active form-inline my-2 my-lg-0">
+                </li>
+            </ul>
+
+            <div class="form-inline my-2 my-lg-0">
+                @((JsonConvert.DeserializeObject<MUser>(@HttpContextAccessor.HttpContext.Session.GetString("UserInfo"))).Name)
+                <div>
+                    <a href="~/login/logout" style="padding:15px;" data-toggle="tooltip" data-placement="bottom" title="Logout"><i class="fa fa-sign-out fa-3" aria-hidden="true"></i></a>
+                </div>
+                @*<a class="nav-link" href="#" style="color:#000"><i class="fa fa-user-circle-o" aria-hidden="true"></i> Welcome, @((JsonConvert.DeserializeObject<MUser>(@HttpContextAccessor.HttpContext.Session.GetString("UserInfo"))).Name) <span class="sr-only">(current)</span></a>*@
+            </div>
+        </div>
+    </nav>
+
+    @RenderBody()
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2023 - Aragen Smartsheet
+        </div>
+    </footer>
+
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

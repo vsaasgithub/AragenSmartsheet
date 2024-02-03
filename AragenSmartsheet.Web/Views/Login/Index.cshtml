@@ -1,0 +1,140 @@
+﻿@{
+    Layout = null;
+}
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Login- Aragen Smartsheet</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+	<link rel="stylesheet" type="text/css" href="~/css/bootstrap_next.min.css">
+
+	<link rel="stylesheet" type="text/css" href="~/css/all.min.css">
+<link rel="stylesheet" type="text/css" href="~/css/main_next.css">
+	<style>
+		body {
+			background: #fafafa !important;
+		}
+
+		.wrap-login100{
+		   border-radius:5px!important;
+		}
+
+		.container-login100 {
+			min-height: 87vh !important;
+		}
+
+		.wrap-login100 {
+			width: auto;
+		}
+
+		.login100-form {
+			width: 400px !important;
+		}
+
+		.wrap-login100 {
+				padding: 40px 42px 55px 42px !important;
+		}
+
+		.p-t-136 {
+			padding-top: 10px;
+		}
+
+		.login100-form-title {
+			padding-bottom: 30px;
+		}
+
+		.login100-form-title {
+			font-size: 18px;
+			margin-top: 20px;
+			margin-left: 20px;
+			text-align: left;
+			margin-bottom: -15px;
+		}
+
+
+		.container-login100 {
+			background: none !important;
+		}
+
+		.wrap-login100 {
+			background: #fffcfc;
+			box-shadow: 0 0 100px #ccc;
+		}
+
+		.input100 {
+			border-radius: 5px !important;
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			letter-spacing: 2px;
+		}
+
+		.login100-form-btn {
+			border-radius: 5px !important;
+			background: #033882 !important;
+			font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			letter-spacing: 2px;
+		}
+
+		.footer {
+			background: #fff;
+			padding: 9px 0;
+			position: absolute;
+			width: 100%;
+			bottom: 0px;
+			text-align: center;
+		}
+	</style>
+</head>
+
+<body>
+    <div class="limiter">
+        <div class="container-login100">
+            <div class="wrap-login100">
+
+                <form class="login100-form validate-form" method="POST" action="~/login/Authenticate">
+                    <div class="row">
+                        <div class="col-sm-12 text-center">
+                            <img src="~/img/logo-1.svg" style="width:200px;margin-bottom:25px" />
+                        </div>
+                    </div>
+
+                    <div class="wrap-input100 validate-input" data-validate="Valid email is required: ex@abc.xyz">
+                        <input class="input100" type="text" required name="username" placeholder="Username">
+                        <span class="focus-input100"></span>
+                        <span class="symbol-input100">
+                            <i class="fa fa-user" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <div class="wrap-input100 validate-input" data-validate="Password is required">
+                        <input class="input100" type="password" required name="password" placeholder="Password">
+                        <span class="focus-input100"></span>
+                        <span class="symbol-input100">
+                            <i class="fa fa-lock" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <span style="color:red">@ViewBag.Error</span>
+                    </div>
+                    <div class="container-login100-form-btn">
+                        <button class="login100-form-btn">
+                            Login
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+	<footer class="border-top footer text-muted">
+		<div class="container">
+			&copy; 2023 - Aragen Smartsheet
+		</div>
+	</footer>
+
+</body>
+</html>

@@ -1,0 +1,487 @@
+﻿@using Microsoft.AspNetCore.Http;
+@using Newtonsoft.Json;
+@{
+    ViewData["Title"] = "Gantt Chart";
+    var s = ViewBag.TaskList;
+    var D = ViewBag.ListofKey;
+}
+@inject IHttpContextAccessor HttpContextAccessor;
+<link href="~/bootstrabjs/ganttbaseline.css" rel="stylesheet" />
+<link href="~/bootstrabjs/all.min.css" rel="stylesheet" />
+<link href="~/css/gantt-style.css" rel="stylesheet" />
+<style>
+    .modal-backdrop.in {
+        opacity: 0.3;
+    }
+    input::placeholder {
+        font: 10px sans-serif;
+    }
+    body table {
+        line-height: 1 !important;
+    }
+    .leftPanel {
+        overflow-y: hidden !important;
+    }
+    .dataPanel {
+        margin: 0 !important;
+    }
+</style>
+<div class="modal fade" id="myModalspin" style="margin-top: 130px;">
+    <div class="modal-dialog">
+        <div class="modal-body">
+            <img src="~/img/vayr.gif" style="margin-left: 50%; margin-top: 24%;margin-top: 24%;height: 90px;" />
+        </div>
+    </div>
+</div>
+<div class="spinnerCont">
+    <div class="container-fluid ">
+        <div class="row" style="">
+            <div class="col-sm-4 py-3" style="">
+                <button class="btn btn-success btn-sm" type="submit" onclick="Updatedata()" data-toggle="modal">Save</button>
+               @* <a class="btn btn-primary btn-sm" target="_blank" href="@ViewBag.ProjectMetaDataSheet">Project MetaData</a>
+                <a class="btn btn-primary btn-sm" target="_blank" href="@ViewBag.ProjectResources">Project Resources</a>
+                <a class="btn btn-primary btn-sm" target="_blank" href="@ViewBag.ProjectMetaDataSheet">Project Meta</a>*@
+                @*<button class="btn btn-primary btn-sm" type="submit" onclick="@ViewBag.">Project Resources</button>*@
+                <a class="btn btn-primary btn-sm" target="_blank" href="@ViewBag.ProjectFolderLink">Project Folder</a>
+                <button class="btn btn-primary btn-sm" type="submit" onclick="baseClick()">Baseline</button>
+            </div>
+            <div class="col-lg-8 row" style="">
+                <div class="col-lg-6 row">
+                    <label class="col-lg-4 form-control-plaintext row">Display Type</label>
+                    <select class="col-lg-6 form-control-sm row" id="ddlgant" onchange="onChangesetsize()" style="margin-left: 10px;">
+                        <option value="1" selected>Gant View</option>
+                        <option value="2">Grid View</option>
+                    </select>
+                </div>
+                <div class="col-lg-6 row" id="gridhide">
+                    <label class="col-lg-4 form-control-plaintext row">Table Size:</label>
+                    <input class="form-control col-lg-6 table_size" type="number" id="gridsize" value="100" oninput="setsize()">
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-7" style="font-weight: bold; margin-left: -15px;">
+            <span>@ViewBag.ProjectName</span>
+        </div>
+    </div>
+    <div class="gantt">
+
+    </div>
+
+
+    <div class="healthcheck"></div>
+    <div class="modal fade" id="myModal" role="dialog">
+        <div class="modal-dialog">
+            Modal content
+            <div class="modal-content">
+                <div class="modal-header" style="color: white;background: linear-gradient(334deg, #0a0320, transparent);height: 53px;">
+                    <a onclick="Close()"> <i class="fa fa-close" style="font-size: 30px; color: white; text-align: right; margin-left: 465px;"></i></a>
+                </div>
+                <div class="modal-body">
+                    <table class="table-borderless" id="newRow" style="width: 100%;">
+                        <tr>
+                            <th> <span>ROW</span></th>
+                            <th> <span>Task</span></th>
+                            <th> <span>Type</span></th>
+                            <th> <span>Lag</span></th>
+                        </tr>
+                        <tbody id="rowGet">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="rowFind()">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="baseLine" role="dialog">
+        <div class="modal-dialog baseline-modal">
+            <div class="modal-content">
+                <a onclick="Close()" style="padding: 10px 0px 25px;background: linear-gradient(304deg, #091e44, transparent);"> <i class="fa fa-close" style="color: #f3eff1;font-size: 25px;font-weight: bolder;"></i></a>
+
+                <div class="modal-body">
+                    <table class="table-borderless" id="newRow" style="width: 100%;">
+                        <tr>
+                            <th>  <label class="baseline">Baselines</label></th>
+                            <th><lable style="">Show BaseLine</lable> <label class="switch"><input onchange="setbaseline()" id="Checktype" type="checkbox" style="padding: 10px;"> <span class="slider round"></span></label>  </th>
+
+                        </tr>
+                        <tbody>
+                            <tr><td><label class="actual-content">Actual</label></td></tr>
+                            <tr>
+                                <td>
+                                    <label class="lblB ">Start</label>
+                                </td>
+                                <td>
+                                    <label class="lblB ">End</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><label id="lableS" class="lblA"></label></td>
+                                <td><label id="lableE" class="lblA"></label></td>
+                            </tr>
+                            <tr><td><label class="actual-content">baseline</label></td></tr>
+                            <tr>
+                                <td>
+                                    <label class="lblB ">Start</label>
+                                </td>
+                                <td>
+                                    <label class="lblB ">End</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><label id="lableP" class="lblA"></label></td>
+                                <td><label id="lablePd" class="lblA"></label></td>
+                            </tr>
+                            <tr>
+                                <td><label class="actual-content">Varriance</label></td>
+                            </tr>
+                            <tr>
+                                <td><label>Days Behind</label></td>
+                            </tr>
+                            <tr><td><label id="labelVarriance" class="day"></label></td></tr>
+                            <tr>
+                                <td>
+                                    <button type="button" class="btn btn-primary" id="hideSubmit" onclick="baseOn()" style="margin-left: 195px;">Submit</button>
+                                    <button type="button" class="btn btn-primary" id="hideReset" style="margin-left: 195px;" onclick="baseResetOn()">Reset</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="adduser" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(304deg, #091e44, transparent);    padding: 6px 20px;">
+                    <h5 class="modal-title">Project Resources</h5>
+                    <a onclick="Close()"> <i class="fa fa-close" style="color: #fff;    margin-top: 7px;"></i></a>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <table class="table table-bordered rowfy" id="tbProjectResources">
+                                <thead>
+                                    <tr>
+                                        <th>Name </th>
+                                        <th>Email</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in JsonConvert.DeserializeObject<Dictionary<string, string>>(HttpContextAccessor.HttpContext.Session.GetString("ProjectResources")))
+                                    {
+                                        <tr>
+                                            <td><input type="text" class="form-control textbox1" placeholder="Name" style="height: 30px!important;" value="@item.Value"></td>
+                                            <td><input type="text" class="form-control textbox2" placeholder="Email" style="height: 30px!important;" value="@item.Key"></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row text-center">
+                        <button type="button" onclick="SubmitResources()" class="btn btn-sm btn-primary" style="margin:0 auto">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/bootstrabjs/moment.min.js"></script>
+<script src="~/bootstrabjs/bootstrap.min.js"></script>
+<script src="~/bootstrabjs/jquery-ui.min.js"></script>
+<script src="~/js/unpkg.com_sweetalert@2.1.2_dist_sweetalert.min.js"></script>
+<script src="~/lib/jquery-gantt/jquery.fn.gantt.js"></script>
+<script type="text/javascript">
+    $(document).ready(function ()
+    { 
+        $('.rowfy').each(function () {
+            $('tbody', this).find('tr').each(function () {
+                $(this).append('<td><button type="button" class="btn btn-sm '
+                    + ($(this).is(":last-child") ?
+                        'rowfy-addrow btn-success" style="padding:0 8px">+' :
+                        'rowfy-deleterow btn-danger" style="padding:0 10px">-')
+                    + '</button></td>');
+            });
+        });
+        $(".leftPanel").css("width", "50%");
+        $(".spinner").hide();
+        $("#myModalspin").modal({ backdrop: "static", keyboard: false });
+        $("#gridsize").attr('maxlength', '3');
+        $(document).on('click', '.rowfy-addrow', function () {
+            let rowfyable = $(this).closest('table');
+            let lastRow = $('tbody tr:last', rowfyable).clone();
+            $('input', lastRow).val('');
+            $('tbody', rowfyable).append(lastRow);
+            $(this).removeClass('rowfy-addrow btn-success').addClass('rowfy-deleterow btn-danger').text('-');
+        });
+        $(document).on('click', '.rowfy-deleterow', function () {
+            $(this).closest('tr').remove();
+        });        
+        ScreenView();
+        GetChart();
+        $("#gridsize").attr('maxlength', '3');
+    });
+    function projectPlan() {
+        $.ajax({
+            dataType: 'json',
+            type: 'POST',
+            url: '/CDS/GetChartData',
+            success: function (json) {
+                window.location.href = '/CDS/GanttChart'
+            }
+        });
+    }
+    function ProjectMetaData() {
+        $.ajax({
+            dataType: 'json',
+            type: 'POST',
+            url: '/CDS/ProjectMetaData',
+            success: function (json) {
+                if (json != null && json != undefined && json != '') {
+                    MetaGanttchart = json;
+                    window.location.href = '/CDS/GanttMetaChart'
+
+                }
+            }
+        });
+    }
+    function Updatedata() {
+        $("#myModalspin").modal("show");
+        var datalist = arrayGantt;        
+        var datetime = new Date();
+        $.ajax({
+            dataType: 'json',
+            type: 'POST',
+            url: '/CDS/GanttChartUpdate',
+            data: { datalists: JSON.stringify(datalist) },
+            success: function (json) {
+                $('#myModalspin').modal('hide');
+                GetChart();                
+            }
+        });
+    }    
+    function DeleteRows(obj) {
+        var DeleteIds = [];
+        DeleteIds.push(obj);
+        $.ajax({
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            type: 'POST',
+            url: '/CDS/ProjectPlanDeleteRows',
+            data: JSON.stringify(DeleteIds),
+            success: function (json) {
+
+            }
+        });
+
+    }    
+    var arrayGantt = [];
+    var MetaGanttchart = [];
+    var DatePick = [];    
+    var TaskManagerName = '@s';
+    TaskManagerName = JSON.parse(TaskManagerName.replace(/&quot;/g, '"'));
+    var Taskey = '@D';
+    Taskey = JSON.parse(Taskey.replace(/&quot;/g, '"'));
+    var FolderID = '@ViewBag.FolderId';  
+    function GetChart() {
+        $.ajax({
+            url: '/CDS/GetChartData',
+            dataType: 'json',
+            success: function (json) {
+                if (json != null && json != undefined && json != '')
+                {
+                    arrayGantt = json[0];
+                    CalculateEndDate();                  
+                } 
+            }
+        });
+    }       
+    var baselinebool = false;
+    function setbaseline() {
+        if ($("#Checktype").prop("checked") == true) {
+            baselinebool = true;
+            LoadChart();
+        }
+        else {
+            baselinebool = false;
+            LoadChart();
+        }
+    }
+    //type the textbox increase the table width
+    function setsize() {
+        var size = $("#gridsize").val();
+        if (size < 100) {
+            var size = $("#gridsize").val();
+        } else {
+            alert('No numbers above 100');
+            var size = $("#gridsize").val('100');
+        }
+        $(".leftPanel").css("width", size + "%");
+    }    
+    var SumCount = 0;  
+    function LoadChart() {
+        $(".gantt").gantt
+        ({
+            source: arrayGantt,
+            navigate: "scroll",
+            scale: "days",
+            maxScale: "months",
+            minScale: "days",
+            itemsPerPage: 10,
+            onItemClick: function (data) {
+                alert("Item clicked - show some details");
+            },
+            onAddClick: function (dt, rowId) {
+                alert("Empty space clicked - add an item!");
+            },
+            onRender: function () {
+                if (window.console && typeof console.log === "function") {
+                    for (var selectedIndex = 0; selectedIndex < arrayGantt.length; selectedIndex++) {
+                        if (arrayGantt[selectedIndex].subTask.length > 0) {
+                            arrayGantt[selectedIndex].subTask = SlDateChange(arrayGantt[selectedIndex].subTask);
+                        } else {
+                            BindDatePicker(arrayGantt[selectedIndex].workingDays, arrayGantt[selectedIndex].rowCount);
+                        }
+                    }
+                    ScreenView();
+                }
+            }
+        });        
+      
+    }
+    function SlDateChange(arr) {
+        for (var i = 0; i < arr.length; i++) {
+            if (arr[i].subTask.length > 0) {
+                arr[i].subTask = SlDateChange(arr[i].subTask);
+            }
+            else {
+                BindDatePicker(arr[i].workingDays, arr[i].rowCount);
+            }
+        }
+        return arr;
+    }   
+    var Higduration = 0;
+    function dateSplit(date) {
+        var split = date.split("/");
+        if (parseInt(split[0]) <= 9) {
+            var convert = "0" + parseInt(split[0]);
+
+        } else {
+            var convert = parseInt(split[0]);
+        }
+        if (parseInt(split[1]) <= 9) {
+            var dConvert = "0" + parseInt(split[1]);
+        } else {
+            var dConvert = split[1];
+        }
+        var d = dConvert + "-" + convert + "-" + parseInt(split[2]);
+        return d;
+    }      
+ 
+    // change the date formate
+    function toDate(dateStr) {
+        var parts = dateStr.split("-")
+        return new Date(parts[2], parts[1] - 1, parts[0])
+    }
+    //trim the date
+    function trimDate(today) {
+        const yyyy = today.getFullYear();
+        let mm = today.getMonth() + 1; // Months start at 0!
+        let dd = today.getDate();
+        if (dd < 10) dd = '0' + dd;
+        if (mm < 10) mm = '0' + mm;
+        return dd + '-' + mm + '-' + yyyy;
+    }
+    function GetDuration(startDate, endDate) {
+        var duration = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
+        return duration + 1;
+    }
+    // modelpopup close
+    function Close() {
+        $('#myModal').modal('hide');
+        $('#baseLine').modal('hide');
+        $('#clear').remove();
+        $('#adduser').modal('hide');
+
+    }
+    //-----Prdecssors data push arraygant
+    var secRow;
+    var globalVarribal;
+    var dropValueCurrent;
+    var Inc = 1;
+    var staticData = [];
+    // add additional row in modelpopup
+    function Add(rowCount) {
+        var row = '<tr><td><input type="text" style="width: 7rem;" id="rowVal' + Inc + '" onchange="getTaskNameParam(' + Inc + ')" class="form-control-sm prd' + rowCount + ' " value=""></input></td><td><select id ="myDropDownLisTId' + Inc + '" style ="width: 9rem;" class="form-control-sm pr' + rowCount + '"> <option></option></select></td><td><select id="myDropBox' + Inc + '" style="width: 120px;" onchange="prdicVal(' + Inc + ')"  class="form-control-sm prdS' + rowCount + ' PredicClass"> <option>------------------</option><option value ="Finish-to-start"> Finish-to-start(FS)</option><option value="Finish-to-Finish">Finish-to-Finish(FF)</option><option value="Start-to-Start">Start-to-Start(SS)</option><option value="Start-to-Finish">Start-to-Finish(SF)</option></select></td><td><input type="text" id="lagVal' + Inc + '" style="width: 3rem;" class="form-control-sm prdL' + rowCount + '"></td>  <td> <a onclick="Add(' + rowCount + ')"> <i class="fa fa-plus" style="font-size:28px;color:blue"></i></a></td></tr>';
+        Inc++;       
+        $("#newRow").append(row);
+    }
+    // modelpopup text the value  bind predecssors row in this function    
+    function getTaskName() {
+        var rowCount = parseInt($('#rowVal').val());
+        var data = BindDropDownValue(rowCount);
+        $("#myDropDownLisTId").append($("<option selected></option>").val(rowCount).html(data));
+    }
+    var TaskName = [];
+    function BindDropDownValue(rowCount) {
+        for (var selectedIndex = 0; selectedIndex < arrayGantt.length; selectedIndex++) {
+            if (arrayGantt[selectedIndex].rowCount == rowCount) {
+                TaskName = arrayGantt[selectedIndex].name;
+                break;
+            }
+            else {
+                TaskName = BindDropDownSubTree(arrayGantt[selectedIndex].subTask, rowCount);
+            }
+        }
+        return TaskName;
+
+    }
+    function BindDropDownSubTree(arr, rowCount) {
+        if (arr.length > 0) {
+            for (var i = 0; i < arr.length; i++) {
+                if (arr[i].rowCount == rowCount) {
+                    TaskName = arr[i].name;
+                    break;
+                }
+                else {
+                    TaskName = BindDropDownSubTree(arr[i].subTask, rowCount);
+                }
+            }
+        }
+        return TaskName;
+    }
+    //percentage complete calcualtion
+    function parseTime(s) {
+        var c = s.split(':');
+        return parseInt(c[0]) * 60 + parseInt(c[1]);
+    }
+    function ProjectResources() {
+        $('#adduser').modal('show');
+    }
+    function SubmitResources() {
+        var values = [];
+
+        // Loop through each row in the table
+        $("#tbProjectResources tr").each(function () {
+            var textbox1Value = $(this).find(".textbox1").val();
+            var textbox2Value = $(this).find(".textbox2").val();
+
+            var rowValues = {
+                textbox1: textbox1Value,
+                textbox2: textbox2Value
+            };
+
+            values.push(rowValues);
+        });
+        // Display the values in the console
+       
+    }
+   
+</script>

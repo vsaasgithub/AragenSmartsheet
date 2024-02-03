@@ -1,0 +1,246 @@
+﻿body {
+    line-height: 0 !important;
+}
+
+form-control-sm {
+    border-radius: 0rem !important;
+}
+
+.modal-header {
+    background: #c8f7ad;
+}
+
+.form-control {
+    height: 21px !important;
+    width: 205px !important;
+}
+
+body table {
+    line-height: 2 !important;
+}
+body table#newRow{
+    line-height:normal !important;
+}
+
+.fn-gantt .leftPanel .fn-label {
+    background: unset;
+    border: none !important;
+}
+
+.fn-gantt .leftPanel .fn-labels {
+    background: unset;
+    border: none !important;
+}
+
+.row.header.month .labelB {
+    width: 115px !important;
+    margin: 0;
+}
+
+.leftPanel tr td {
+    width: 115px !important;
+}
+
+    .leftPanel tr td:empty {
+        display: none;
+    }
+
+    .leftPanel tr td:nth-child(2), .row.header.month .labelB:nth-child(1) {
+        width: 200px !important;
+    }
+
+.fn-gantt .ganttGreen .fn-label::before {
+    position: absolute;
+    content: "";
+    font-family: 'FontAwesome';
+    font-size: 10px;
+    left: -17px;
+    font-weight: normal;
+    color: #000;
+}
+
+.fn-gantt .ganttGreen .fn-label::after {
+    position: absolute;
+    content: "\f177";
+    font-family: 'FontAwesome';
+    font-size: 10px;
+    right: -17px;
+    font-weight: normal;
+    color: #000;
+}
+
+.fn-gantt .ganttGreen .fn-labels::before {
+    position: absolute;
+    font-family: 'FontAwesome';
+    font-size: 10px;
+    left: -17px;
+    font-weight: normal;
+    color: #000;
+}
+
+.fn-label-line {
+    width: 2px;
+    height: 20px;
+    bottom: 8px;
+    position: absolute;
+    left: -18px;
+    background: #000;
+}
+
+.fn-label-line {
+    width: 2px;
+    height: 30px;
+    bottom: 9px;
+    position: absolute;
+    left: -17px;
+    background: #080606;
+}
+
+.row.header.month .labelB {
+    border: 1px solid #ccc !important;
+}
+
+.row {
+    align-items: center;
+}
+
+.lblA {
+    font-family: sans-serif;
+    font-size: 16px;
+    color: black;
+}
+
+.lblB {
+    color: black;
+    font-weight: 700;
+    font-size: 18px;
+    display: block;
+}
+
+.table_size {
+    height: 30px !important;
+}
+
+.baseline {
+    font-size: 23px;
+    color: black;
+    font-weight: 700;
+    font-family: revert;
+}
+
+.day {
+    font-size: 27px;
+    color: #b71844;
+    font-weight: bold;
+    margin-left: 16px;
+}
+
+.planEnd {
+    font-size: 22px;
+    font-weight: bold;
+    color: #9f9ca3;
+}
+
+.lineZ {
+    margin-top: 10px;
+    width: 122px;
+    background: black;
+    height: 2px;
+    float: left;
+}
+
+.fn-label.hiddenlabel::before {
+    display: none;
+}
+
+.fn-label.hiddenlabels::after {
+    display: none;
+}
+
+.set {
+    height: 2px !important;
+    background-color: #700f0f !important;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+    }
+
+input:checked + .slider {
+    background-color: #2196F3;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+    border-radius: 34px;
+}
+
+    .slider.round:before {
+        border-radius: 50%;
+    }
+
+.actual-content {
+    font-size: 20px;
+    color: #075ca7de;
+    font-weight: 700;
+    line-height: 38px !important;
+}
+.modal-dialog.baseline-modal {
+    max-width: 100%;
+    margin: 1.75rem auto;
+    width: 450px !important;
+}
+    .modal-dialog.baseline-modal .modal-content {
+        max-width: 100%;
+        margin: 1.75rem auto;
+        width: 450px !important;
+        position:relative;
+    }
+        .modal-dialog.baseline-modal .modal-content a i {
+            position: absolute;
+            right: 15px;
+            font-size: 21px;
+        }

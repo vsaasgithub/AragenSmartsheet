@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <CopyRefAssembliesToPublishDirectory>false</CopyRefAssembliesToPublishDirectory>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNet.Mvc" Version="5.3.0" />
+    <PackageReference Include="Microsoft.Identity.Web" Version="1.11.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
+    <PackageReference Include="System.DirectoryServices" Version="7.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AragenSmartsheet.Data\AragenSmartsheet.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\lib\jQuery-Gantt\" />
+    <Folder Include="wwwroot\json\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Aragen.Common.Utility" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Update="Aragen.Common.Utility">
+      <HintPath>..\AragenSmartsheet.Integration\Aragen.Common.Utility .dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,971 @@
+﻿@{
+    ViewData["Title"] = "Project Initiation";
+}
+@using Newtonsoft.Json;
+@using Microsoft.AspNetCore.Http;
+@using AragenSmartsheet.Entities.Client;
+@inject IHttpContextAccessor HttpContextAccessor;
+@model AragenSmartsheet.Entities.Home.MProjectIntake;
+<style>
+    .required:after {
+        content: " *";
+        color: red;
+    }
+
+    label {
+        font-size: 13px;
+    }
+
+    .form-group {
+        margin-bottom: 0.2rem;
+    }
+
+    .form-control {
+        height: 40px;
+    }
+
+    .minbodydetails { /*
+                                padding: 0 15px;*/
+    }
+
+    .minbodyview {
+        background-color: #fff;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .loaderoverlay {
+        background: rgba(0,0,0,0.2);
+        position: absolute;
+        width: 100%;
+        z-index: 99;
+        color: #fff;
+        font-weight: bold;
+        text-align: center;
+        padding: 20px;
+        top: 0;
+        min-height: 100%;
+        height: 200%;
+        display: none;
+    }
+
+    .minload {
+        position: absolute;
+        top: 45%;
+        font-size: 30px;
+        font: bold;
+    }
+</style>
+
+<link href="~/css/cdn.jsdelivr.net_npm_select2@4.0.13_dist_css_select2.min.css" rel="stylesheet" />
+<script src="~/js/cdn.jsdelivr.net_npm_select2@4.0.13_dist_js_select2.min.js"></script>
+<section class="ftco-section">
+    <div class="container-fluid" style="padding:0;overflow-x:hidden">
+
+        <div class="row justify-content-center">
+            <div class="col-lg-12 col-md-12">
+                <div class="wrapper" style="margin-top:30px">
+                    <div class="row no-gutters">
+
+                        <div class="col-md-10 d-flex align-items-stretch" style="margin:0 auto">
+                            <div class="minbodyview">
+
+                                <div class="contact-wrap w-100 p-md-5 p-4" style="padding:1rem 3rem!important">
+                                    <div class="minbodydetails">
+                                        <h3 class="mb-4" style="margin-bottom:0!important"> Project Initiation</h3>
+                                        <p> Use this form to submit your project request.</p>
+                                    </div>
+                                    <hr />
+                                    <div class="minbody">
+                                        <form method="POST" action="~/Home/CreateProject" id="ProjectInitiation" name="ProjectInitiation" autocomplete="off" enctype="multipart/form-data">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label>Business Unit</label>
+
+                                                        <select class="form-control" required id="BusinessUnit" name="BusinessUnit">
+                                                            <option value="" disabled selected> Select One</option>
+                                                            <option value="ASL"> ASL</option>
+                                                            <option value="Biologics"> Biologics</option>
+                                                            <option value="CDS"> CDS</option>
+                                                            <option value="Digital X"> Digital X</option>
+                                                            <option value="Discovery Biology"> Discovery Biology</option>
+                                                            <option value="Discovery Chemistry"> Discovery Chemistry</option>
+                                                            <option value="Formulations"> Formulations</option>
+                                                            <option value="Integrated Drug Discovery"> Integrated Drug Discovery</option>
+                                                            <option value="PCET"> PCET</option>
+                                                            <option value="SAS"> SAS</option>
+                                                        </select>
+                                                        <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label>Client</label>
+
+                                                        @Html.DropDownList("Client", new SelectList(JsonConvert.DeserializeObject<List<MClient>>(@HttpContextAccessor.HttpContext.Session.GetString("ClientList")), "ClientID", "Name1"), "Select One", new { @required = "required", @class = "form-control operator" })
+
+                                                        <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                    </div>
+                                                </div>
+
+
+
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+
+                                                        <label name="lblName2" id="lblName2" class="" style="border-color:white;font-weight:bold;">Client Location</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        @*<label>Client City</label>*@
+                                                        <label name="lblCity" id="lblCity" class="" style="border-color:white;font-weight:bold;">Client City</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row" style="padding:0 3px">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label>Region</label>
+                                                        @*@Html.DropDownList("Region", new SelectList(JsonConvert.DeserializeObject<List<String>>(@HttpContextAccessor.HttpContext.Session.GetString("RegionList"))), "Region", new { @required = "required", @class = "form-control" })*@
+                                                        <select class="form-control" required id="Region" name="Region">
+                                                            <option value="" disabled selected> Select One</option>
+                                                            <option value="Europe"> Europe</option>
+                                                            <option value="JAPAC"> JAPAC</option>
+                                                            <option value="NA"> NA</option>
+                                                            <option value="KAM"> KAM</option>
+                                                        </select>
+                                                        <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        @*<label>Country</label>
+                                                        <select class="form-control" required id="Country" name="Country">
+                                                        <option value="" disabled selected> Country</option>
+                                                        </select>
+                                                        <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>*@
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div id="CDS" class="clsDepartment row" style="padding:0 0px">
+
+                                                <div class="col-md-12" style="padding:0 20px">
+                                                    <div class="form-group">
+                                                        <label>Project Category </label>
+
+                                                        <select class="form-control" id="ProjectCategoryCDS" name="ProjectCategoryCDS" required>
+                                                            <option value="" disabled selected> Select Project Category</option>
+                                                            <option value="CCS">CCS</option>
+                                                            <option value="CM New">CM New</option>
+                                                            <option value="PRD">PRD</option>
+                                                            <option value="FC">FC</option>
+                                                        </select>
+                                                        <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-6" style="padding:0 20px">
+                                                    <div class="form-group">
+                                                        <label>BD Email </label>
+                                                        <input type="email" class="form-control" name="BDName" id="BDName" required>
+                                                        <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label>Project Manager Email</label>
+
+                                                        <input type="email" class="form-control" name="ProjectManager" id="ProjectManager" required>
+                                                        <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                    </div>
+                                                </div>
+
+                                                <div id="divCCSFC" class="clsCDSCat row" style="padding:0 20px">
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Proposal Code</label>
+
+                                                            <input type="text" class="form-control" name="ProposalCode" id="ProposalCode" required>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Project Code</label>
+
+                                                            <input type="text" class="form-control" name="ProjectCode" id="ProjectCode" required>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+
+                                                        <div class="form-group">
+                                                            <label>Project Name</label>
+
+                                                            <input type="text" class="form-control" name="ProjectName" id="ProjectName">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Project type</label>
+
+                                                            <select class="form-control" id="ProjectType1" name="ProjectType" required>
+                                                                <option value="" disabled selected> Select One</option>
+                                                                <option>New</option>
+                                                                <option>Reload</option>
+                                                                <option>Repeat</option>
+                                                            </select>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>GMP/NON-GMP</label>
+
+                                                            <select class="form-control" id="GMPOrNonGMP" name="GMPOrNonGMP" required>
+                                                                <option value="" disabled selected> Select One</option>
+                                                                <option>GMP</option>
+                                                                <option>Non-GMP</option>
+                                                            </select>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Molecules</label>
+
+                                                            <select class="form-control" id="Molecules" name="Molecules" required>
+                                                                <option value="" disabled selected> Select One</option>
+                                                                <option>API</option>
+                                                                <option>Intermediate</option>
+                                                                @*<option>NCE</option>*@
+                                                                <option>Service</option>
+                                                            </select>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Phase</label>
+
+                                                            <select class="form-control" name="Phase" id="Phase">
+                                                                <option value="" disabled selected> Select One</option>
+                                                                <option>Commercial</option>
+                                                                <option>Phase 1</option>
+                                                                <option>Phase 2</option>
+                                                                <option>Phase 3</option>
+                                                                <option>Preclinical</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Qty (in Kg)</label>
+
+                                                            <input type="number" min="0" value="0" step="any" class="form-control" name="Qty" id="Qty">
+                                                        </div>
+                                                    </div>
+
+                                                    @*<div class="col-md-2">
+                                                    <div class="form-group">
+                                                    <label>Units</label>
+
+                                                    <select class="form-control" name="Units" id="Units">
+                                                    <option value="" disabled selected> Select</option>
+                                                    <option>gms</option>
+                                                    <option>Kg</option>
+                                                    <option>MT</option>
+                                                    </select>
+                                                    </div>
+                                                    </div>*@
+
+                                                    @*<div class="col-md-6">
+                                                    <div class="form-group">
+                                                    <label>Committed Yield (in %)</label>
+
+                                                    <input type="number" step="any" class="form-control" name="CommittedYield" id="CommittedYield" required>
+                                                    <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                    </div>
+                                                    </div>*@
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Deliverable</label>
+
+                                                            <input type="text" class="form-control" maxlength="100" name="Deliverable" id="Deliverable" required>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Project Value (In USD)</label>
+
+                                                            <input type="number" class="form-control" name="ProjectValue" id="ProjectValue" min="0" value="0" step="any" required>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Planned Start Date</label>
+
+                                                            <input type="text" autocomplete="off" onkeypress="return false" pattern="^\d{2}-[A-Za-z]{3}-\d{4}$" class="form-control startdate" id="StartDate" name="StartDate" required>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Planned End Date</label>
+
+                                                            <input type="text" autocomplete="off" onkeypress="return false" pattern="^\d{2}-[A-Za-z]{3}-\d{4}$" class="form-control enddate" id="EndDate" name="EndDate" required>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+
+                                                <div id="divPRD" class="clsCDSCat row" style="padding:0 20px">
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Proposal Code</label>
+
+                                                            <input type="text" class="form-control" name="ProposalCode" id="ProposalCode" required>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Project Code</label>
+
+                                                            <input type="text" class="form-control" name="ProjectCode" id="ProjectCode" required>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>SO Number</label>
+
+                                                            <input type="text" class="form-control" name="SONumber" id="SONumber">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>PO Number</label>
+
+                                                            <input type="text" class="form-control" name="PONumber" id="PONumber">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+
+                                                        <div class="form-group">
+                                                            <label>Project Name</label>
+
+                                                            <input type="text" class="form-control" name="ProjectName" id="ProjectName">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Project type</label>
+
+                                                            <select class="form-control" id="ProjectType" name="ProjectType" required>
+                                                                <option value="" disabled selected> Select One</option>
+                                                                <option>FC</option>
+                                                                <option>PRD</option>
+                                                            </select>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Contract Start Date</label>
+
+                                                            <input type="text" autocomplete="off" class="form-control" onkeypress="return false" pattern="^\d{2}-[A-Za-z]{3}-\d{4}$" id="PlannedStartDate" name="PlannedStartDate" required>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Contract End Date</label>
+
+                                                            <input type="text" autocomplete="off" class="form-control" onkeypress="return false" pattern="^\d{2}-[A-Za-z]{3}-\d{4}$" id="PlannedEndDate" name="PlannedEndDate" required>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Scientist Email</label>
+
+                                                            <input type="email" class="form-control" name="Scientist" id="Scientist" required>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>FTE Rate (in USD)</label>
+
+                                                            <input type="text" onblur="formatInput(this)" class="form-control" name="ProjectValue" id="ProjectValue">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>No. of FTE's</label>
+
+                                                            <input type="number" step="any" class="form-control" name="NoOfFTE" id="NoOfFTE" required>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                            <div id="DiscoveryBiology" class="clsDepartment row">
+
+                                                <div class="col-md-12" style="padding:0 20px">
+                                                    <div class="form-group">
+                                                        <label>Project Type </label>
+
+                                                        <select class="form-control" id="ProjectTypeBIO" name="ProjectTypeBIO" required>
+                                                            <option value="" disabled selected> Select Type of PO</option>
+                                                            <option value="Single PO">Single PO</option>
+                                                            <option value="Open PO">Open PO</option>
+                                                            <option value="FTE">FTE</option>
+                                                        </select>
+                                                        <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                    </div>
+                                                </div>
+
+                                                <div id="divPO" class="clsPOType row" style="padding:0 20px">
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label>Proposal Code</label>
+                                                            <input type="text" class="form-control" name="ProposalCodePO" id="ProposalCodePO" required>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label>Sale Order</label>
+                                                            <input type="text" class="form-control" name="SaleOrderPO" id="SaleOrderPO" required>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label>WBS Code</label>
+                                                            <input type="text" class="form-control" name="WBSCodePO" id="WBSCodePO" required>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>PO No/SOW</label>
+                                                            <input type="text" class="form-control" name="PONo" id="PONo">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Service</label>
+                                                            <select class="form-control" id="POService" name="POService" required>
+                                                                <option value="" disabled selected> Select One</option>
+                                                                <option>AD&S</option>
+                                                                <option>DMPK</option>
+                                                                <option>In Vivo</option>
+                                                                <option>RG</option>
+                                                                <option>PK</option>
+                                                            </select>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Proposal Approval Date</label>
+                                                            <input type="text" autocomplete="off" onkeypress="return false" pattern="^\d{2}-[A-Za-z]{3}-\d{4}$" class="form-control" id="ProposalApprovalDate" name="ProposalApprovalDate">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Compound Receipt Date</label>
+                                                            <input type="text" autocomplete="off" onkeypress="return false" class="form-control" pattern="^\d{2}-[A-Za-z]{3}-\d{4}$" id="CompoundReceiptDate" name="CompoundReceiptDate">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Study Initiation Date</label>
+                                                            <input type="text" autocomplete="off" onkeypress="return false" class="form-control" pattern="^\d{2}-[A-Za-z]{3}-\d{4}$" id="StudyInitiationDate" name="StudyInitiationDate">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Location</label>
+                                                            <select class="form-control" id="Location" name="Location">
+                                                                <option value="" disabled selected> Select One</option>
+                                                                <option>BLR</option>
+                                                                <option>MLR</option>
+                                                                <option>NRM</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Study Details</label>
+                                                            <input type="text" class="form-control" name="StudyDetails" id="StudyDetails">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Sales Team</label>
+                                                            <input type="text" class="form-control" name="SalesTeam" id="SalesTeam">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Project Lead</label>
+                                                            <input type="text" class="form-control" name="ProjectLead" id="ProjectLead" required>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>No. Of Units</label>
+                                                            <input type="number" class="form-control" name="NoOfUnits" id="NoOfUnits" required>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>No. of Days (As per proposal)</label>
+                                                            <input type="number" class="form-control" name="NoOfDays" id="NoOfDays">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Actual PO Value</label>
+                                                            <input type="text" onblur="formatInput(this)" pattern="^\d{1,3}(,\d{3})*$|^\d+$" class="form-control" name="ActualPOValue" id="ActualPOValue" required>
+                                                            <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div id="divFTE" class="clsPOType">
+                                                    <div class="row" style="padding:0 20px">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label>Sale Order</label>
+                                                                <input type="text" class="form-control" name="SaleOrder" id="SaleOrder" required>
+                                                                <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label>PO No/SOW</label>
+                                                                <input type="text" class="form-control" name="PONoFTE" id="PONoFTE">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label>WBS Element</label>
+                                                                <input type="text" class="form-control" name="WBSCode" id="WBSCode" required>
+                                                                <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label>Proposal Reference</label>
+                                                                <input type="text" class="form-control" name="ProposalCode" id="ProposalCode" />
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-check" style="margin-top:35px;margin-left:5px">
+                                                                <input class="form-check-input" value="IDD" type="checkbox" name="IDD" id="IDD" style="margin-top: 10px;">
+                                                                <label class="form-check-label">
+                                                                    IDD
+                                                                </label>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label>Service</label>
+                                                                <select class="form-control" id="Service" name="Service" required>
+                                                                    <option value="" disabled selected> Select One</option>
+                                                                    <option>AD&S</option>
+                                                                    <option>DMPK</option>
+                                                                    <option>In Vivo</option>
+                                                                    <option>RG</option>
+                                                                    <option>PM</option>
+                                                                </select>
+                                                                <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label>No.of FTEs & Duration as per proposal</label>
+                                                                <input type="text" class="form-control" name="NoOfFTE" id="NoOfFTE" required />
+                                                                <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label>Contract Start Date</label>
+                                                                <input type="text" autocomplete="off" class="form-control" onkeypress="return false" pattern="^\d{2}-[A-Za-z]{3}-\d{4}$" id="ContractStartDate" name="ContractStartDate" required>
+                                                                <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label>Contract End date</label>
+
+                                                                <input type="text" autocomplete="off" class="form-control" onkeypress="return false" pattern="^\d{2}-[A-Za-z]{3}-\d{4}$" id="ContractEndDate" name="ContractEndDate" required>
+                                                                <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                            </div>
+                                                        </div>
+
+
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label>PM POC</label>
+                                                                <input type="text" class="form-control" name="PMPOC" id="PMPOC">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label>BD</label>
+                                                                <input type="text" class="form-control" name="BD" id="BD">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label>Total PO Values</label>
+                                                                <input type="text" onblur="formatInput(this)" pattern="^\d{1,3}(,\d{3})*$|^\d+$" class="form-control" name="TotalPOValues" id="TotalPOValues" required>
+                                                                <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label>FTE Rate/Annum</label>
+                                                                <input type="text" onblur="formatInput(this)" pattern="^\d{1,3}(,\d{3})*$|^\d+$" class="form-control" name="FTECost" id="FTECost" required>
+                                                                <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label>Passthrough Value</label>
+                                                                <input type="text" onblur="formatInput(this)" pattern="^\d{1,3}(,\d{3})*$|^\d+$" class="form-control" name="PassthroughValue" id="PassthroughValue" required>
+                                                                <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                            <div class="row" style="padding:0 3px;margin-top:10px">
+                                                <div class="col-md-12">
+                                                    <div class="form-group col-sm-4" style="margin:15px auto">
+                                                        <input type="submit" onclick="disableButtonAndSubmitForm()" value="Submit" class="btn btn-primary btn-block">
+
+                                                        <div class="submitting"> </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+
+                                                        @if (ViewBag.Success != null && ViewBag.Success == "true")
+                                                        {
+                                                            <span style="color:green">Project created successfully in Smartsheet.Please use below link to navigate to project folder/sheet.</span>
+                                                            <br />
+                                                            @* <a href="/CDS/GanttChart?FolderID=@ViewBag.FolderId&FolderName=@ViewBag.Name">@ViewBag.Name</a> *@
+                                                            <a href="@Url.Action("GanttView", "CDS", new { FolderID = @ViewBag.FolderId, FolderName = @ViewBag.Name, FolderLink = @ViewBag.FolderLink })">@ViewBag.Name</a>
+                                                        }
+                                                        else if (ViewBag.Success == "false")
+                                                        {
+                                                            <span style="color:red">Some error occured.Please try again</span>
+                                                        }
+                                                        else if (ViewBag.Success == "smartsheet")
+                                                        {
+                                                            <a href="@ViewBag.Name">@ViewBag.Name</a>
+                                                        }
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<div class="loaderoverlay">
+    <span class="minload">Loader...</span>
+</div>
+
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation/dist/additional-methods.min.js"></script>
+
+<script>
+
+
+
+
+
+
+    function disableButtonAndSubmitForm() {
+
+        // Submit the form with parameters
+        //var form = document.getElementById("ProjectInitiation");
+        var form = $("#ProjectInitiation");
+
+        if (form.valid()) {
+            $(".loaderoverlay").show();
+
+            form.action = "../Home/CreateProject";
+            form.method = "post";
+            form.submit();
+            //alert("ok");
+        } else {
+            $(".error").css("color", "red")
+        }
+
+
+
+        //}
+    }
+
+    function customRange(input) {
+
+        if (input.id == 'EndDate') {
+            var minDate = new Date($('#StartDate').val());
+            minDate.setDate(minDate.getDate())
+
+            return {
+                minDate: minDate
+
+            };
+        }
+
+        return {}
+
+    }
+
+    $(document).ready(function () {
+
+
+
+        $("#StartDate").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: 'dd-M-yy',
+            beforeShow: customRange
+        });
+        $("#EndDate").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: 'dd-M-yy',
+            beforeShow: customRange
+        });
+        $("#ProposalApprovalDate").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: 'dd-M-yy'
+        });
+        $("#CompoundReceiptDate").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: 'dd-M-yy'
+        });
+        $("#StudyInitiationDate").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: 'dd-M-yy'
+        });
+        $("#ContractStartDate").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: 'dd-M-yy',
+            beforeShow: customRange
+        });
+        $("#ContractEndDate").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: 'dd-M-yy',
+            beforeShow: customRange
+        });
+        //$("#RenewalDate").datepicker({
+        //    changeMonth: true,
+        //    changeYear: true,
+        //    dateFormat: 'dd-M-yy'
+        //});
+        $("#PlannedStartDate").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: 'dd-M-yy',
+            beforeShow: customRange
+        });
+        $("#PlannedEndDate").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: 'dd-M-yy',
+            beforeShow: customRange
+        });
+
+        $("#StartDate").attr("autocomplete", "off");
+        $("#EndDate").attr("autocomplete", "off");
+        $("#ProposalApprovalDate").attr("autocomplete", "off");
+        $("#CompoundReceiptDate").attr("autocomplete", "off");
+        $("#StudyInitiationDate").attr("autocomplete", "off");
+        $("#ContractStartDate").attr("autocomplete", "off");
+        $("#ContractEndDate").attr("autocomplete", "off");
+        $("#RenewalDate").attr("autocomplete", "off");
+        $("#PlannedStartDate").attr("autocomplete", "off");
+        $("#PlannedEndDate").attr("autocomplete", "off");
+        $(".clsDepartment").hide();
+        $(".clsPOType").hide();
+        $(".clsCDSCat").hide();
+        $("select").select2();
+    });
+
+    function formatInput(input) {
+        //var input = document.getElementById("myInput");
+        var value = input.value.replace(/\D/g, "");
+        var result = Number(value).toLocaleString('en-US');
+        if (result == '0') {
+            result = '';
+        }
+        input.value = result;
+    }
+
+    function formatCurrency(input) {
+        var value = parseInt(input.value);
+        if (isNaN(value)) {
+            input.value = '';
+            return;
+        }
+
+        alert('a' + (value.toLocaleString('en-US', { minimumFractionDigits: 2 })).split('.').shift() + 'a');
+        input.value = (value.toLocaleString('en-US', { minimumFractionDigits: 2 })).split('.').shift();
+    };
+
+    $(document).on('change', '#Client', function (e) {
+        var selClient = $(this).val();
+        $.ajax({
+            type: 'GET',
+            data: { selClient },
+            url: '/Home/GetClientDetails',
+            success: function (data) {
+                $("#lblName2").html(data.name2);
+                $("#lblCity").html(data.city);
+            }
+        });
+    });
+
+    $(document).on('change', '#BusinessUnit', function (e) {
+        var selClient = $(this).val();
+        $(".clsDepartment").hide().find('input, select').attr('disabled', 'disabled');
+        selClient = selClient.replace(' ', '');
+        $('#' + selClient).show().find('input, select').removeAttr('disabled');
+        $("select").select2();
+    });
+
+    $(document).on('change', '#ProjectTypeBIO', function (e) {
+        var selProjectType = $(this).val();
+        $(".clsPOType").hide().find('input, select').attr('disabled', 'disabled');
+        if (selProjectType == 'FTE') {
+            $('#divFTE').show().find('input, select').removeAttr('disabled');
+        }
+        else {
+            $('#divPO').show().find('input, select').removeAttr('disabled');
+        }
+        $("select").select2();
+    });
+
+    $(document).on('change', '#ProjectCategoryCDS', function (e) {
+        var selProjectType = $(this).val();
+        $(".clsCDSCat").hide().find('input, select').attr('disabled', 'disabled');
+        if (selProjectType == 'PRD') {
+            $('#divPRD').show().find('input, select').removeAttr('disabled');
+        }
+        else {
+            $('#divCCSFC').show().find('input, select').removeAttr('disabled');
+        }
+        $("select").select2();
+    });
+
+    //$(document).on('change', '#Region', function (e) {
+    //    var selRegion = $(this).val();
+    //    $.ajax({
+    //        type: 'GET',
+    //        data: { selRegion },
+    //        url: '/Home/GetCountry',
+    //        success: function (data) {
+    //            console.log(data);
+    //            var s = '<option value="" disabled selected> Country</option>';
+    //            for (var i = 0; i < data.length; i++) {
+    //                s += '<option value="' + data[i].text + '">' + data[i].text + '</option>';
+    //            }
+    //            $("#Country").html(s);
+    //        }
+    //    });
+    //});
+
+</script>

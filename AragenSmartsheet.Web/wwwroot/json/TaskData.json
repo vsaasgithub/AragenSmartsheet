@@ -1,0 +1,226 @@
+[
+  {
+    "id": 1,
+    "subid": 0,
+    "parentId": 1,
+    "name": "Task 1",
+    "desc": "Task 1",
+    "startDate": "21-02-2023",
+    "endDate": "",
+    "slDate": 5,
+    "Noofdays": 10,
+    "Health": "Red",
+    "Duration": "8 hrs",
+    "Scientist": "test scientist",
+    "ProjectManager": "test manager",
+    "Predecessors": "2",
+    "PercentageComplete": "20%",
+    "TaskStatus": "Completed",
+    "ProjectStartDate": "05-02-2023",
+    "CommitedEndDate": "15-04-2023",
+    "DelayReason": "delayed!",
+    "DelayComments": "delay Comment",
+    "Variance": "122",
+    "Allocation": "10%",
+    "values": [
+      {
+        "from": "/Date(1676917860000)/",
+        "to": "/Date(1676917860000)/",
+        "label": "Scoping",
+        "customClass": "ganttBlue"
+      }
+    ]
+  },
+  {
+    "id": 1,
+    "subid": 1,
+    "parentId": 1,
+    "name": " ",
+    "desc": "SubTask 1",
+    "startDate": "21-02-2023",
+    "endDate": "",
+    "slDate": 5,
+    "Noofdays": 4,
+    "Health": "Red",
+    "Duration": "",
+    "Scientist": "",
+    "ProjectManager": "",
+    "Predecessors": "2",
+    "PercentageComplete": "20%",
+    "TaskStatus": "",
+    "ProjectStartDate": "05-02-2023",
+    "CommitedEndDate": "15-04-2023",
+    "DelayReason": "",
+    "DelayComments": "",
+    "Variance": "",
+    "Allocation": "",
+    "values": [
+      {
+        "from": "/Date(1676917860000)/",
+        "to": "/Date(1676917860000)/",
+        "label": "Scoping",
+        "customClass": "ganttLightBlue"
+      }
+    ]
+  },
+  {
+    "id": 1,
+    "subid": 2,
+    "parentId": 1,
+    "name": " ",
+    "desc": "SubTask 2",
+    "startDate": "23-02-2023",
+    "endDate": "",
+    "slDate": 5,
+    "Noofdays": 5,
+    "Health": "Red",
+    "Duration": "",
+    "Scientist": "",
+    "ProjectManager": "",
+    "Predecessors": "2",
+    "PercentageComplete": "20%",
+    "TaskStatus": "",
+    "ProjectStartDate": "05-02-2023",
+    "CommitedEndDate": "15-04-2023",
+    "DelayReason": "",
+    "DelayComments": "",
+    "Variance": "",
+    "Allocation": "",
+    "values": [
+      {
+        "from": "/Date(1677090660000)/",
+        "to": "/Date(1677090660000)/",
+        "label": "Scoping",
+        "customClass": "ganttLightBlue"
+      }
+    ]
+  },
+  {
+    "id": 1,
+    "subid": 3,
+    "parentId": 1,
+    "name": " ",
+    "desc": "SubTask 3",
+    "startDate": "26-02-2023",
+    "endDate": "",
+    "slDate": 5,
+    "Noofdays": 2,
+    "Health": "Red",
+    "Duration": "",
+    "Scientist": "",
+    "ProjectManager": "",
+    "Predecessors": "2",
+    "PercentageComplete": "20%",
+    "TaskStatus": "",
+    "ProjectStartDate": "05-02-2023",
+    "CommitedEndDate": "15-04-2023",
+    "DelayReason": "",
+    "DelayComments": "",
+    "Variance": "",
+    "Allocation": "",
+    "values": [
+      {
+        "from": "/Date(1677349860000)/",
+        "to": "/Date(1677349860000)/",
+        "label": "Scoping",
+        "customClass": "ganttLightBlue"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "subid": 4,
+    "parentId": 2,
+    "name": "Task 2",
+    "desc": "Task 2",
+    "startDate": "02-03-2023",
+    "endDate": "",
+    "slDate": 5,
+    "Noofdays": 13,
+    "Health": "Red",
+    "Duration": "",
+    "Scientist": "",
+    "ProjectManager": "",
+    "Predecessors": "2",
+    "PercentageComplete": "20%",
+    "TaskStatus": "",
+    "ProjectStartDate": "05-02-2023",
+    "CommitedEndDate": "15-04-2023",
+    "DelayReason": "",
+    "DelayComments": "",
+    "Variance": "",
+    "Allocation": "",
+    "values": [
+      {
+        "from": "/Date(1677695460000)/",
+        "to": "/Date(1677695460000)/",
+        "label": "Scoping",
+        "customClass": "ganttBlue"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "subid": 5,
+    "parentId": 2,
+    "name": " ",
+    "desc": "SubTask 1",
+    "startDate": "09-03-2023",
+    "endDate": "",
+    "slDate": 5,
+    "Noofdays": 7,
+    "Health": "Red",
+    "Duration": "",
+    "Scientist": "",
+    "ProjectManager": "",
+    "Predecessors": "2",
+    "PercentageComplete": "20%",
+    "TaskStatus": "",
+    "ProjectStartDate": "05-02-2023",
+    "CommitedEndDate": "15-04-2023",
+    "DelayReason": "",
+    "DelayComments": "",
+    "Variance": "",
+    "Allocation": "",
+    "values": [
+      {
+        "from": "/Date(1678300260000)/",
+        "to": "/Date(1678300260000)/",
+        "label": "Scoping",
+        "customClass": "ganttLightBlue"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "subid": 6,
+    "parentId": 2,
+    "name": " ",
+    "desc": "SubTask 2",
+    "startDate": "11-03-2023",
+    "endDate": "",
+    "slDate": 5,
+    "Noofdays": 2,
+    "Health": "Red",
+    "Duration": "",
+    "Scientist": "",
+    "ProjectManager": "",
+    "Predecessors": "2",
+    "PercentageComplete": "20%",
+    "TaskStatus": "",
+    "ProjectStartDate": "05-02-2023",
+    "CommitedEndDate": "15-04-2023",
+    "DelayReason": "",
+    "DelayComments": "",
+    "Variance": "",
+    "Allocation": "",
+    "values": [
+      {
+        "from": "/Date(1678473060000)/",
+        "to": "/Date(1678473060000)/",
+        "label": "Scoping",
+        "customClass": "ganttLightBlue"
+      }
+    ]
+  }
+]

@@ -66,7 +66,7 @@ namespace AragenSmartsheet.Web
                 app.UseExceptionHandler("/Home/Error");
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseSession();
 

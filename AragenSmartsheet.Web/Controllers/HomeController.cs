@@ -439,6 +439,7 @@ namespace AragenSmartsheet.Web.Controllers
                 Log.Error(ex.Message);
                 Log.Error(ex.StackTrace);
             }
+            FillData();
             return View("~/views/home/project.cshtml");
         }
 

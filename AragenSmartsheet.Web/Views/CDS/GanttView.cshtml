@@ -506,6 +506,7 @@
             // Extract start and end dates of child tasks
             const childStartDates = childTasks.map(task => new Date(task.start));
             const childEndDates = childTasks.map(task => new Date(task.end));
+            // const childDurationDays = childTasks.map(task => task.durationdays);
 
             // Find the earliest start date and latest end date among child tasks
             const parentStartDate = new Date(Math.min(...childStartDates));
@@ -516,6 +517,10 @@
             parentTask.set('end', parentEndDate.toISOString())
 
             // set durationdays for parent task
+            /*
+            let parentDurationInDays = 0
+            childDurationDays.forEach(duration => parentDurationInDays += duration)
+            */
             const parentDurationInMilliseconds = parentEndDate - parentStartDate;
             const parentDurationInDays = Math.ceil(parentDurationInMilliseconds / MS_IN_A_DAY);
             parentTask.set('durationdays', parentDurationInDays);
@@ -779,7 +784,6 @@
 
                     gantt.dataSource.sync();
                     //showPlannedColumns(false);
-                    console.log('[2] >>> gantt.refresh()')
                     gantt.refresh();
 
                 })
@@ -818,7 +822,6 @@
 
                     });
                     gantt.dataSource.sync();
-                    console.log('[3] >>> gantt.refresh()')
                     gantt.refresh();
                 })
                     .fail(function () {
@@ -857,8 +860,7 @@
                     },
                     parameterMap: function (options, operation) {
                         if (operation !== "read") {
-                            //return { models: kendo.stringify(options.models || [options]) };
-                            return { models: options.models || [options] };
+                            return { models: kendo.stringify(options.models || [options]) };
                         }
                     }
                 },
@@ -898,17 +900,8 @@
                     },
                     update: {
                         url: serviceRoot + "/GanttDependencies/Update",
-                        contentType: "application/json",
                         dataType: "json",
-                        data: function (data) {
-                            //Bug: This original JSON stringify data is a big bug.  This cause the data to be encoded over and over again until it is not readable.
-                            // This may cause data coruption. This causes the data loading failed and the Task edit dialog can not read the saved dependecy type.
-                            // This also cause the issue that after saving the first time, the data can not be loaded so you do not see the data
-                            // in the dialog.  When you create the second time, you see the second dependency data but now you have multiple dependency.
-                            // It cause an unpredictable behaviour.
-                            //return JSON.stringify(data);
-                            return data
-                        }
+                        type: "POST"
                     },
                     destroy: {
                         url: serviceRoot + "/GanttDependencies/Destroy",
@@ -920,8 +913,7 @@
                     },
                     parameterMap: function (options, operation) {
                         if (operation !== "read") {
-                            //return { models: kendo.stringify(options.models || [options]) };
-                            return { models: options.models || [options] };
+                            return { models: kendo.stringify(options.models || [options]) };
                         }
                     }
                 },
@@ -977,7 +969,6 @@
                             //         //column.width = 100;
                             //     }
                             // });
-                            console.log('[4] >>> gantt.refresh()')
                             gantt.refresh();
                         }
                         else {
@@ -991,7 +982,6 @@
                             //         //column.width = 0;
                             //     }
                             // });
-                            console.log('[5] >>> gantt.refresh()')
                             gantt.refresh();
                         }
                         $('#planned-switch_label').text('Set Baselines');
@@ -2397,7 +2387,6 @@
             //     ganttTasks.sync();
             // }
             $(document).bind("kendo:skinChange", function () {
-                console.log('[6] >>> gantt.refresh()')
                 gantt.refresh();
             });
         });

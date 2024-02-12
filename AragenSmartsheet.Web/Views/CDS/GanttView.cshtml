@@ -34,6 +34,54 @@
     </style>
 
     <script>
+
+        // ================= Gantt data access helper functions ==================
+
+        // Enum for Dependency types
+        // Make sure these value are in sync with the backend type definition
+        const DependencyType = {
+            FinishFinish: 0,
+            FinishStart: 1,
+            StartFinish: 2,
+            StartStart: 3,
+        }
+
+        // Enum for day of week
+        const DayOfWeek = {
+            SUNDAY: 0,
+            MONDAY: 1,
+            TUESDAY: 2,
+            WEDNESDAY: 3,
+            THURSDAY: 4,
+            FRIDAY: 5,
+            SATURDAY: 6,
+        }
+
+        const MS_IN_A_DAY = 1000 * 60 * 60 * 24
+
+        // GanttView instance access methods
+        function getGanttDataSource() {
+            return $('#gantt').data('kendoGantt').dataSource
+        }
+
+        function getGanttTasks() {
+            return $('#gantt').data('kendoGantt').dataSource.data()
+        }
+
+        function getGanttDependencies() {
+            return $('#gantt').data('kendoGantt').dependencies.data()
+        }
+
+        function getGanttAssignments() {
+            return $('#gantt').data('kendoGantt').assignments.dataSource.data()
+        }
+        
+        function refreshGanntView() {
+            $('#gantt').data('kendoGantt')?.refresh()
+        }
+
+        // ==========================================================================
+
         var baselineSet = false;
 
         function calcVariance(workdays, pstart, pend, astart, aend) {
@@ -306,6 +354,359 @@
 
         }
 
+        // Get all dependencies for the current task
+        function getTaskDependencies(taskId) {
+            const ganttDependencies = getGanttDependencies()
+            const taskDependencies = ganttDependencies?.filter(task => task.predecessorId === taskId)
+            return taskDependencies
+        }
+
+        // With provided workingDays, check if a date is a working day.
+        // Note: this can be extended to check for holiday or non-working days
+        function isWorkingDay(currentDate, workingDays) {
+            const curDate = (typeof currentDate === 'string') ? new Date(currentDate) : currentDate
+            const dayOfWeek = curDate.getDay()
+            if (workingDays === 5 && (dayOfWeek === DayOfWeek.SATURDAY || dayOfWeek === DayOfWeek.SUNDAY)) {
+                return false
+            }
+            if (workingDays === 6 && dayOfWeek === DayOfWeek.SUNDAY) {
+                return false
+            }
+            
+            return true
+        }
+
+        // Get the next working day
+        function getNextWorkingDate(currentDate, workingDays) {
+            // Calculate next date
+            const nextDate = new Date(currentDate)
+            nextDate.setDate(nextDate.getDate() + 1)
+            while(!isWorkingDay(nextDate, workingDays)) {
+                nextDate.setDate(nextDate.getDate() + 1)
+            }
+            return nextDate
+        }
+
+        // Get the previous working day
+        function getPreviousWorkingDate(currentDate, workingDays) {
+            // Calculate next date 
+            const prevDate = new Date(currentDate)
+            prevDate.setDate(prevDate.getDate() - 1)
+            while(!isWorkingDay(prevDate, workingDays)) {
+                prevDate.setDate(prevDate.getDate() - 1)
+            }
+            return prevDate
+        }
+
+
+        // With dependency type of Finish-Start and provided inputs of the current task duration, workingDays
+        // and the predecessorEndDate calculate the startDate and endDate for the currennt task
+        function finishToStartDates(duration, workingDays, predecessorEndDate) {
+            // Calculate start date based on predecessor's end date
+            const startDate = getNextWorkingDate(predecessorEndDate, workingDays)
+
+            // Calculate end date based on duration and working days per week
+            let remainingDays = duration
+            let endDate = new Date(startDate)
+            while (remainingDays > 0) {
+                if (isWorkingDay(endDate, workingDays)) {
+                    remainingDays--
+                }
+                endDate = getNextWorkingDate(endDate, workingDays)
+
+                //endDate.setDate(endDate.getDate() + 1)
+            }
+
+            endDate = getPreviousWorkingDate(endDate, workingDays) //Get the last working day
+            return { startDate: startDate.toISOString(), endDate: endDate.toISOString() }
+        }
+
+        // With dependency type of Finish-Finish and provided inputs of the current task duration, workingDays
+        // and the predecessorEndDate calculate the startDate and endDate for the currennt task
+        function finishToFinishDates(duration, workingDays, predecessorEndDate) {
+            let endDate = new Date(predecessorEndDate)
+            if(!isWorkingDay(endDate, workingDays)) {
+                endDate = getPreviousWorkingDate(endDate, workingDays)
+            }
+            let startDate = new Date(endDate)
+            let remainingDays = duration
+            while (remainingDays > 0) {
+                if (isWorkingDay(startDate, workingDays)) {
+                    remainingDays--
+                }
+                startDate.setDate(startDate.getDate() - 1)
+            }
+            startDate = getNextWorkingDate(startDate, workingDays) //Get the next working day
+            return { startDate: startDate?.toISOString(), endDate: endDate?.toISOString() }
+        }
+
+        // With dependency type of Start-Finish and provided inputs of the current task duration, workingDays
+        // and the predecessorStartDate calculate the startDate and endDate for the currennt task
+        function startToFinishDates(duration, workingDays, predecessorStartDate) {
+            // Calculate end date based on predecessor's start date
+            const endDate = getPreviousWorkingDate(predecessorStartDate, workingDays)
+
+            // Calculate start date based on duration and working days per week
+            let remainingDays = duration
+            let startDate = new Date(endDate)
+            while (remainingDays > 0) {
+                if (isWorkingDay(endDate, workingDays)) {
+                    remainingDays--
+                }
+                startDate = getPreviousWorkingDate(startDate, workingDays)
+                //startDate.setDate(startDate.getDate() - 1)
+            }
+
+            startDate = getNextWorkingDate(startDate, workingDays) //Get the next working day
+            return { startDate: startDate.toISOString(), endDate: endDate.toISOString() }
+        }
+
+        // With dependency type of Start-Start and provided inputs of the current task duration, workingDays
+        // and the predecessorStartDate calculate the startDate and endDate for the currennt task
+        function startToStartDates(duration, workingDays, predecessorStartDate) {
+            let startDate = new Date(predecessorStartDate)
+            if(!isWorkingDay(startDate, workingDays)) {
+                startDate = getNextWorkingDate(startDate, workingDays)
+            }
+            let endDate = new Date(startDate)
+            let remainingDays = duration
+            while (remainingDays > 0) {
+                if (isWorkingDay(endDate, workingDays)) {
+                    remainingDays--
+                }
+                endDate.setDate(endDate.getDate() + 1)
+            }
+
+            endDate = getPreviousWorkingDate(endDate, workingDays) //Get the last working day
+            return { startDate: startDate?.toISOString(), endDate: endDate?.toISOString() }
+        }
+        
+        // Update task variancedays
+        function updateTaskVariance(taskId) {
+            const ganttTasks = getGanttTasks()
+
+            const task = ganttTasks.find(item => item.id === taskId)
+            // TODO: >>>> review this - If this is a parent task, calculate variance with workdays as 7?
+            if (task?.hasChildren) {
+                const variance = calcVariance(7, task.plannedStart, task.plannedEnd, task.start, task.end) ?? 0
+                task.set("variancedays", variance)
+            } else if (task && task.workdays && task.plannedStart && task.plannedEnd && task.start && task.end) {
+                const variance = calcVariance(task.workdays, task.plannedStart, task.plannedEnd, task.start, task.end) ?? 0
+                task.set("variancedays", variance)
+            }
+        }
+
+        // Recursively ppdate parent dates (start, end, durationdays) and its parents
+        function updateParentTaskDates(parentId) {
+            const ganttTasks = getGanttTasks()
+
+            const parentTask = ganttTasks.find(item => item.id === parentId)
+            const childTasks = ganttTasks.filter(item => item.parentId === parentId)
+
+            // Extract start and end dates of child tasks
+            const childStartDates = childTasks.map(task => new Date(task.start));
+            const childEndDates = childTasks.map(task => new Date(task.end));
+
+            // Find the earliest start date and latest end date among child tasks
+            const parentStartDate = new Date(Math.min(...childStartDates));
+            const parentEndDate = new Date(Math.max(...childEndDates));
+
+            // Set start and end date for parent task
+            parentTask.set('start', parentStartDate.toISOString())
+            parentTask.set('end', parentEndDate.toISOString())
+
+            // set durationdays for parent task
+            const parentDurationInMilliseconds = parentEndDate - parentStartDate;
+            const parentDurationInDays = Math.ceil(parentDurationInMilliseconds / MS_IN_A_DAY);
+            parentTask.set('durationdays', parentDurationInDays);
+
+            updateTaskVariance(parentId)
+
+            // If this task has parent task then update the parent task.  This will recursively update all the parent tasks
+            if (parentTask.parentId) {
+                updateParentTaskDates(parentTask.parentId)
+            }
+
+            // Since the startDate and endDate are changed, we need to update its dependencies
+            updateTaskDependencies(parentId)
+        }
+
+        // Recursively update all task dependencies
+        function updateTaskDependencies(taskId) {
+            const ganttTasks = getGanttTasks()
+            const currentTask = ganttTasks.find(task => task.id === taskId)
+
+            // Get list of dependencies of the current task
+            const taskDependencies = getTaskDependencies(taskId)
+
+            // For each of the dependencies, find the successor task and update the startDate and endDate
+            // according to the dependency type and the associated date (startDate or endDate) of the predecessor task
+            taskDependencies?.map(depItem => {
+                depTask = ganttTasks.find(task => task.id === depItem.successorId)
+                if (depTask) {
+                    let newDates
+                    if (depItem.type === DependencyType.FinishStart) {
+                        // Handle Finish-Start dependency type
+                        newDates = finishToStartDates(depTask.durationdays, depTask.workdays, currentTask.end)
+                    } else if (depItem.type === DependencyType.FinishFinish) {
+                        // Handle Finish-Finish dependency type
+                        newDates = finishToFinishDates(depTask.durationdays, depTask.workdays, currentTask.end)
+                    } else if (depItem.type === DependencyType.StartFinish) {
+                        // Handle Start-Finish dependency type
+                        newDates = startToFinishDates(depTask.durationdays, depTask.workdays, currentTask.start)
+                    } else if (depItem.type === DependencyType.StartStart) {
+                        // Handle Start-Start dependency type
+                        newDates = startToStartDates(depTask.durationdays, depTask.workdays, currentTask.start)
+                    } else {
+                        // Unknown dependency type. Ignore
+                        console.log('Dependency id=' + depItem.id + ' has unknown type: ' + depItem.type)
+                        return
+                    }
+
+                    // Update the successor task with new startDate and endDate
+                    if (newDates) {
+                        depTask.set('start', newDates.startDate)
+                        depTask.set('end', newDates.endDate)
+
+                        // Note: As the current successor task has the startDate and endDate changed,
+                        // we need to update its dependencies recursively
+                        updateTaskDependencies(depTask.id)
+                    }
+                }
+            })
+        }
+
+        function updateDependencyTaskCallback(callbackInfo) {
+            const currentTask = callbackInfo.model
+
+            // Ignore destroy callback. Handle only created and updated events
+            if (callbackInfo.updateDependencies?.destroyed.length > 0) {
+                return
+            }
+
+            // Handle created dependency
+            if (callbackInfo.updateDependencies?.created.length > 0) {
+                // Need to figure out if the current task is a successor or predecessor
+                const dependency = callbackInfo.updateDependencies?.created[0]
+                
+                if (currentTask?.id === dependency?.successorId) {
+                    updatePredecessorTasks(callbackInfo)
+                } else if (currentTask?.id === dependency?.predecessorId) {
+                    updateSuccessorTasks(callbackInfo)
+                } else {
+                    console.error('Unknown dependency. Current task is nether a predecessor nor successor')
+                }
+                return
+            }
+
+            /* // Redundant.  The dependency is already updated
+            // Handle updated dependency
+            if (callbackInfo.updateDependencies?.updated.length > 0) {
+                // Need to figure out if the current task is a successor or predecessor
+                const updateDependency = callbackInfo.updateDependencies?.updated[0]
+                const dependency = getGanttDependencies().find(d => d.successorId === updateDependency.successorId && d.predecessorId === updateDependency.predecessorId)
+                if (dependency) {
+                    dependency.type = updateDependency.type
+                }
+            }
+            */
+
+            // Handle updated/saved without changing
+            if (callbackInfo?.sender?.dependencyData?.predecessorId?.length > 0) {
+                updatePredecessorTasks(callbackInfo)
+            } else if (callbackInfo?.sender?.dependencyData?.successorId.length > 0) {
+                updateSuccessorTasks(callbackInfo)
+            }
+        }
+
+        /*
+        function unflatModel(model) {
+            if (model["0"] === "[") {
+                return JSON.parse(Object.values(model).join("").split("[object Object]")[0])[0]
+                return JSON.parse("".join(model.values()))
+            } else {
+                return model
+            }
+        }
+        */
+
+        function updatePredecessorTasks(callbackInfo) {
+            const successorTask = callbackInfo.model
+
+            // callbackInfo.updateInfo is the kendo-ui dependency object that will be used to send update to the backend
+            // we need to update this object with the latest date changes for the successor when a dependency is updated
+
+            const ganttTasks = getGanttTasks()
+            let dependencies = getGanttDependencies()
+            // Since the new created dependency is not added to the gantt data source dependecies list yet,
+            // We need to move this new dependency from created list to current list so we have the dependency data to warlk the tasks.
+            // The system will continue to sync the lagged created dependencies to the backend system and update the gantt datasource
+            const createdDependencies = callbackInfo.updateDependencies?.created.length > 0 ? [...callbackInfo.updateDependencies?.created] : []
+            if (createdDependencies?.length > 0) {
+                createdDependencies.forEach(dep => {
+                    dependencies.push(dep)
+                    callbackInfo.updateDependencies.created.pop()
+                })
+            }
+
+            const curDependencies = dependencies.filter(dep => dep.successorId === successorTask.id)
+            curDependencies?.forEach(function (dep) {
+                const predecessorTask = ganttTasks?.find(task => task.id === dep.predecessorId)
+                if (predecessorTask) {
+                    updateRelatedTasks(predecessorTask.id, predecessorTask.parentId)
+                }
+            })
+
+            // All the dependencies has been updated, get the latest info for the current successor task
+            // and use its info for kendo-ui updateInfo object that is used by Task editor to update to the backend.
+            const updateInfo = callbackInfo.updateInfo 
+            if (updateInfo) {
+                const updatedSuccessorTask = ganttTasks.find(t => t.id === successorTask.id)
+                updateInfo.start = updatedSuccessorTask.start
+                updateInfo.end = updatedSuccessorTask.end
+            }
+            refreshGanntView()
+        }
+
+        function updateSuccessorTasks(callbackInfo) {
+            const predecessorTask = callbackInfo.model
+
+            updateTaskDependencies(predecessorTask.id)
+            // All the dependencies has been updated, get the latest info for the current successor task
+            // and use its info for kendo-ui updateInfo object that is used by Task editor to update to the backend.
+
+            const updateInfo = callbackInfo.updateInfo
+            if (updateInfo) {
+                const ganttTasks = getGanttTasks()
+                const updatedPredecessorTask = ganttTasks.find(t => t.id === predecessorTask.id)
+                updateInfo.start = updatedPredecessorTask.start
+                updateInfo.end = updatedPredecessorTask.end
+            }
+            refreshGanntView()
+        }
+
+        // Update the current task info and  all of its related tasks
+        // - current task variance
+        // - current task dependencies recursively and their parents recursively
+        // - current task parent recursively and their dependencies recursively
+        function updateRelatedTasks(taskId, parentId) {
+            if (!taskId) {
+                return
+            }
+            // Update task variancedays
+            updateTaskVariance(taskId)
+            
+            // Since the startDate and endDate are changed, we need to update its dependencies
+            updateTaskDependencies(taskId)
+
+            // Update parent task if exist
+            if (parentId) {
+                updateParentTaskDates(parentId)
+            }
+
+            refreshGanntView()
+        }
+
         function changeValue(showPlanned) {
             var gantt = $('#gantt').data('kendoGantt')
             var datasource = gantt.dataSource;
@@ -374,10 +775,13 @@
                         task.set("variancedays", 0)
                         task.set("plannedStart", task.start);
                         task.set("plannedEnd", task.end);
-                        gantt.dataSource.sync();
-                        //showPlannedColumns(false);
-                        gantt.refresh();
                     });
+
+                    gantt.dataSource.sync();
+                    //showPlannedColumns(false);
+                    console.log('[2] >>> gantt.refresh()')
+                    gantt.refresh();
+
                 })
                     .fail(function () {
                         gantt.setOptions({
@@ -414,6 +818,7 @@
 
                     });
                     gantt.dataSource.sync();
+                    console.log('[3] >>> gantt.refresh()')
                     gantt.refresh();
                 })
                     .fail(function () {
@@ -427,6 +832,7 @@
         $(document).ready(function () {
             var serviceRoot = "https://aragencdsgantt.azurewebsites.net/CDS";
             //var serviceRoot = "https://localhost:44380/CDS";
+            var serviceRoot = "https://localhost:5001/CDS";
             var ganttInitialized = false;
             var tasksDataSource = new kendo.data.GanttDataSource({
                 transport: {
@@ -451,7 +857,8 @@
                     },
                     parameterMap: function (options, operation) {
                         if (operation !== "read") {
-                            return { models: kendo.stringify(options.models || [options]) };
+                            //return { models: kendo.stringify(options.models || [options]) };
+                            return { models: options.models || [options] };
                         }
                     }
                 },
@@ -494,7 +901,13 @@
                         contentType: "application/json",
                         dataType: "json",
                         data: function (data) {
-                            return JSON.stringify(data);
+                            //Bug: This original JSON stringify data is a big bug.  This cause the data to be encoded over and over again until it is not readable.
+                            // This may cause data coruption. This causes the data loading failed and the Task edit dialog can not read the saved dependecy type.
+                            // This also cause the issue that after saving the first time, the data can not be loaded so you do not see the data
+                            // in the dialog.  When you create the second time, you see the second dependency data but now you have multiple dependency.
+                            // It cause an unpredictable behaviour.
+                            //return JSON.stringify(data);
+                            return data
                         }
                     },
                     destroy: {
@@ -507,7 +920,8 @@
                     },
                     parameterMap: function (options, operation) {
                         if (operation !== "read") {
-                            return { models: kendo.stringify(options.models || [options]) };
+                            //return { models: kendo.stringify(options.models || [options]) };
+                            return { models: options.models || [options] };
                         }
                     }
                 },
@@ -563,6 +977,7 @@
                             //         //column.width = 100;
                             //     }
                             // });
+                            console.log('[4] >>> gantt.refresh()')
                             gantt.refresh();
                         }
                         else {
@@ -576,6 +991,7 @@
                             //         //column.width = 0;
                             //     }
                             // });
+                            console.log('[5] >>> gantt.refresh()')
                             gantt.refresh();
                         }
                         $('#planned-switch_label').text('Set Baselines');
@@ -722,7 +1138,10 @@
                                             var startDate = options.model.start;
                                             // options.model.set("end", endDate);
 
-
+                                            // Update starting day
+                                            while(!isWorkingDay(startDate, options.model.workdays)) {
+                                                startDate.setDate(startDate.getDate() + 1)
+                                            }
 
                                             if ((selectedValue == 5) && startDate && durationdays) {
                                                 var loop = new Date(startDate);
@@ -812,6 +1231,13 @@
                                                 }
                                                 options.model.set("durationdays", z);
                                             }
+
+                                            // If this task has a predecessor, make sure it startDate or endDate depends on its predecessor
+                                            updatePredecessorTasks({ model })
+
+                                            // Note: As the current successor task has the startDate and endDate changed,
+                                            // we need to update its dependencies recursively
+                                            updateTaskDependencies(options.model.id)
                                         }
                                     });
                             }
@@ -1115,6 +1541,14 @@
 
                                         }
 
+                                        // If this task has a predecessor, make sure it startDate or endDate depends on its predecessor
+                                        updatePredecessorTasks({ model })
+
+                                        // Update the current task info and  all of its related tasks
+                                        // - current task duration and variance
+                                        // - current task dependencies recursively and their parents recursively
+                                        // - current task parent recursively and their dependencies recursively
+                                        updateRelatedTasks(options.model.id, options.model.parentId)
                                     }
                                 })
                             }
@@ -1426,6 +1860,12 @@
                                                 options.model.set("percentComplete", 0)
                                             }
                                         }
+
+                                        // Update the current task info and  all of its related tasks
+                                        // - current task duration and variance
+                                        // - current task dependencies recursively and their parents recursively
+                                        // - current task parent recursively and their dependencies recursively
+                                        updateRelatedTasks(options.model.id, options.model.parentId)
                                     }
                                 })
                             }
@@ -1518,6 +1958,12 @@
                                                 options.model.set("variancedays", 0)
                                             }
                                         }
+
+                                        // Update the current task info and  all of its related tasks
+                                        // - current task duration and variance
+                                        // - current task dependencies recursively and their parents recursively
+                                        // - current task parent recursively and their dependencies recursively
+                                        updateRelatedTasks(options.model.id, options.model.parentId)
                                     }
                                 });
                             }
@@ -1883,7 +2329,8 @@
                 },
                 togglePlannedTasks: function (e) {
                     changeValue(e.showPlannedTasks);
-                }
+                },
+                updateDependencyTaskCallback
             }).data("kendoGantt");
 
 
@@ -1950,6 +2397,7 @@
             //     ganttTasks.sync();
             // }
             $(document).bind("kendo:skinChange", function () {
+                console.log('[6] >>> gantt.refresh()')
                 gantt.refresh();
             });
         });

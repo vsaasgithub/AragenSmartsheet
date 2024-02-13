@@ -496,17 +496,54 @@
             }
         }
 
-        // Recursively ppdate parent dates (start, end, durationdays) and its parents
-        function updateParentTaskDates(parentId) {
+        // Recursively update parent dates (start, end, durationdays) and its parents
+        function updateParentTaskDates(task) {
+            const parentId = task.parentId
             const ganttTasks = getGanttTasks()
 
             const parentTask = ganttTasks.find(item => item.id === parentId)
             const childTasks = ganttTasks.filter(item => item.parentId === parentId)
+            let oldParent = null
+            // If this task has a new parent then check if it is already in the child task list.  If not then add it to
+            // the child task list of the new parent.  Also remove it from the child task list of the old parent and update
+            // the dates and durations for old parent.
+            // Note: if task.dirtyFields.parentId is true, this input task is the Kendo ui model callback object which
+            // is not one of the tasks in our current task list.  So we need to recalculate the dates and duration for
+            // the old parent and new parent of the task base on the parentId info in the Kendo ui model task (with
+            // new parentId) and in existing task (with the old parentId).
+            if (task.parentId && task?.dirtyFields?.parentId && !childTasks.find(t => t.id === task.id)) {
+                // Add the new task to the new parent child list for updating new parent dates
+                childTasks.push(task)
+
+                // Update old parent dates
+                const oldTask = ganttTasks.find(t => t.id === task.id)
+                const oldParentId = oldTask.parentId
+                const oldChildTasks = ganttTasks.filter(t => t.parentId === oldParentId && t.id !== oldTask.id)
+                const oldParentTask = ganttTasks.find(t => t.id === oldParentId)
+                // Extract start and end dates of child tasks
+                const oldChildStartDates = oldChildTasks.map(task => new Date(task.start));
+                const oldChildEndDates = oldChildTasks.map(task => new Date(task.end));
+                const oldChildDurationDays = oldChildTasks.map(task => task.durationdays);
+
+                // Find the earliest start date and latest end date among child tasks
+                const oldParentStartDate = new Date(Math.min(...oldChildStartDates));
+                const oldParentEndDate = new Date(Math.max(...oldChildEndDates));
+
+                // Set start and end date for parent task
+                oldParentTask.set('start', oldParentStartDate.toISOString())
+                oldParentTask.set('end', oldParentEndDate.toISOString())
+
+                // set durationdays for parent task
+                let oldParentDurationInDays = 0
+                oldChildDurationDays.forEach(duration => oldParentDurationInDays += duration)
+                oldParentTask.set('durationdays', oldParentDurationInDays);
+
+            }
 
             // Extract start and end dates of child tasks
             const childStartDates = childTasks.map(task => new Date(task.start));
             const childEndDates = childTasks.map(task => new Date(task.end));
-            // const childDurationDays = childTasks.map(task => task.durationdays);
+            const childDurationDays = childTasks.map(task => task.durationdays);
 
             // Find the earliest start date and latest end date among child tasks
             const parentStartDate = new Date(Math.min(...childStartDates));
@@ -517,19 +554,15 @@
             parentTask.set('end', parentEndDate.toISOString())
 
             // set durationdays for parent task
-            /*
             let parentDurationInDays = 0
             childDurationDays.forEach(duration => parentDurationInDays += duration)
-            */
-            const parentDurationInMilliseconds = parentEndDate - parentStartDate;
-            const parentDurationInDays = Math.ceil(parentDurationInMilliseconds / MS_IN_A_DAY);
             parentTask.set('durationdays', parentDurationInDays);
 
             updateTaskVariance(parentId)
 
             // If this task has parent task then update the parent task.  This will recursively update all the parent tasks
             if (parentTask.parentId) {
-                updateParentTaskDates(parentTask.parentId)
+                updateParentTaskDates(parentTask)
             }
 
             // Since the startDate and endDate are changed, we need to update its dependencies
@@ -604,36 +637,17 @@
                 return
             }
 
-            /* // Redundant.  The dependency is already updated
-            // Handle updated dependency
-            if (callbackInfo.updateDependencies?.updated.length > 0) {
-                // Need to figure out if the current task is a successor or predecessor
-                const updateDependency = callbackInfo.updateDependencies?.updated[0]
-                const dependency = getGanttDependencies().find(d => d.successorId === updateDependency.successorId && d.predecessorId === updateDependency.predecessorId)
-                if (dependency) {
-                    dependency.type = updateDependency.type
-                }
-            }
-            */
 
             // Handle updated/saved without changing
             if (callbackInfo?.sender?.dependencyData?.predecessorId?.length > 0) {
                 updatePredecessorTasks(callbackInfo)
             } else if (callbackInfo?.sender?.dependencyData?.successorId.length > 0) {
                 updateSuccessorTasks(callbackInfo)
+            } else if (callbackInfo?.sender?.task?.dirtyFields?.parentId){
+                // ParentId has been changed update the current task with new parent
+                updateRelatedTasks(callbackInfo.model)
             }
         }
-
-        /*
-        function unflatModel(model) {
-            if (model["0"] === "[") {
-                return JSON.parse(Object.values(model).join("").split("[object Object]")[0])[0]
-                return JSON.parse("".join(model.values()))
-            } else {
-                return model
-            }
-        }
-        */
 
         function updatePredecessorTasks(callbackInfo) {
             const successorTask = callbackInfo.model
@@ -658,7 +672,7 @@
             curDependencies?.forEach(function (dep) {
                 const predecessorTask = ganttTasks?.find(task => task.id === dep.predecessorId)
                 if (predecessorTask) {
-                    updateRelatedTasks(predecessorTask.id, predecessorTask.parentId)
+                    updateRelatedTasks(predecessorTask)
                 }
             })
 
@@ -694,19 +708,19 @@
         // - current task variance
         // - current task dependencies recursively and their parents recursively
         // - current task parent recursively and their dependencies recursively
-        function updateRelatedTasks(taskId, parentId) {
-            if (!taskId) {
+        function updateRelatedTasks(task) {
+            if (!task) {
                 return
             }
             // Update task variancedays
-            updateTaskVariance(taskId)
+            updateTaskVariance(task.id)
             
             // Since the startDate and endDate are changed, we need to update its dependencies
-            updateTaskDependencies(taskId)
+            updateTaskDependencies(task.id)
 
-            // Update parent task if exist
-            if (parentId) {
-                updateParentTaskDates(parentId)
+            // Update the new parent task if exist
+            if (task.parentId) {
+                updateParentTaskDates(task)
             }
 
             refreshGanntView()
@@ -1538,7 +1552,7 @@
                                         // - current task duration and variance
                                         // - current task dependencies recursively and their parents recursively
                                         // - current task parent recursively and their dependencies recursively
-                                        updateRelatedTasks(options.model.id, options.model.parentId)
+                                        updateRelatedTasks(options.model)
                                     }
                                 })
                             }
@@ -1855,7 +1869,7 @@
                                         // - current task duration and variance
                                         // - current task dependencies recursively and their parents recursively
                                         // - current task parent recursively and their dependencies recursively
-                                        updateRelatedTasks(options.model.id, options.model.parentId)
+                                        updateRelatedTasks(options.model)
                                     }
                                 })
                             }
@@ -1953,7 +1967,7 @@
                                         // - current task duration and variance
                                         // - current task dependencies recursively and their parents recursively
                                         // - current task parent recursively and their dependencies recursively
-                                        updateRelatedTasks(options.model.id, options.model.parentId)
+                                        updateRelatedTasks(options.model)
                                     }
                                 });
                             }

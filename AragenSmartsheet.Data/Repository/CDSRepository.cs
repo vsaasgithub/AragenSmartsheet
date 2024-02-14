@@ -402,7 +402,12 @@ namespace AragenSmartsheet.Data.Repository
 
                     liCDSFolder.Add(CDSFolder);
                 }
-                liCDSFolder.Remove(liCDSFolder.Single(x => x.FolderID == CDSTempelate));
+                MCDSFolder msdsFolder = liCDSFolder.FirstOrDefault(x => x.FolderID == CDSTempelate);
+                if (msdsFolder != null)
+                {
+                    liCDSFolder.Remove(msdsFolder);
+
+                }
                 return liCDSFolder.OrderBy(x => x.FolderName).ToList();
             }
 
@@ -994,7 +999,7 @@ namespace AragenSmartsheet.Data.Repository
                 }
                 if (lstTask.Where(x => x.BaselineSet == true).Count() > 0)
                 {
-                    lstTask.Where(x=>x.BaselineSet == false).ToList().ForEach(x=>x.BaselineSet = true);
+                    lstTask.Where(x => x.BaselineSet == false).ToList().ForEach(x => x.BaselineSet = true);
                 }
                 return lstTask;
             }
@@ -1114,7 +1119,7 @@ namespace AragenSmartsheet.Data.Repository
                             ColumnId = ProjectPlanColumnMap[CDSProjectPlan.BaselineSet],
                             Value = task.BaselineSet
                         },
-                    };                    
+                    };
                     row = new Row
                     {
                         Id = task.RowID,

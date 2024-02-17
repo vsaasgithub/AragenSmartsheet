@@ -614,6 +614,33 @@
             })
         }
 
+        // Check if task1 is a predecessor of task2 or task2's 
+        function isPredecessor(taskId1, taskId2) {
+            if (taskId1 === taskId2) {
+                return true
+            }
+            const dependencies = getGanttDependencies()
+            const curDependencies = dependencies?.filter(d => d.predecessorId === taskId1)
+            let isDependency = !!curDependencies?.find(d => d.successorId === taskId2)
+            if (isDependency) {
+                return true
+            }
+
+            // taskId2 is not direct successor of taskId1, check if taskId2 is a successor of taskId2 dependencies recursively
+            curDependencies.forEach(d => {
+                if (isPredecessor(d.successorId, taskId2)) {
+                    return true
+                }
+            })
+
+            return false
+        }
+
+        // Check if a new dependency will produce a circular dependency
+        function isCircularDependency(newDependency) {
+            return isPredecessor(newDependency.successorId, newDependency.predecessorId)
+        }
+
         function updateDependencyTaskCallback(callbackInfo) {
             const currentTask = callbackInfo.model
 
@@ -626,6 +653,15 @@
             if (callbackInfo.updateDependencies?.created.length > 0) {
                 // Need to figure out if the current task is a successor or predecessor
                 const dependency = callbackInfo.updateDependencies?.created[0]
+
+                // Check for circular dependency before proceed to update task with new dependency
+                if (isCircularDependency(dependency)) {
+                    kendo.alert("Sorry, you can't create a circular dependency")
+
+                    // Clear the created dependency so that it is not saved to the backend
+                    callbackInfo.updateDependencies.created.pop()
+                    return
+                }
                 
                 if (currentTask?.id === dependency?.successorId) {
                     updatePredecessorTasks(callbackInfo)

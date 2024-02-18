@@ -615,7 +615,8 @@ namespace AragenSmartsheet.Web.Controllers
                         return RedirectToAction("Index", "Home");
                     }
                 }
-                return new JsonResult(models);
+                // Important Note: Return null in the response body here so that data is not corrupted on the client side.
+                return new JsonResult(null);
             }
             catch (Exception ex)
             {

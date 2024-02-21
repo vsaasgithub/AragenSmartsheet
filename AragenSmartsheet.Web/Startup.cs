@@ -68,6 +68,7 @@ namespace AragenSmartsheet.Web
 
             //app.UseHttpsRedirection();
 
+
             app.UseSession();
 
             app.UseStaticFiles();

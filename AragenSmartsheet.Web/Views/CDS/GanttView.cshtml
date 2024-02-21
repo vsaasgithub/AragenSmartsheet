@@ -2374,6 +2374,19 @@
                 updateDependencyTaskCallback
             }).data("kendoGantt");
 
+            // Intercept event after dependency is saved, we need to assigned the new created dependency
+            // and ID, other wise the id of 0 will be treated as a new dependency to be
+            $('#gantt').data('kendoGantt').dependencies.bind("requestEnd", function(e){
+                const TEMP_ID = 9999
+                if (e.type === "create") {
+                    // This code will be executed after data is saved
+                    const newDependency = getGanttDependencies().find(d => d.id === 0)
+                    if (newDependency) {
+                        newDependency.id = TEMP_ID
+                    }
+                    console.log("Data saved successfully");
+                }
+            });
 
             function moveTask(gantt, task, startDelta) {
                 var t = gantt.dependencies.filter({

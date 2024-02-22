@@ -36,7 +36,7 @@ namespace AragenSmartsheet.Web
 
             services.AddAuthentication(IISDefaults.AuthenticationScheme);
 
-            services.AddSession(options => options.IdleTimeout = TimeSpan.FromMinutes(30));
+            services.AddSession(options => options.IdleTimeout = TimeSpan.FromMinutes(3000));
 
             services.AddCors(options =>
             {

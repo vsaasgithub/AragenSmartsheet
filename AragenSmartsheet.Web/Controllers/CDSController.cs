@@ -42,7 +42,6 @@ namespace AragenSmartsheet.Web.Controllers
             return View(FolderList);
         }
 
-
         /// <summary>
         /// Insert and update ganttchart functionalities
         /// </summary>       

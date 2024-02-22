@@ -52,7 +52,6 @@ namespace AragenSmartsheet.Web.Controllers
                 Log.Error(ex.StackTrace);
             }
             return View("~/views/home/project.cshtml");
-
         }
 
         /// <summary>

@@ -57,7 +57,7 @@
             SATURDAY: 6,
         }
 
-        const MS_IN_A_DAY = 1000 * 60 * 60 * 24
+        const MILISECONDS_PER_DAY = 1000 * 60 * 60 * 24
 
         // GanttView instance access methods
         function getGanttDataSource() {
@@ -524,18 +524,19 @@
                 const oldChildStartDates = oldChildTasks.map(task => new Date(task.start));
                 const oldChildEndDates = oldChildTasks.map(task => new Date(task.end));
                 const oldChildDurationDays = oldChildTasks.map(task => task.durationdays);
+                const oldChildWorkingDays = oldChildTasks.map(task => task.workingdays);
 
                 // Find the earliest start date and latest end date among child tasks
                 const oldParentStartDate = new Date(Math.min(...oldChildStartDates));
                 const oldParentEndDate = new Date(Math.max(...oldChildEndDates));
+                const oldParentWorkingDays = Math.max(...oldChildWorkingDays);
 
                 // Set start and end date for parent task
                 oldParentTask.set('start', oldParentStartDate.toISOString())
                 oldParentTask.set('end', oldParentEndDate.toISOString())
 
-                // set durationdays for parent task
-                let oldParentDurationInDays = 0
-                oldChildDurationDays.forEach(duration => oldParentDurationInDays += duration)
+                // Set durationdays for parent task
+                const oldParentDurationInDays = Math.floor((oldParentEndDate - oldParentStartDate) / MILISECONDS_PER_DAY);
                 oldParentTask.set('durationdays', oldParentDurationInDays);
 
             }
@@ -554,8 +555,7 @@
             parentTask.set('end', parentEndDate.toISOString())
 
             // set durationdays for parent task
-            let parentDurationInDays = 0
-            childDurationDays.forEach(duration => parentDurationInDays += duration)
+            const parentDurationInDays = Math.floor((parentEndDate - parentStartDate) / MILISECONDS_PER_DAY);
             parentTask.set('durationdays', parentDurationInDays);
 
             updateTaskVariance(parentId)

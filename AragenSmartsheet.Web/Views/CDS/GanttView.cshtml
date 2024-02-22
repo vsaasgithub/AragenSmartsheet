@@ -626,14 +626,16 @@
                 return true
             }
 
+            let subPredecessor = false
             // taskId2 is not direct successor of taskId1, check if taskId2 is a successor of taskId2 dependencies recursively
             curDependencies.forEach(d => {
                 if (isPredecessor(d.successorId, taskId2)) {
-                    return true
+                    subPredecessor = true
+                    return
                 }
             })
 
-            return false
+            return subPredecessor
         }
 
         // Check if a new dependency will produce a circular dependency
@@ -646,7 +648,7 @@
 
             // Ignore destroy callback. Handle only created and updated events
             if (callbackInfo.updateDependencies?.destroyed.length > 0) {
-                return
+                return true
             }
 
             // Handle created dependency
@@ -660,7 +662,7 @@
 
                     // Clear the created dependency so that it is not saved to the backend
                     callbackInfo.updateDependencies.created.pop()
-                    return
+                    return false
                 }
                 
                 if (currentTask?.id === dependency?.successorId) {
@@ -670,7 +672,7 @@
                 } else {
                     console.error('Unknown dependency. Current task is nether a predecessor nor successor')
                 }
-                return
+                return true
             }
 
 
@@ -683,6 +685,7 @@
                 // ParentId has been changed update the current task with new parent
                 updateRelatedTasks(callbackInfo.model)
             }
+            return true
         }
 
         function updatePredecessorTasks(callbackInfo) {

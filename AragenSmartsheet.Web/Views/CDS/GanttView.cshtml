@@ -536,7 +536,7 @@
                 oldParentTask.set('end', oldParentEndDate.toISOString())
 
                 // Set durationdays for parent task
-                const oldParentDurationInDays = Math.floor((oldParentEndDate - oldParentStartDate) / MILISECONDS_PER_DAY);
+                const oldParentDurationInDays = Math.floor((oldParentEndDate - oldParentStartDate) / MILISECONDS_PER_DAY) + 1;
                 oldParentTask.set('durationdays', oldParentDurationInDays);
 
             }
@@ -555,7 +555,7 @@
             parentTask.set('end', parentEndDate.toISOString())
 
             // set durationdays for parent task
-            const parentDurationInDays = Math.floor((parentEndDate - parentStartDate) / MILISECONDS_PER_DAY);
+            const parentDurationInDays = Math.floor((parentEndDate - parentStartDate) / MILISECONDS_PER_DAY) + 1;
             parentTask.set('durationdays', parentDurationInDays);
 
             updateTaskVariance(parentId)
@@ -655,6 +655,16 @@
             if (callbackInfo.updateDependencies?.created.length > 0) {
                 // Need to figure out if the current task is a successor or predecessor
                 const dependency = callbackInfo.updateDependencies?.created[0]
+
+                // Check if this dependency between successor and predecessor already exist
+                const curDependency = getGanttDependencies().find(d => (d.successorId === dependency.successorId && d.predecessorId === dependency.predecessorId))
+                if (curDependency) {
+                    kendo.alert("Sorry, a dependency with the same predecessor already exists.")
+
+                    // Clear the created dependency so that it is not saved to the backend
+                    callbackInfo.updateDependencies.created.pop()
+                    return false
+                }
 
                 // Check for circular dependency before proceed to update task with new dependency
                 if (isCircularDependency(dependency)) {
@@ -2358,12 +2368,24 @@
                     { field: "delaycomments", title: "Delay Comments", type: "text", editable: true, width: 200 },
                     { field: "remarks", title: "Remarks", type: "text", editable: true, width: 200 }
                 ],
+                events: {
+                    dependencyDragEnd: function(e) {
+                        // Handle the dependencyDragEnd event
+                        console.log("Dependency drag end event triggered");
+                        console.log("Source task ID: " + e.source.id);
+                        console.log("Target task ID: " + e.target.id);
+                        const successorTask = getGanttTasks().find(t => t.id === e.target.id)
+                        if (successorTask) {
+                            updatePredecessorTasks({ model: successorTask })
+                        }
+                    }
+                },
 
                 loading: true,
                 //showPlannedTasks: false,
                 toolbar: ["append", "pdf", "plannedTasks"],
-                editable: { plannedTasks: true },
-                resizable: true,
+                editable: { plannedTasks: true, resize: false, move: false },
+                resizable: false,
                 showWorkHours: false,
                 showWorkDays: false,
                 height: 500,

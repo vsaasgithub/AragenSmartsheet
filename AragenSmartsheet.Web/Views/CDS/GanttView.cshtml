@@ -2398,6 +2398,13 @@
                 },
                 updateDependencyTaskCallback
             }).data("kendoGantt");
+            // Intercept event after dependency is saved, we need to assigned the new created dependency
+            // and ID, other wise the id of 0 will be treated as a new dependency to be
+            $("#gantt").data("kendoGantt").dataSource.bind("requestEnd", function(e) {
+                if (e.type === "create") {
+                    gantt.dataSource.read();
+                }
+            });
 
             // Intercept event after dependency is saved, we need to assigned the new created dependency
             // and ID, other wise the id of 0 will be treated as a new dependency to be

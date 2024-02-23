@@ -648,30 +648,52 @@
 
             // Ignore destroy callback. Handle only created and updated events
             if (callbackInfo.updateDependencies?.destroyed.length > 0) {
-                return true
+                // return true
             }
 
             // Handle created dependency
             if (callbackInfo.updateDependencies?.created.length > 0) {
+                let validated = true
+                let errorMessage = null
                 // Need to figure out if the current task is a successor or predecessor
-                const dependency = callbackInfo.updateDependencies?.created[0]
+                const dependencies = [...callbackInfo.updateDependencies?.created]
+                dependencies.forEach(dependency => {
+                    // Check if there are duplicates in created list
+                    const duplicates = callbackInfo.updateDependencies?.created.filter(d => (d.successorId === dependency.successorId && d.predecessorId === dependency.predecessorId))
+                    if (duplicates?.length > 1) {
+                        errorMessage = "There are duplicate dependencies in the list."
 
-                // Check if this dependency between successor and predecessor already exist
-                const curDependency = getGanttDependencies().find(d => (d.successorId === dependency.successorId && d.predecessorId === dependency.predecessorId))
-                if (curDependency) {
-                    kendo.alert("Sorry, a dependency with the same predecessor already exists.")
+                        // Clear the created dependency so that it is not saved to the backend
+                        callbackInfo.updateDependencies.created.pop()
+                        validated = false
+                        return false
+                    }
 
-                    // Clear the created dependency so that it is not saved to the backend
-                    callbackInfo.updateDependencies.created.pop()
-                    return false
-                }
+                    // Check if this dependency between successor and predecessor already exist
+                    const curDependency = getGanttDependencies().find(d => (d.successorId === dependency.successorId && d.predecessorId === dependency.predecessorId))
+                    if (curDependency) {
+                        errorMessage = "Sorry, a dependency with the same predecessor already exists."
 
-                // Check for circular dependency before proceed to update task with new dependency
-                if (isCircularDependency(dependency)) {
-                    kendo.alert("Sorry, you can't create a circular dependency")
+                        // Clear the created dependency so that it is not saved to the backend
+                        callbackInfo.updateDependencies.created.pop()
+                        validated = false
+                        return false
+                    }
 
-                    // Clear the created dependency so that it is not saved to the backend
-                    callbackInfo.updateDependencies.created.pop()
+                    // Check for circular dependency before proceed to update task with new dependency
+                    if (isCircularDependency(dependency)) {
+                        errorMessage = "Sorry, you can't create a circular dependency"
+
+                        // Clear the created dependency so that it is not saved to the backend
+                        callbackInfo.updateDependencies.created.pop()
+                        validated = false
+                        return false
+                    }
+                })
+                if (!validated) {
+                    if (errorMessage) {
+                        kendo.alert(errorMessage)
+                    }
                     return false
                 }
                 

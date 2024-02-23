@@ -696,10 +696,9 @@
                     }
                     return false
                 }
-                
-                if (currentTask?.id === dependency?.successorId) {
+                if (dependencies.map(d => d.successorId)?.includes(currentTask.id)) {
                     updatePredecessorTasks(callbackInfo)
-                } else if (currentTask?.id === dependency?.predecessorId) {
+                } else if (dependencies.map(d => d.predecessorId)?.includes(currentTask.id)) {
                     updateSuccessorTasks(callbackInfo)
                 } else {
                     console.error('Unknown dependency. Current task is nether a predecessor nor successor')

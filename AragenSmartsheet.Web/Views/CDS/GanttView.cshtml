@@ -34,10 +34,18 @@
         .k-pdf-export .k-gantt-toolbar {
             display: none;
         }
+        /* Hide Percent Complete input in Task Editor */
         .k-form-field.k-colspan-1.k-col-span-1 {
             display: none;
         }
-
+        /* Hide Percent Complete Slider on Gantt Chart Task */
+        .k-task-draghandle {
+            display: none;
+        }
+        /* Hide dragable dot for creating dependency */
+        .k-task-wrap:hover .k-task-dot, .k-task-wrap.k-origin .k-task-dot {
+            display: none;
+        }
     </style>
 
     <script>
@@ -1011,7 +1019,7 @@
                                             // Update starting day
                                             if(!isWorkingDay(startDate, task.workdays)) {
                                                 startDate = getNextWorkingDate(startDate, task.workdays)
-                                                task.start = createStart(startDate)
+                                                task.start = createStartDate(startDate)
                                             }
                                             if (task.durationdays) {
                                                 let curDate = new Date(startDate)

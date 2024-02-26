@@ -7,6 +7,9 @@
         font-size: 14px;
         font-family: Arial, Helvetica, sans-serif;
     }
+    .k-edit-label[for=percentComplete], .k-edit-field[data-container-for=percentComplete] {
+        display: none;
+    }
 </style>
 <title>CDS Gantt</title>
 
@@ -29,6 +32,18 @@
 
         /* Hide toolbars during export */
         .k-pdf-export .k-gantt-toolbar {
+            display: none;
+        }
+        /* Hide Percent Complete input in Task Editor */
+        .k-form-field.k-colspan-1.k-col-span-1 {
+            display: none;
+        }
+        /* Hide Percent Complete Slider on Gantt Chart Task */
+        .k-task-draghandle {
+            display: none;
+        }
+        /* Hide dragable dot for creating dependency */
+        .k-task-wrap:hover .k-task-dot, .k-task-wrap.k-origin .k-task-dot {
             display: none;
         }
     </style>
@@ -80,279 +95,71 @@
             $('#gantt').data('kendoGantt')?.refresh()
         }
 
+        function createStartDate(aDate) {
+            const startDate = new Date(aDate)
+            startDate.setHours(9)   // Set to start at 9:00 AM
+            return startDate
+        }
+        function createEndDate(aDate) {
+            const endDate = new Date(aDate)
+            endDate.setHours(17)    // Set to end at 5:00 PM
+            return endDate
+        }
+        function getDisableDates(days) {
+            if (days == '5') {
+                return ["su", "sa"];
+            }
+            if (days == '6') {
+                return ["su"];
+            }
+        }
         // ==========================================================================
 
         var baselineSet = false;
 
         function calcVariance(workdays, pstart, pend, astart, aend) {
-            plannedDaysDifference = Math.ceil((pend - pstart) / (1000 * 60 * 60 * 24));
-            actualDaysDifference = Math.ceil((aend - astart) / (1000 * 60 * 60 * 24));
-            if (workdays == 5) {
-                var excludedDays = [0, 6];
-                plannedtotalWorkdays = 0;
-                actualtotalWorkdays = 0;
-                for (var i = 0; i <= plannedDaysDifference - 1; i++) {
-                    var tempDate = new Date(pstart);
-                    tempDate.setDate(tempDate.getDate() + i)
-                    if (!excludedDays.includes(tempDate.getDay())) {
-                        workdaysList.push(tempDate.toDateString())
-                        plannedtotalWorkdays++
-                    }
-                }
-                for (var i = 0; i <= actualDaysDifference - 1; i++) {
-                    var tempDate = new Date(astart);
-                    tempDate.setDate(tempDate.getDate() + i)
-
-                    if (!excludedDays.includes(tempDate.getDay())) {
-                        workdaysList.push(tempDate.toDateString())
-                        actualtotalWorkdays++
-                    }
-                }
-                var durationInDays = (plannedtotalWorkdays - actualtotalWorkdays);
-                durationInDays = durationInDays * -1;
-                durationInDays = durationInDays - 1;
-                if (durationInDays < 0) {
-                    durationInDays = 0;
-                }
-                return durationInDays;
+            if (!baselineSet) {
+                return 0;
             }
-            if (workdays == 6) {
-                var excludedDays = [0];
-                plannedtotalWorkdays = 0;
-                actualtotalWorkdays = 0;
-                for (var i = 0; i <= plannedDaysDifference - 1; i++) {
-                    var tempDate = new Date(pstart);
-                    tempDate.setDate(tempDate.getDate() + i)
-                    if (!excludedDays.includes(tempDate.getDay())) {
-                        workdaysList.push(tempDate.toDateString())
-                        plannedtotalWorkdays++
-                    }
-                }
-                for (var i = 0; i <= actualDaysDifference - 1; i++) {
-                    var tempDate = new Date(astart);
-                    tempDate.setDate(tempDate.getDate() + i)
-
-                    if (!excludedDays.includes(tempDate.getDay())) {
-                        workdaysList.push(tempDate.toDateString())
-                        actualtotalWorkdays++
-                    }
-                }
-                var durationInDays = (plannedtotalWorkdays - actualtotalWorkdays);
-                durationInDays = durationInDays * -1;
-                durationInDays = durationInDays - 1;
-                if (durationInDays < 0) {
-                    durationInDays = 0;
-                }
-                return durationInDays;
+            plannedDaysDifference = Math.ceil((pend - pstart) / MILISECONDS_PER_DAY);
+            actualDaysDifference = Math.ceil((aend - astart) / MILISECONDS_PER_DAY);
+            plannedtotalWorkdays = getWorkEffordDays(pstart, pend, workdays)
+            actualtotalWorkdays = getWorkEffordDays(astart, aend, workdays)
+            var variance = (actualtotalWorkdays - plannedtotalWorkdays) - 1;
+            if (variance < 0) {
+                variance = 0;
             }
-            if (workdays == 7) {
-                var excludedDays = [];
-                plannedtotalWorkdays = 0;
-                actualtotalWorkdays = 0;
-                for (var i = 0; i <= plannedDaysDifference - 1; i++) {
-                    var tempDate = new Date(pstart);
-                    tempDate.setDate(tempDate.getDate() + i)
-                    if (!excludedDays.includes(tempDate.getDay())) {
-                        workdaysList.push(tempDate.toDateString())
-                        plannedtotalWorkdays++
-                    }
-                }
-                for (var i = 0; i <= actualDaysDifference - 1; i++) {
-                    var tempDate = new Date(astart);
-                    tempDate.setDate(tempDate.getDate() + i)
-
-                    if (!excludedDays.includes(tempDate.getDay())) {
-                        workdaysList.push(tempDate.toDateString())
-                        actualtotalWorkdays++
-                    }
-                }
-                var durationInDays = (plannedtotalWorkdays - actualtotalWorkdays);
-                durationInDays = durationInDays * -1;
-                durationInDays = durationInDays - 1;
-                if (durationInDays < 0) {
-                    durationInDays = 0;
-                }
-                return durationInDays;
-            }
+            return variance;
         }
 
-        function calcPercentage(workdays, startdate, enddate) {
-            var currentdate = new Date();
-            currentdate.setSeconds(0, 0);
-            const timeDifference = enddate - startdate;
-            const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-            const xdate = new Date(startdate)
-            days = -1
-            hours = 0
-            if (workdays == 5 && startdate && enddate) {
-                var excludedDays = [0, 6];
-                totalWorkdays = 0;
-                hourscompleted = 0
-                workcompleted = -1
-                workHoursDifference = 0
-                workdaysList = []
-                for (var i = 0; i <= daysDifference - 1; i++) {
-                    var tempDate = new Date(startdate);
-                    tempDate.setDate(tempDate.getDate() + i)
-
-                    if (!excludedDays.includes(tempDate.getDay())) {
-                        workdaysList.push(tempDate.toDateString())
-                        totalWorkdays++
-                    }
-
-
-                }
-
-
-
-                while (xdate <= currentdate && enddate >= currentdate) {
-
-                    if (workdaysList.includes(xdate.toDateString()) && xdate < currentdate) {
-                        workcompleted = workcompleted + 1
-                    }
-                    if ((workdaysList.includes(xdate.toDateString()) && xdate.toDateString() == currentdate.toDateString())) {
-                        chours = currentdate.getHours();
-                        xhours = xdate.getHours();
-                        if (chours <= 17 && chours > 9) {
-                            hoursdiff = chours - xhours
-                            hourscompleted = hoursdiff
-                        } else if (chours > 17) {
-                            workcompleted = workcompleted + 1
-                        }
-                    }
-                    xdate.setDate(xdate.getDate() + 1);
-                }
-                workHoursDifference = totalWorkdays * 8
-                totalHours = (workcompleted * 8) + hourscompleted
-                const per = ((workHoursDifference - totalHours) / workHoursDifference) * 100
-
-                if (startdate <= currentdate && enddate >= currentdate) {
-
-                    return Math.ceil(per)
-                }
-                else if (startdate > currentdate) {
-
-                    return ("")
-                } else {
-
-                    return "0"
-                }
-
+        function calcPercentage(workdays, startDate, endDate) {
+            const currentDate = new Date();
+            currentDate.setSeconds(0, 0);
+            if (currentDate < startDate) { // Project not started yet
+                return null
+            }
+            if (currentDate > endDate) { // Project has already completed
+                return 0
             }
 
-            if (workdays == 6 && startdate && enddate) {
-                var excludedDays = [0];
-                totalWorkdays = 0;
-                hourscompleted = 0
-                workcompleted = -1
-                workHoursDifference = 0
-                workdaysList = []
-                for (var i = 0; i <= daysDifference - 1; i++) {
-                    var tempDate = new Date(startdate);
-                    tempDate.setDate(tempDate.getDate() + i)
+            // Process only prject that endDate has not passed today
+            var totalWorkdays = getWorkEffordDays(startDate, endDate, workdays)
+            var daysCompleted = getWorkEffordDays(startDate, currentDate, workdays) - 1 // -1 to exclude today
+            var todayHoursCompleted = 0
 
-                    if (!excludedDays.includes(tempDate.getDay())) {
-                        workdaysList.push(tempDate.toDateString())
-                        totalWorkdays++
-                    }
-
-
-                }
-
-
-
-                while (xdate <= currentdate && enddate >= currentdate) {
-
-                    if (workdaysList.includes(xdate.toDateString()) && xdate < currentdate) {
-                        workcompleted = workcompleted + 1
-                    }
-                    if ((workdaysList.includes(xdate.toDateString()) && xdate.toDateString() == currentdate.toDateString())) {
-                        chours = currentdate.getHours();
-                        xhours = xdate.getHours();
-                        if (chours <= 17 && chours > 9) {
-                            hoursdiff = chours - xhours
-                            hourscompleted = hoursdiff
-                        } else if (chours > 17) {
-                            workcompleted = workcompleted + 1
-                        }
-                    }
-                    xdate.setDate(xdate.getDate() + 1);
-                }
-                workHoursDifference = totalWorkdays * 8
-                totalHours = (workcompleted * 8) + hourscompleted
-                const per = ((workHoursDifference - totalHours) / workHoursDifference) * 100
-
-                if (startdate <= currentdate && enddate >= currentdate) {
-
-                    return Math.ceil(per)
-                }
-                else if (startdate > currentdate) {
-
-                    return ("")
-                } else {
-
-                    return "0"
-                }
-
+            currentHours = currentDate.getHours();
+            // If current time has passed 5:00 PM, then count it as a whole day
+            if (currentHours > 17) {
+                todayHoursCompleted = 8 // Add fullday hours
+            } else if (currentHours > 9) {
+                todayHoursCompleted = currentHours - 9  // Add partial hours
             }
 
-            if (workdays == 7 && startdate && enddate) {
-                var excludedDays = [];
-                totalWorkdays = 0;
-                hourscompleted = 0
-                workcompleted = -1
-                workHoursDifference = 0
-                workdaysList = []
-                for (var i = 0; i <= daysDifference - 1; i++) {
-                    var tempDate = new Date(startdate);
-                    tempDate.setDate(tempDate.getDate() + i)
-
-                    if (!excludedDays.includes(tempDate.getDay())) {
-                        workdaysList.push(tempDate.toDateString())
-                        totalWorkdays++
-                    }
-
-
-                }
-
-
-
-                while (xdate <= currentdate && enddate >= currentdate) {
-
-                    if (workdaysList.includes(xdate.toDateString()) && xdate < currentdate) {
-                        workcompleted = workcompleted + 1
-                    }
-                    if ((workdaysList.includes(xdate.toDateString()) && xdate.toDateString() == currentdate.toDateString())) {
-                        chours = currentdate.getHours();
-                        xhours = xdate.getHours();
-                        if (chours <= 17 && chours > 9) {
-                            hoursdiff = chours - xhours
-                            hourscompleted = hoursdiff
-                        } else if (chours > 17) {
-                            workcompleted = workcompleted + 1
-                        }
-                    }
-                    xdate.setDate(xdate.getDate() + 1);
-                }
-                workHoursDifference = totalWorkdays * 8
-                totalHours = (workcompleted * 8) + hourscompleted
-                const per = ((workHoursDifference - totalHours) / workHoursDifference) * 100
-
-                if (startdate <= currentdate && enddate >= currentdate) {
-
-                    return Math.ceil(per)
-                }
-                else if (startdate > currentdate) {
-
-                    return ("")
-                } else {
-
-                    return "0"
-                }
-
-            }
-
-        }
+            const totalWorkHours = totalWorkdays * 8
+            const totalHoursCompleted = (daysCompleted * 8) + todayHoursCompleted
+            const percentCompleted = totalWorkHours > totalHoursCompleted ? totalHoursCompleted / totalWorkHours : 0
+            return percentCompleted
+       }
 
         // Get all dependencies for the current task
         function getTaskDependencies(taskId) {
@@ -418,7 +225,7 @@
             }
 
             endDate = getPreviousWorkingDate(endDate, workingDays) //Get the last working day
-            return { startDate: startDate.toISOString(), endDate: endDate.toISOString() }
+            return { startDate: createStartDate(startDate).toISOString(), endDate: createEndDate(endDate).toISOString() }
         }
 
         // With dependency type of Finish-Finish and provided inputs of the current task duration, workingDays
@@ -437,7 +244,7 @@
                 startDate.setDate(startDate.getDate() - 1)
             }
             startDate = getNextWorkingDate(startDate, workingDays) //Get the next working day
-            return { startDate: startDate?.toISOString(), endDate: endDate?.toISOString() }
+            return { startDate: createStartDate(startDate).toISOString(), endDate: createEndDate(endDate).toISOString() }
         }
 
         // With dependency type of Start-Finish and provided inputs of the current task duration, workingDays
@@ -458,7 +265,7 @@
             }
 
             startDate = getNextWorkingDate(startDate, workingDays) //Get the next working day
-            return { startDate: startDate.toISOString(), endDate: endDate.toISOString() }
+            return { startDate: createStartDate(startDate).toISOString(), endDate: createEndDate(endDate).toISOString() }
         }
 
         // With dependency type of Start-Start and provided inputs of the current task duration, workingDays
@@ -478,22 +285,43 @@
             }
 
             endDate = getPreviousWorkingDate(endDate, workingDays) //Get the last working day
-            return { startDate: startDate?.toISOString(), endDate: endDate?.toISOString() }
+            return { startDate: createStartDate(startDate).toISOString(), endDate: createEndDate(endDate).toISOString() }
         }
         
-        // Update task variancedays
-        function updateTaskVariance(taskId) {
-            const ganttTasks = getGanttTasks()
-
-            const task = ganttTasks.find(item => item.id === taskId)
-            // TODO: >>>> review this - If this is a parent task, calculate variance with workdays as 7?
-            if (task?.hasChildren) {
-                const variance = calcVariance(7, task.plannedStart, task.plannedEnd, task.start, task.end) ?? 0
-                task.set("variancedays", variance)
-            } else if (task && task.workdays && task.plannedStart && task.plannedEnd && task.start && task.end) {
-                const variance = calcVariance(task.workdays, task.plannedStart, task.plannedEnd, task.start, task.end) ?? 0
-                task.set("variancedays", variance)
+        function getWorkEffordDays(startDate, endDate, workingdays) {
+            let workEffordDays = 0
+            let curDate = createStartDate(startDate)
+            const fullEndDate = createEndDate(endDate)
+            while(curDate < fullEndDate) {
+                workEffordDays++
+                curDate = getNextWorkingDate(curDate, workingdays)
             }
+            return workEffordDays
+        }
+
+        // Update task variancedays
+        function updateTaskVariance(taskInfo) {
+            let task = taskInfo
+            if (typeof taskInfo === 'number') {
+                const ganttTasks = getGanttTasks()
+                task = ganttTasks.find(item => item.id === taskInfo)
+            }
+            if (!baselineSet) { // If baseline is not set, do not calculate variancedays
+                task.variancedays = 0
+                return 0
+            }
+            if (task?.hasChildren) {
+                task.workdays = 7 // Default parent summary task to 7 days
+            }
+            var plannedTotalWorkdays = getWorkEffordDays(task.plannedStart, task.plannedEnd, task.workdays);
+            var actualTotalWorkdays = getWorkEffordDays(task.start, task.end, task.workdays);
+
+            var variance = actualTotalWorkdays - plannedTotalWorkdays;
+            if (variance < 0) {
+                variance = 0
+            }
+            task.variancedays = variance
+            return variance
         }
 
         // Recursively update parent dates (start, end, durationdays) and its parents
@@ -524,7 +352,7 @@
                 const oldChildStartDates = oldChildTasks.map(task => new Date(task.start));
                 const oldChildEndDates = oldChildTasks.map(task => new Date(task.end));
                 const oldChildDurationDays = oldChildTasks.map(task => task.durationdays);
-                const oldChildWorkingDays = oldChildTasks.map(task => task.workingdays);
+                const oldChildWorkingDays = oldChildTasks.map(task => task.workdays);
 
                 // Find the earliest start date and latest end date among child tasks
                 const oldParentStartDate = new Date(Math.min(...oldChildStartDates));
@@ -603,8 +431,8 @@
 
                     // Update the successor task with new startDate and endDate
                     if (newDates) {
-                        depTask.set('start', newDates.startDate)
-                        depTask.set('end', newDates.endDate)
+                        depTask.start = createStartDate(newDates.startDate)
+                        depTask.end = createEndDate(newDates.endDate)
 
                         // Note: As the current successor task has the startDate and endDate changed,
                         // we need to update its dependencies recursively
@@ -644,7 +472,7 @@
         }
 
         function updateDependencyTaskCallback(callbackInfo) {
-            const currentTask = callbackInfo.model
+            const currentTask = callbackInfo.model ?? callbackInfo.task
 
             // Ignore destroy callback. Handle only created and updated events
             if (callbackInfo.updateDependencies?.destroyed.length > 0) {
@@ -714,13 +542,13 @@
                 updateSuccessorTasks(callbackInfo)
             } else if (callbackInfo?.sender?.task?.dirtyFields?.parentId){
                 // ParentId has been changed update the current task with new parent
-                updateRelatedTasks(callbackInfo.model)
+                updateRelatedTasks(currentTask)
             }
             return true
         }
 
         function updatePredecessorTasks(callbackInfo) {
-            const successorTask = callbackInfo.model
+            const successorTask = callbackInfo.model ?? callbackInfo.task
 
             // callbackInfo.updateInfo is the kendo-ui dependency object that will be used to send update to the backend
             // we need to update this object with the latest date changes for the successor when a dependency is updated
@@ -758,13 +586,13 @@
         }
 
         function updateSuccessorTasks(callbackInfo) {
-            const predecessorTask = callbackInfo.model
+            const predecessorTask = callbackInfo.model ?? callbackInfo.task
 
             updateTaskDependencies(predecessorTask.id)
             // All the dependencies has been updated, get the latest info for the current successor task
             // and use its info for kendo-ui updateInfo object that is used by Task editor to update to the backend.
 
-            const updateInfo = callbackInfo.updateInfo
+            const updateInfo = callbackInfo?.updateInfo
             if (updateInfo) {
                 const ganttTasks = getGanttTasks()
                 const updatedPredecessorTask = ganttTasks.find(t => t.id === predecessorTask.id)
@@ -888,12 +716,7 @@
                         startdate = task.plannedStart
                         endDate = task.plannedEnd
                         percentage = calcPercentage(workdays, startdate, endDate)
-                        if (percentage) {
-                            task.set("percentComplete", percentage)
-                        }
-                        else {
-                            task.set("percentComplete", 0)
-                        }
+                        task.set("percentComplete", percentage ?? 0)
 
                         task.set("baselineSet", true);
                         task.set("variancedays", 0)
@@ -1022,53 +845,21 @@
                         ganttInitialized = true;
 
                         gantt.dataSource['_data'].forEach(event => {
-
-                            var startDate = event.start
-                            var EndDate = event.end
-                            var Workdays = event.workdays
-                            var pstart = event.plannedStart
-                            var pend = event.plannedEnd
-                            percentage = calcPercentage(Workdays, startDate, EndDate)
-
-                            if (percentage) {
-
-                                event.set("percentComplete", percentage);
-                            }
-                            else {
-                                event.set("percentComplete", 0);
-                            }
+                            var startDate = createStartDate(event.start)
+                            var endDate = createEndDate(event.end)
+                            var workdays = event.workdays
+                            var pstart = createStartDate(event.plannedStart)
+                            var pend = createEndDate(event.plannedEnd)
+                            percentage = calcPercentage(workdays, startDate, endDate)
+                            event.set("percentComplete", (percentage ?? 0));
 
                         });
                         gantt.dataSource.sync();
                         console.log(gantt.dataSource.data());
+                        console.log(gantt.dependencies.data());
                         baselineSet = gantt.dataSource.data()[0].BaselineSet;
-
-                        if (baselineSet) {
-                            gantt.setOptions({
-                                showPlannedTasks: true
-                            });
-                            // gantt.options.columns.forEach(function (column) {
-                            //     if (column.field === "plannedStart" || column.field === "plannedEnd") {
-                            //         alert(baselineSet + " " + column.field);
-                            //         column.hidden = false;
-                            //         //column.width = 100;
-                            //     }
-                            // });
-                            gantt.refresh();
-                        }
-                        else {
-                            gantt.setOptions({
-                                showPlannedTasks: false
-                            });
-                            // gantt.options.columns.forEach(function (column) {
-                            //     if (column.field === "plannedStart" || column.field === "plannedEnd") {
-                            //         alert(baselineSet + " " + column.field);
-                            //         column.hidden = true;
-                            //         //column.width = 0;
-                            //     }
-                            // });
-                            gantt.refresh();
-                        }
+                        gantt.setOptions({ showPlannedTasks: baselineSet });
+                        gantt.refresh();
                         $('#planned-switch_label').text('Set Baselines');
                     }
                 },
@@ -1091,20 +882,15 @@
                     //var resGrid = $('#resources-grid').data('kendoGrid');
                     //resGrid.hideColumn(1);
                 },
-                // save: function (e) {
-                //     var task = e.task;
-
-                //     if (!e.values.end) {
-                //         return;
-                //     }
-
-                //     var startDelta = e.values.end - e.task.end;
-
-                //     moveTask(e.sender, task, startDelta)
-
-                //     e.sender.dependencies.filter(null);
-                //     e.sender.dataSource.sync();
-                // },
+                /*
+                save: function (e) {
+                    if (!updateDependencyTaskCallback(e)) {
+                        e.preventDefault()
+                        return false
+                    }
+                    return true
+                },
+                */
                 dependencies: dependenciesDataSource,
                 resources: {
                     field: "resources",
@@ -1172,7 +958,29 @@
                     { type: "week", selected: true }
                 ],
                 columns: [
-                    { field: "title", title: "Title", editable: true, sortable: true, width: 200 },
+                    { field: "id", title: "ID", width: 50 },
+                    { field: "title", title: "Title", editable: true, sortable: true, width: 200,
+                        template: function (task){
+                            let level = 0
+                            // Count parents
+                            const tasks = getGanttTasks()
+                            let parentId = task.parentId
+                            while(parentId) {
+                                level++
+                                parentTask = tasks.find(t => t.id === parentId)
+                                parentId = parentTask?.parentId
+                            }
+                            const indentSize = task.hasChildren ? 4 : 8; // Number of spaces per indent level
+                            const indent = "&nbsp;".repeat(indentSize); // HTML encoded space character for indent
+                            // Generate indents based on the level of orderId
+                            let indents = "";
+                            for (let i = 0; i < level; i++) {
+                                indents += indent;
+                            }
+                            const displayTitle = indents + task.title;
+                            return kendo.toString(displayTitle);
+                        }
+                    },
                     {
                         field: "workdays", title: "Work Days", editable: true, width: 85,
                         template: function (options) {
@@ -1184,9 +992,10 @@
                             }
                         },
                         editor: function (container, options) {
+                            const task = options.model
                             var isChecked = $("#planned-switch").prop("checked");
 
-                            if (isChecked || options.model.hasChildren) {
+                            if (isChecked || task.hasChildren) {
                                 //container.html(kendo.toString(options.model.workdays));
                                 container.html(kendo.toString(""));
                             }
@@ -1204,115 +1013,31 @@
                                             { text: "7", value: "7" }
                                         ],
                                         change: function (e) {
-                                            var selectedValue = e.sender.value();
-
-                                            options.model.set("workdays", selectedValue);
-                                            //console.log(selectedValue)
-                                            var durationdays = options.model.durationdays;
-                                            var endDate = options.model.end;
-                                            var startDate = options.model.start;
-                                            // options.model.set("end", endDate);
+                                            task.workdays = e.sender.value();
+                                            var startDate = new Date(task.start);
 
                                             // Update starting day
-                                            while(!isWorkingDay(startDate, options.model.workdays)) {
-                                                startDate.setDate(startDate.getDate() + 1)
+                                            if(!isWorkingDay(startDate, task.workdays)) {
+                                                startDate = getNextWorkingDate(startDate, task.workdays)
+                                                task.start = createStartDate(startDate)
+                                            }
+                                            if (task.durationdays) {
+                                                let curDate = new Date(startDate)
+                                                for(var i = 0; i<task.durationdays-1; i++) {
+                                                    curDate = getNextWorkingDate(curDate, task.workdays)
+                                                }
+                                                task.end = createEndDate(curDate)
+                                            } else {
+                                                task.durationdays = getWorkEffordDays(task.start, task.end, task.workdays)
                                             }
 
-                                            if ((selectedValue == 5) && startDate && durationdays) {
-                                                var loop = new Date(startDate);
-                                                var z = 0
-                                                var days = durationdays
-                                                var endDate = endDate
-                                                while (days > 0) {
-                                                    if (loop.getDay() !== 0 && loop.getDay() !== 6) {
-                                                        z = z + 1
-                                                        endDate = loop
-                                                        days -= 1
-                                                    }
-                                                    let newDate = loop.setDate(loop.getDate() + 1);
-                                                    loop = new Date(newDate);
-                                                }
-                                                endDate = new Date(endDate.setDate(endDate.getDate() - 1))
-                                                options.model.set("end", endDate);
-                                            }
-                                            else if ((selectedValue == 6) && startDate && durationdays) {
-                                                var loop = new Date(startDate);
-                                                var z = 0
-                                                var days = durationdays
-                                                var endDate = endDate
-                                                while (days > 0) {
-                                                    if (loop.getDay() !== 0) {
-                                                        z = z + 1
-                                                        endDate = loop
-                                                        days -= 1
-                                                    }
-                                                    let newDate = loop.setDate(loop.getDate() + 1);
-                                                    loop = new Date(newDate);
-                                                }
-                                                endDate = new Date(endDate.setDate(endDate.getDate() - 1))
-                                                options.model.set("end", endDate);
-                                            }
-                                            else if ((selectedValue == 7) && startDate && durationdays) {
-                                                var loop = new Date(startDate);
-                                                var z = 0
-                                                var days = durationdays
-                                                var endDate = endDate
-                                                while (days > 0) {
-                                                    z = z + 1
-                                                    endDate = loop
-                                                    days -= 1
-                                                    let newDate = loop.setDate(loop.getDate() + 1);
-                                                    loop = new Date(newDate);
-                                                    console.log(loop);
-                                                    console.log(days);
-                                                }
-                                                endDate = new Date(endDate.setDate(endDate.getDate() - 1))
-                                                options.model.set("end", endDate);
-                                            }
-
-                                            else if ((selectedValue == 5) && startDate && endDate) {
-                                                var loop = new Date(startDate);
-                                                var z = 0
-                                                while (loop <= endDate) {
-                                                    if (loop.getDay() !== 0 && loop.getDay() !== 6) {
-                                                        z = z + 1
-
-                                                    }
-                                                    let newDate = loop.setDate(loop.getDate() + 1);
-                                                    loop = new Date(newDate);
-                                                }
-                                                options.model.set("durationdays", z);
-                                            }
-                                            else if ((selectedValue == 6) && startDate && endDate) {
-                                                var loop = new Date(startDate);
-                                                var z = 0
-                                                while (loop <= endDate) {
-                                                    if (loop.getDay() !== 0) {
-                                                        z = z + 1
-
-                                                    }
-                                                    let newDate = loop.setDate(loop.getDate() + 1);
-                                                    loop = new Date(newDate);
-                                                }
-                                                options.model.set("durationdays", z);
-                                            }
-                                            else if ((selectedValue == 7) && startDate && endDate) {
-                                                var loop = new Date(startDate);
-                                                var z = 0
-                                                while (loop <= endDate) {
-                                                    z = z + 1
-                                                    let newDate = loop.setDate(loop.getDate() + 1);
-                                                    loop = new Date(newDate);
-                                                }
-                                                options.model.set("durationdays", z);
-                                            }
 
                                             // If this task has a predecessor, make sure it startDate or endDate depends on its predecessor
-                                            updatePredecessorTasks({ model })
+                                            updatePredecessorTasks({ task })
 
                                             // Note: As the current successor task has the startDate and endDate changed,
                                             // we need to update its dependencies recursively
-                                            updateTaskDependencies(options.model.id)
+                                            updateTaskDependencies(task.id)
                                         }
                                     });
                             }
@@ -1320,182 +1045,7 @@
                     },
                     {
                         field: "health", title: "Health", editable: false, width: 80, template: function (dataItem) {
-                            var percentCompleted = "";
-                            var startdate = dataItem.start
-                            var endDate = dataItem.end
-                            var workdays = dataItem.workdays
-
-                            if (startdate && endDate && workdays) {
-                                workdays = workdays;
-                                startdate.setHours(9, 0, 0, 0)
-                                var enddate = endDate
-                                enddate.setHours(17, 0, 0, 0)
-                                var currentdate = new Date();
-                                currentdate.setSeconds(0, 0);
-                                const timeDifference = enddate - startdate;
-                                const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-                                const xdate = new Date(startdate)
-                                days = -1
-                                hours = 0
-                                if (workdays == 5) {
-                                    var excludedDays = [0, 6];
-                                    totalWorkdays = 0;
-                                    hourscompleted = 0
-                                    workcompleted = -1
-                                    workHoursDifference = 0
-                                    workdaysList = []
-                                    for (var i = 0; i <= daysDifference - 1; i++) {
-                                        var tempDate = new Date(startdate);
-                                        tempDate.setDate(tempDate.getDate() + i)
-
-                                        if (!excludedDays.includes(tempDate.getDay())) {
-                                            workdaysList.push(tempDate.toDateString())
-                                            totalWorkdays++
-                                        }
-
-                                    }
-                                    while (xdate <= currentdate && enddate >= currentdate) {
-                                        if (workdaysList.includes(xdate.toDateString()) && xdate < currentdate) {
-                                            workcompleted = workcompleted + 1
-                                        }
-                                        if ((workdaysList.includes(xdate.toDateString()) && xdate.toDateString() == currentdate.toDateString())) {
-                                            chours = currentdate.getHours();
-                                            xhours = xdate.getHours();
-
-                                            if (chours <= 17 && chours > 9) {
-                                                hoursdiff = chours - xhours
-                                                hourscompleted = hoursdiff
-                                            } else if (chours > 17) {
-                                                workcompleted = workcompleted + 1
-                                            }
-
-                                        }
-                                        xdate.setDate(xdate.getDate() + 1);
-                                    }
-
-                                    workHoursDifference = totalWorkdays * 8
-                                    totalHours = (workcompleted * 8) + hourscompleted
-                                    const per = ((workHoursDifference - totalHours) / workHoursDifference) * 100
-
-                                    if (startdate <= currentdate && enddate >= currentdate) {
-
-                                        percentCompleted = Math.ceil(per).toString()
-                                    }
-                                    else if (startdate > currentdate) {
-                                        percentCompleted = ""
-                                    }
-                                    else {
-                                        percentCompleted = "0"
-                                    }
-
-
-                                }
-                                if (workdays == 6) {
-                                    var excludedDays = [0];
-                                    totalWorkdays = 0;
-                                    hourscompleted = 0
-                                    workcompleted = -1
-                                    workHoursDifference = 0
-                                    workdaysList = []
-                                    for (var i = 0; i <= daysDifference - 1; i++) {
-                                        var tempDate = new Date(startdate);
-                                        tempDate.setDate(tempDate.getDate() + i)
-
-                                        if (!excludedDays.includes(tempDate.getDay())) {
-                                            workdaysList.push(tempDate.toDateString())
-                                            totalWorkdays++
-                                        }
-
-                                    }
-                                    while (xdate <= currentdate && enddate >= currentdate) {
-                                        if (workdaysList.includes(xdate.toDateString()) && xdate < currentdate) {
-                                            workcompleted = workcompleted + 1
-                                        }
-                                        if ((workdaysList.includes(xdate.toDateString()) && xdate.toDateString() == currentdate.toDateString())) {
-                                            chours = currentdate.getHours();
-                                            xhours = xdate.getHours();
-
-                                            if (chours <= 17 && chours > 9) {
-                                                hoursdiff = chours - xhours
-                                                hourscompleted = hoursdiff
-                                            } else if (chours > 17) {
-                                                workcompleted = workcompleted + 1
-                                            }
-
-                                        }
-                                        xdate.setDate(xdate.getDate() + 1);
-                                    }
-
-                                    workHoursDifference = totalWorkdays * 8
-                                    totalHours = (workcompleted * 8) + hourscompleted
-                                    const per = ((workHoursDifference - totalHours) / workHoursDifference) * 100
-
-                                    if (startdate <= currentdate && enddate >= currentdate) {
-
-                                        percentCompleted = Math.ceil(per).toString();
-                                    }
-                                    else if (startdate > currentdate) {
-                                        percentCompleted = ""
-                                    }
-                                    else {
-                                        percentCompleted = "0"
-                                    }
-
-
-                                }
-                                if (workdays == 7) {
-                                    var excludedDays = [];
-                                    totalWorkdays = 0;
-                                    hourscompleted = 0
-                                    workcompleted = -1
-                                    workHoursDifference = 0
-                                    workdaysList = []
-                                    for (var i = 0; i <= daysDifference - 1; i++) {
-                                        var tempDate = new Date(startdate);
-                                        tempDate.setDate(tempDate.getDate() + i)
-
-                                        if (!excludedDays.includes(tempDate.getDay())) {
-                                            workdaysList.push(tempDate.toDateString())
-                                            totalWorkdays++
-                                        }
-
-                                    }
-                                    while (xdate <= currentdate && enddate >= currentdate) {
-                                        if (workdaysList.includes(xdate.toDateString()) && xdate < currentdate) {
-                                            workcompleted = workcompleted + 1
-                                        }
-                                        if ((workdaysList.includes(xdate.toDateString()) && xdate.toDateString() == currentdate.toDateString())) {
-                                            chours = currentdate.getHours();
-                                            xhours = xdate.getHours();
-                                            if (chours <= 17 && chours > 9) {
-                                                hoursdiff = chours - xhours
-                                                hourscompleted = hoursdiff
-                                            } else if (chours > 17) {
-                                                workcompleted = workcompleted + 1
-                                            }
-
-                                        }
-                                        xdate.setDate(xdate.getDate() + 1);
-                                    }
-
-                                    workHoursDifference = totalWorkdays * 8
-                                    totalHours = (workcompleted * 8) + hourscompleted
-                                    const per = ((workHoursDifference - totalHours) / workHoursDifference) * 100
-
-                                    if (startdate <= currentdate && enddate >= currentdate) {
-                                        percentCompleted = Math.ceil(per).toString();
-                                    }
-                                    else if (startdate > currentdate) {
-                                        percentCompleted = ""
-                                    }
-                                    else {
-                                        percentCompleted = "0"
-                                    }
-
-
-                                }
-
-                            }
+                            var percentCompleted = calcPercentage(dataItem.workdays, dataItem.start, dataItem.end)
 
                             var actualStart = dataItem.start
                             // actualStart.format{0,yyyy,mm,dd}
@@ -1506,124 +1056,52 @@
                             if (statusField === "Completed") {
                                 return '<div style="background-color: green; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
                             }
-                            else if (percentCompleted === "") {
+                            else if (percentCompleted === null) {
                                 return '<div style="background-color: blue; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
                             }
-                            else if ((percentCompleted == 100) && (statusField != "Completed")) {
-                                return '<div style="background-color: green; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
+                            else if (percentCompleted === 0) {
+                                return '<div style="background-color: red; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
                             }
-                            else if (percentCompleted < 60 && percentCompleted > 0) {
+                            else if (percentCompleted > 0 && percentCompleted <= .60) {
                                 return '<div style="background-color: yellow; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
                             }
-                            else if (percentCompleted < 100 && percentCompleted > 0) {
+                            else if (percentCompleted > 0.6 && percentCompleted < 1) {
                                 return '<div style="background-color: green; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
-                            }
-                            else if (percentCompleted === "0") {
-                                return '<div style="background-color: red; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
+                            } else if ((percentCompleted == 1) && (statusField != "Completed")) {
+                                return '<div style="background-color: green; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
                             }
                         }
                     },
                     {
                         field: "durationdays", title: "Duration", editable: true, width: 100,
                         editor: function (container, options) {
+                            const task = options.model ?? options.task
                             var isChecked = $("#planned-switch").prop("checked");
 
-                            if (isChecked || options.model.hasChildren) {
-                                container.html(kendo.toString(options.model.durationdays));
+                            if (isChecked || task.hasChildren) {
+                                container.html(kendo.toString(task.durationdays));
                             }
                             else {
                                 var input = $('<input name="' + options.field + '"/>').appendTo(container)
                                 input.kendoNumericTextBox({
                                     min: 1,
                                     change: function (e) {
-                                        var selectedValue = e.sender.value();
-
-                                        options.model.set("durationdays", selectedValue);
-                                        var durationdays = options.model.durationdays;
-                                        var workdays = options.model.workdays;
-                                        var startdate = options.model.start;
-                                        var endDate = options.model.end
-
-                                        if ((workdays == 5) && startdate) {
-                                            var loop = new Date(startdate);
-                                            var z = 0
-                                            var days = durationdays
-                                            var endDate = endDate
-                                            while (days > 0) {
-                                                if (loop.getDay() !== 0 && loop.getDay() !== 6) {
-                                                    z = z + 1
-                                                    endDate = loop
-                                                    days -= 1
-                                                }
-                                                let newDate = loop.setDate(loop.getDate() + 1);
-                                                loop = new Date(newDate);
-                                            }
-                                            endDate = new Date(endDate.setDate(endDate.getDate() - 1))
-                                            options.model.set("end", endDate);
+                                        var durationdays = e.sender.value();
+                                        task.set("durationdays", durationdays);
+                                        var endDate = new Date(task.start);
+                                        for(var i=0; i<durationdays-1; i++) {
+                                            endDate = getNextWorkingDate(endDate, task.workdays)
                                         }
-                                        else if ((workdays == 6) && startdate) {
-                                            var loop = new Date(startdate);
-                                            var z = 0
-                                            var days = durationdays
-                                            var endDate = endDate
-                                            while (days > 0) {
-                                                if (loop.getDay() !== 0) {
-                                                    z = z + 1
-                                                    endDate = loop
-                                                    days -= 1
-                                                }
-                                                let newDate = loop.setDate(loop.getDate() + 1);
-                                                loop = new Date(newDate);
-                                            }
-                                            endDate = new Date(endDate.setDate(endDate.getDate() - 1))
-                                            options.model.set("end", endDate);
-                                        }
-                                        else if ((workdays == 7) && startdate) {
-                                            var loop = new Date(startdate);
-                                            var z = 0
-                                            var days = durationdays
-                                            var endDate = endDate
-                                            while (days > 0) {
-
-                                                z = z + 1
-                                                endDate = loop
-                                                days -= 1
-
-                                                let newDate = loop.setDate(loop.getDate() + 1);
-                                                loop = new Date(newDate);
-                                            }
-                                            endDate = new Date(endDate.setDate(endDate.getDate() - 1))
-                                            options.model.set("end", endDate);
-                                        }
-
-                                        else if (startdate && durationdays) {
-                                            // options.model.set("workdays", "5");
-                                            var loop = new Date(startdate);
-                                            var z = 0
-                                            var days = durationdays
-                                            var endDate = endDate
-                                            while (days > 0) {
-                                                if (loop.getDay() !== 0 && loop.getDay() !== 6) {
-                                                    z = z + 1
-                                                    endDate = loop
-                                                    days -= 1
-                                                }
-                                                let newDate = loop.setDate(loop.getDate() + 1);
-                                                loop = new Date(newDate);
-                                            }
-                                            endDate = new Date(endDate.setDate(endDate.getDate() - 1))
-                                            options.model.set("end", endDate);
-
-                                        }
+                                        task.end = createEndDate(endDate)
 
                                         // If this task has a predecessor, make sure it startDate or endDate depends on its predecessor
-                                        updatePredecessorTasks({ model })
+                                        updatePredecessorTasks({ task })
 
                                         // Update the current task info and  all of its related tasks
                                         // - current task duration and variance
                                         // - current task dependencies recursively and their parents recursively
                                         // - current task parent recursively and their dependencies recursively
-                                        updateRelatedTasks(options.model)
+                                        updateRelatedTasks(task)
                                     }
                                 })
                             }
@@ -1631,414 +1109,144 @@
                     },
                     {
                         field: "planneddays", title: "Planned(days)", editable: false, width: 0,
-                        template: function (dataItem) {
-                            model = dataItem;
-                            var plannedStart = model.start
-                            var plannedEnd = model.end
-                            var workdays = model.workdays
-                            // if(!workdays){
-                            //     workdays="5"
-                            //     //console.log("not")
-                            //     dataItem.set("workdays","5")
-                            // }
-                            if ((workdays == 5) && plannedStart && plannedEnd) {
-                                var loop = new Date(plannedStart);
-                                var z = 0
-                                while (loop <= plannedEnd) {
-                                    if (loop.getDay() !== 0 && loop.getDay() !== 6) {
-                                        z = z + 1
-
-                                    }
-                                    let newDate = loop.setDate(loop.getDate() + 1);
-                                    loop = new Date(newDate);
-                                }
-                                model.planneddays = z
-                                return z;
-                            }
-                            else if ((workdays == 6) && plannedStart && plannedEnd) {
-                                var loop = new Date(plannedStart);
-                                var z = 0
-                                while (loop <= plannedEnd) {
-                                    if (loop.getDay() !== 0) {
-                                        z = z + 1
-
-                                    }
-                                    let newDate = loop.setDate(loop.getDate() + 1);
-                                    loop = new Date(newDate);
-                                }
-                                model.planneddays = z
-                                return z;
-                            }
-                            else if (plannedStart && plannedEnd) {
-                                var durationInDays = Math.floor((plannedEnd - plannedStart) / (1000 * 60 * 60 * 24));
-                                model.planneddays = durationInDays + 1
-                                return durationInDays + 1;
-                            }
-                            model.planneddays = ""
-                            return ""
+                        template: function (task) {
+                            task.planneddays = getWorkEffordDays(task.start, task.end, task.workdays)
+                            return task.planneddays
                         }
                     },
                     {
                         field: "plannedStart", title: "Plan Start Date", defaultValue: "", nullable: true, editable: false, format: "{0:dd/MM/yyyy}", width: 100,
+                        template: function(task) {
+                            task.plannedStart = createStartDate(task.plannedStart)
+                            return kendo.toString(task.plannedStart, "dd/MM/yyyy")
+                        },
                         editor: function (container, options) {
+                            const task = options.model
                             var isChecked = $("#planned-switch").prop("checked");
 
-                            if (isChecked || options.model.hasChildren) {
-                                container.html(kendo.toString(options.model.plannedStart, "dd/MM/yyyy"));
+                            if (isChecked || task.hasChildren) {
+                                container.html(kendo.toString(task.plannedStart, "dd/MM/yyyy"));
                             }
                             else {
 
-                                var days = options.model.workdays;
                                 var input = $('<input name="' + options.field + '"/>').appendTo(container)
                                 input.kendoDatePicker({
                                     format: "dd/MM/yyyy",
-                                    value: options.model.columnName,
-                                    disableDates: ((days) => {
-                                        if (days == '5') {
-                                            return ["su", "sa"];
-                                        }
-                                        if (days == '6') {
-                                            return ["su"];
-                                        }
-                                    })(days),
+                                    value: task.columnName,
+                                    disableDates: getDisableDates(task.workdays),
                                     change: function (e) {
-                                        var startdate = options.model.plannedStart;
-                                        var durationdays = options.model.durationdays;
-                                        var workdays = options.model.workdays;
-                                        var endDate = options.model.plannedEnd
-
-                                        if ((workdays == 5) && startdate && durationdays) {
-                                            var loop = new Date(startdate);
-                                            var z = 0
-                                            var days = durationdays
-                                            var endDate = endDate
-                                            while (days > 0) {
-                                                if (loop.getDay() !== 0 && loop.getDay() !== 6) {
-                                                    z = z + 1
-                                                    endDate = loop
-                                                    days -= 1
-                                                }
-                                                let newDate = loop.setDate(loop.getDate() + 1);
-                                                loop = new Date(newDate);
-                                            }
-                                            endDate = new Date(endDate.setDate(endDate.getDate() - 1))
-                                            options.model.set("plannedEnd", endDate);
+                                        
+                                        task.plannedStart = createStartDate(task.plannedStart)
+                                        var endDate = new Date(task.plannedStart);
+                                        var durationdays = task.durationdays;
+                                        for(var i = 0; i < durationdays - 1; i++) {
+                                            endDate = getNextWorkingDate(endDate, task.workdays)
                                         }
-                                        if ((workdays == 6) && startdate && durationdays) {
-                                            var loop = new Date(startdate);
-                                            var z = 0
-                                            var days = durationdays
-                                            var endDate = endDate
-                                            while (days > 0) {
-                                                if (loop.getDay() !== 0) {
-                                                    z = z + 1
-                                                    endDate = loop
-                                                    days -= 1
-                                                }
-                                                let newDate = loop.setDate(loop.getDate() + 1);
-                                                loop = new Date(newDate);
-                                            }
-                                            endDate = new Date(endDate.setDate(endDate.getDate() - 1))
-                                            options.model.set("plannedEnd", endDate);
-                                        }
-                                        if ((workdays == 7) && startdate && durationdays) {
-                                            var loop = new Date(startdate);
-                                            var z = 0
-                                            var days = durationdays
-                                            var endDate = endDate
-                                            while (days > 0) {
-                                                z = z + 1
-                                                endDate = loop
-                                                days -= 1
-                                                let newDate = loop.setDate(loop.getDate() + 1);
-                                                loop = new Date(newDate);
-                                            }
-                                            endDate = new Date(endDate.setDate(endDate.getDate() - 1))
-                                            options.model.set("plannedEnd", endDate);
-                                        }
-                                    }
+                                        task.plannedEnd = createEndDate(endDate)
+                                   }
                                 })
                             }
                         }
                     },
                     {
                         field: "plannedEnd", title: "Plan End Date", editable: false, defaultValue: "", nullable: true, format: "{0:dd/MM/yyyy}", width: 100,
+                        template: function(task) {
+                            task.plannedEnd = createEndDate(task.plannedEnd)
+                            return kendo.toString(task.plannedEnd, "dd/MM/yyyy")
+                        },
                         editor: function (container, options) {
+                            const task = options.model
                             var isChecked = $("#planned-switch").prop("checked");
-                            if (isChecked || options.model.hasChildren) {
-                                container.html(kendo.toString(options.model.plannedEnd, "dd/MM/yyyy"));
+                            if (isChecked || task.hasChildren) {
+                                container.html(kendo.toString(task.plannedEnd, "dd/MM/yyyy"));
                             }
                             else {
-                                var days = options.model.workdays;
                                 var input = $('<input name="' + options.field + '"/>').appendTo(container)
                                 input.kendoDatePicker({
                                     format: "dd/MM/yyyy",
-                                    value: options.model.columnName,
-                                    disableDates: ((days) => {
-                                        if (days == '5') {
-                                            return ["su", "sa"];
-                                        }
-                                        if (days == '6') {
-                                            return ["su"];
-                                        }
-                                    })(days), change: function (e) {
-                                        var startdate = options.model.plannedStart;
-                                        var durationdays = options.model.durationdays;
-                                        var workdays = options.model.workdays;
-                                        var endDate = options.model.plannedEnd
-                                        var astart = options.model.start;
-                                        var aend = options.model.end;
-
-                                        if ((workdays == 5) && startdate) {
-                                            var loop = new Date(startdate);
-                                            var z = 0
-                                            while (loop <= endDate) {
-                                                if (loop.getDay() !== 0 && loop.getDay() !== 6) {
-                                                    z = z + 1
-
-                                                }
-                                                let newDate = loop.setDate(loop.getDate() + 1);
-                                                loop = new Date(newDate);
-                                            }
-                                            options.model.set("durationdays", z);
-                                        }
-                                        if ((workdays == 6) && startdate) {
-                                            var loop = new Date(startdate);
-                                            var z = 0
-                                            while (loop <= endDate) {
-                                                if (loop.getDay() !== 0) {
-                                                    z = z + 1
-
-                                                }
-                                                let newDate = loop.setDate(loop.getDate() + 1);
-                                                loop = new Date(newDate);
-                                            }
-                                            options.model.set("durationdays", z);
-                                        }
-                                        if ((workdays == 7) && startdate) {
-                                            var loop = new Date(startdate);
-                                            var z = 0
-                                            while (loop <= endDate) {
-
-                                                z = z + 1
-
-
-                                                let newDate = loop.setDate(loop.getDate() + 1);
-                                                loop = new Date(newDate);
-                                            }
-                                            options.model.set("durationdays", z);
-                                        }
-                                        if (workdays, startdate, endDate, astart, aend) {
-                                            variance = calcVariance(workdays, startdate, endDate, astart, aend)
-                                            if (variance) {
-                                                options.model.set("variancedays", variance)
-                                            }
-                                            else {
-                                                options.model.set("variancedays", 0)
-                                            }
-                                        }
+                                    value: task.columnName,
+                                    disableDates: getDisableDates(task.workdays),
+                                    change: function (e) {
+                                        task.durationdays = getWorkEffordDays(task.plannedStart, task.plannedEnd, task.workdays)
+                                        updateTaskVariance(task)
                                     }
                                 })
                             }
                         }
                     },
                     {
-                        field: "start", title: "Start Date", editable: true, format: "{0:dd/MM/yyyy}", width: 100,
+                        field: "start", title: "Start Date", editable: true,
+                        template: function(task) {
+                            task.start = createStartDate(task.start)
+                            return kendo.toString(task.start, "dd/MM/yyyy")
+                        },
+                        format: "{0:dd/MM/yyyy}", width: 100,
                         editor: function (container, options) {
-                            if (options.model.hasChildren) {
-                                container.html(kendo.toString(options.model.plannedEnd, "dd/MM/yyyy"));
+                            const task = options.model
+                            if (task.hasChildren) {
+                                container.html(kendo.toString(task.start, "dd/MM/yyyy"));
                             }
                             else {
-
-                                var days = options.model.workdays;
                                 var input = $('<input name="' + options.field + '"/>').appendTo(container)
                                 input.kendoDatePicker({
                                     format: "dd/MM/yyyy",
-                                    value: new Date(),
-                                    disableDates: ((days) => {
-                                        if (days == '5') {
-                                            return ["su", "sa"];
-                                        }
-                                        if (days == '6') {
-                                            return ["su"];
-                                        }
-                                    })(days),
+                                    value: task.start,
+                                    disableDates: getDisableDates(task.workdays),
                                     change: function (e) {
-                                        var selectedValue = e.sender.value();
-
-                                        options.model.set("start", selectedValue);
-                                        var startdate = options.model.start;
+                                        task.start = createStartDate(e.sender.value());
+                                        var curDate = new Date(task.start);
                                         var durationdays = options.model.durationdays;
-                                        var workdays = options.model.workdays;
-                                        var endDate = options.model.end
-
-                                        if ((workdays == 5) && startdate && durationdays) {
-                                            var loop = new Date(startdate);
-                                            var z = 0
-                                            var days = durationdays
-                                            var endDate = endDate
-                                            while (days > 0) {
-                                                if (loop.getDay() !== 0 && loop.getDay() !== 6) {
-                                                    z = z + 1
-                                                    endDate = loop
-                                                    days -= 1
-                                                }
-                                                let newDate = loop.setDate(loop.getDate() + 1);
-                                                loop = new Date(newDate);
-                                            }
-                                            endDate = new Date(endDate.setDate(endDate.getDate() - 1))
-                                            endDate = endDate
-                                            options.model.set("end", endDate);
+                                        for(var i=0; i<durationdays-1; i++) {
+                                            curDate = getNextWorkingDate(curDate, task.workdays)
                                         }
-                                        else if ((workdays == 6) && startdate && durationdays) {
-                                            var loop = new Date(startdate);
-                                            var z = 0
-                                            var days = durationdays
-                                            var endDate = endDate
-                                            while (days > 0) {
-                                                if (loop.getDay() !== 0) {
-                                                    z = z + 1
-                                                    endDate = loop
-                                                    days -= 1
-                                                }
-                                                let newDate = loop.setDate(loop.getDate() + 1);
-                                                loop = new Date(newDate);
-                                            }
-                                            endDate = new Date(endDate.setDate(endDate.getDate() - 1))
-
-                                            options.model.set("end", endDate);
-                                        }
-                                        else if ((workdays == 7) && startdate && durationdays) {
-                                            var loop = new Date(startdate);
-                                            var z = 0
-                                            var days = durationdays
-                                            var endDate = endDate
-                                            while (days > 0) {
-                                                z = z + 1
-                                                endDate = loop
-                                                days -= 1
-                                                let newDate = loop.setDate(loop.getDate() + 1);
-                                                loop = new Date(newDate);
-                                            }
-                                            endDate = new Date(endDate.setDate(endDate.getDate() - 1))
-                                            options.model.set("end", endDate);
-                                        }
-                                        if (workdays && startdate && endDate) {
-                                            endDate.setHours(17, 0, 0, 0)
-                                            percentage = calcPercentage(workdays, startdate, endDate)
-
-                                            if (percentage) {
-                                                //console.log(options.model.title, percentage)
-                                                options.model.set("percentComplete", percentage)
-                                            }
-                                            else {
-                                                options.model.set("percentComplete", 0)
-                                            }
+                                        task.end = createEndDate(curDate)
+ 
+                                        if (task.workdays && task.start && task.end) {
+                                            task.percentComplete = calcPercentage(task.workdays, task.start, task.end) ?? 0
                                         }
 
                                         // Update the current task info and  all of its related tasks
                                         // - current task duration and variance
                                         // - current task dependencies recursively and their parents recursively
                                         // - current task parent recursively and their dependencies recursively
-                                        updateRelatedTasks(options.model)
+                                        updateRelatedTasks(task)
                                     }
                                 })
                             }
                         }
                     },
                     {
-                        field: "end", title: "End Date", editable: true, format: "{0:dd/MM/yyyy}", width: 100,
+                        field: "end", title: "End Date", editable: true,
+                        template: function(task) {
+                            task.end = createEndDate(task.end)
+                            return kendo.toString(task.end, "dd/MM/yyyy")
+                        },
+                        format: "{0:dd/MM/yyyy}",
+                        width: 100,
                         editor: function (container, options) {
-                            if (options.model.hasChildren) {
-                                container.html(kendo.toString(options.model.plannedEnd, "dd/MM/yyyy"));
+                            const task = options.model
+                            if (task.hasChildren) {
+                                container.html(kendo.toString(task.end, "dd/MM/yyyy"));
                             }
                             else {
-                                var days = options.model.workdays;
                                 var input = $('<input name="' + options.field + '"/>').appendTo(container)
                                 input.kendoDatePicker({
                                     format: "dd/MM/yyyy",
-                                    value: options.model.columnName,
-                                    disableDates: ((days) => {
-                                        if (days == '5') {
-                                            return ["su", "sa"];
-                                        }
-                                        if (days == '6') {
-                                            return ["su"];
-                                        }
-                                    })(days),
+                                    value: task.end,
+                                    disableDates: getDisableDates(task.workdays),
                                     change: function (e) {
+                                        task.end = createEndDate(e.sender.value())
+                                        var durationdays = getWorkEffordDays(task.start, task.end, task.workdays)
+                                        task.durationdays = durationdays
 
-                                        var selectedValue = e.sender.value();
-                                        options.model.set("end", selectedValue);
-
-                                        var startDate = options.model.start;
-                                        var endDate = options.model.end;
-                                        var durationdays = options.model.durationdays;
-                                        var workdays = options.model.workdays;
-                                        var pstart = options.model.plannedStart;
-                                        var pend = options.model.plannedEnd;
-
-                                        if ((workdays == 5) && startDate && endDate) {
-                                            var loop = new Date(startDate);
-                                            var z = 0
-                                            while (loop <= endDate) {
-                                                if (loop.getDay() !== 0 && loop.getDay() !== 6) {
-                                                    z = z + 1
-                                                }
-                                                let newDate = loop.setDate(loop.getDate() + 1);
-                                                loop = new Date(newDate);
-                                            }
-                                            options.model.set("durationdays", z);
-                                        }
-                                        else if ((workdays == 6) && startDate && endDate) {
-                                            var loop = new Date(startDate);
-                                            var z = 0
-                                            while (loop <= endDate) {
-                                                if (loop.getDay() !== 0) {
-                                                    z = z + 1
-                                                }
-                                                let newDate = loop.setDate(loop.getDate() + 1);
-                                                loop = new Date(newDate);
-                                            }
-                                            options.model.set("durationdays", z);
-                                        }
-                                        else if ((workdays == 7) && startDate && endDate) {
-                                            var loop = new Date(startDate);
-                                            var z = 0
-                                            while (loop <= endDate) {
-                                                z = z + 1
-                                                let newDate = loop.setDate(loop.getDate() + 1);
-                                                loop = new Date(newDate);
-                                            }
-                                            options.model.set("durationdays", z);
-                                        }
-
-                                        if (workdays && startDate && endDate) {
-                                            percentage = calcPercentage(workdays, startDate, endDate)
-                                            if (percentage) {
-                                                //console.log(options.model.title, percentage)
-                                                options.model.set("percentComplete", percentage)
-                                            }
-                                            else {
-                                                options.model.set("percentComplete", 0)
-                                            }
-                                        }
-
-                                        if (workdays, pstart, pend, startDate, endDate) {
-                                            variance = calcVariance(workdays, pstart, pend, startDate, endDate)
-                                            if (variance) {
-                                                options.model.set("variancedays", variance)
-                                            }
-                                            else {
-                                                options.model.set("variancedays", 0)
-                                            }
-                                        }
+                                        percentage = calcPercentage(task.workdays, task.start, task.end)
+                                        task.percentComplete = percentage ?? 0
 
                                         // Update the current task info and  all of its related tasks
                                         // - current task duration and variance
                                         // - current task dependencies recursively and their parents recursively
                                         // - current task parent recursively and their dependencies recursively
-                                        updateRelatedTasks(options.model)
+                                        updateRelatedTasks(task)
                                     }
                                 });
                             }
@@ -2046,303 +1254,20 @@
                     },
                     {
                         field: "variancedays", title: "Variance", width: 100, template: function (dataItem) {
-                            var model = dataItem;
-                            var workdays = dataItem.workdays
-                            var plannedstart = dataItem.plannedStart
-                            var plannedenddate = dataItem.plannedEnd
-                            var actualstart = dataItem.start
-                            var actualenddate = dataItem.end
-
-                            if (workdays == 5) {
-                                var excludedDays = [0, 6];
-                                plannedtotalWorkdays = 0;
-                                actualtotalWorkdays = 0;
-                                var timeDifference = plannedenddate - plannedstart;
-                                var daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-
-                                for (var i = 0; i <= daysDifference - 1; i++) {
-                                    var tempDate = new Date(plannedstart);
-                                    tempDate.setDate(tempDate.getDate() + i)
-
-                                    if (!excludedDays.includes(tempDate.getDay())) {
-                                        workdaysList.push(tempDate.toDateString())
-                                        plannedtotalWorkdays++
-                                    }
-                                }
-                                var timeDifference = actualenddate - actualstart;
-                                var daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-
-                                for (var i = 0; i <= daysDifference - 1; i++) {
-                                    var tempDate = new Date(actualstart);
-                                    tempDate.setDate(tempDate.getDate() + i)
-
-                                    if (!excludedDays.includes(tempDate.getDay())) {
-                                        workdaysList.push(tempDate.toDateString())
-                                        actualtotalWorkdays++
-                                    }
-                                }
-                                var durationInDays = (plannedtotalWorkdays - actualtotalWorkdays);
-                                durationInDays = durationInDays * -1;
-                                durationInDays = durationInDays - 1;
-                                if (durationInDays < 0) {
-                                    durationInDays = 0;
-                                }
-                                return durationInDays;
-                            }
-                            if (workdays == 6) {
-                                var excludedDays = [0];
-                                plannedtotalWorkdays = 0;
-                                actualtotalWorkdays = 0;
-                                var timeDifference = plannedenddate - plannedstart;
-                                var daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-
-                                for (var i = 0; i <= daysDifference - 1; i++) {
-                                    var tempDate = new Date(plannedstart);
-                                    tempDate.setDate(tempDate.getDate() + i)
-
-                                    if (!excludedDays.includes(tempDate.getDay())) {
-                                        workdaysList.push(tempDate.toDateString())
-                                        plannedtotalWorkdays++
-                                    }
-                                }
-                                var timeDifference = actualenddate - actualstart;
-                                var daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-
-                                for (var i = 0; i <= daysDifference - 1; i++) {
-                                    var tempDate = new Date(actualstart);
-                                    tempDate.setDate(tempDate.getDate() + i)
-
-                                    if (!excludedDays.includes(tempDate.getDay())) {
-                                        workdaysList.push(tempDate.toDateString())
-                                        actualtotalWorkdays++
-                                    }
-                                }
-                                var durationInDays = (plannedtotalWorkdays - actualtotalWorkdays);
-                                durationInDays = durationInDays * -1;
-                                durationInDays = durationInDays - 1;
-                                if (durationInDays < 0) {
-                                    durationInDays = 0;
-                                }
-                                return durationInDays;
-                            }
-                            if (workdays == 7) {
-                                var excludedDays = [];
-                                plannedtotalWorkdays = 0;
-                                actualtotalWorkdays = 0;
-                                var timeDifference = plannedenddate - plannedstart;
-                                var daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-
-                                for (var i = 0; i <= daysDifference - 1; i++) {
-                                    var tempDate = new Date(plannedstart);
-                                    tempDate.setDate(tempDate.getDate() + i)
-
-                                    if (!excludedDays.includes(tempDate.getDay())) {
-                                        workdaysList.push(tempDate.toDateString())
-                                        plannedtotalWorkdays++
-                                    }
-                                }
-                                var timeDifference = actualenddate - actualstart;
-                                var daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-
-                                for (var i = 0; i <= daysDifference - 1; i++) {
-                                    var tempDate = new Date(actualstart);
-                                    tempDate.setDate(tempDate.getDate() + i)
-
-                                    if (!excludedDays.includes(tempDate.getDay())) {
-                                        workdaysList.push(tempDate.toDateString())
-                                        actualtotalWorkdays++
-                                    }
-                                }
-                                var durationInDays = (plannedtotalWorkdays - actualtotalWorkdays);
-                                durationInDays = durationInDays * -1;
-                                durationInDays = durationInDays - 1;
-                                if (durationInDays < 0) {
-                                    durationInDays = 0;
-                                }
-                                return durationInDays;
-                            }
+                            return updateTaskVariance(dataItem)
                         }
                     },
                     { field: "taskManager", title: "Task Manager", editable: false, width: 200 },
                     {
                         field: "percentComplete", title: "% Complete", type: "number", editable: false, width: 100,
                         template: function (dataItem) {
-
-                            var workdays = dataItem.workdays;
-
-                            var startdate = dataItem.start;
-                            startdate.setHours(9, 0, 0, 0)
-                            var enddate = dataItem.end;
-                            enddate.setHours(17, 0, 0, 0)
-                            var currentdate = new Date();
-                            currentdate.setSeconds(0, 0);
-
-                            const timeDifference = enddate - startdate;
-                            const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-                            const xdate = new Date(startdate)
-
-                            days = -1
-                            hours = 0
-
-                            if (workdays == 5) {
-                                var excludedDays = [0, 6];
-                                totalWorkdays = 0;
-                                hourscompleted = 0
-                                workcompleted = -1
-                                workHoursDifference = 0
-                                workdaysList = []
-                                for (var i = 0; i <= daysDifference - 1; i++) {
-                                    var tempDate = new Date(startdate);
-                                    tempDate.setDate(tempDate.getDate() + i)
-
-                                    if (!excludedDays.includes(tempDate.getDay())) {
-                                        workdaysList.push(tempDate.toDateString())
-                                        totalWorkdays++
-                                    }
-                                }
-
-                                while (xdate <= currentdate && enddate >= currentdate) {
-
-                                    if (workdaysList.includes(xdate.toDateString()) && xdate < currentdate) {
-                                        workcompleted = workcompleted + 1
-                                    }
-                                    if ((workdaysList.includes(xdate.toDateString()) && xdate.toDateString() == currentdate.toDateString())) {
-                                        chours = currentdate.getHours();
-                                        xhours = xdate.getHours();
-
-                                        if (chours <= 17 && chours > 9) {
-                                            hoursdiff = chours - xhours
-                                            hourscompleted = hoursdiff
-                                        } else if (chours > 17) {
-                                            workcompleted = workcompleted + 1
-                                        }
-                                    }
-                                    xdate.setDate(xdate.getDate() + 1);
-                                }
-
-                                workHoursDifference = totalWorkdays * 8
-                                totalHours = (workcompleted * 8) + hourscompleted
-                                const per = ((workHoursDifference - totalHours) / workHoursDifference) * 100
-
-                                if (startdate <= currentdate && enddate >= currentdate) {
-
-                                    return Math.ceil(per)
-                                }
-                                else if (startdate > currentdate) {
-
-                                    return ("")
-                                } else {
-
-                                    return "0"
-                                }
-
-                            }
-                            if (workdays == 6) {
-                                var excludedDays = [0];
-                                totalWorkdays = 0;
-                                hourscompleted = 0
-                                workcompleted = -1
-                                workHoursDifference = 0
-                                workdaysList = []
-                                for (var i = 0; i <= daysDifference - 1; i++) {
-                                    var tempDate = new Date(startdate);
-                                    tempDate.setDate(tempDate.getDate() + i)
-
-                                    if (!excludedDays.includes(tempDate.getDay())) {
-                                        workdaysList.push(tempDate.toDateString())
-                                        totalWorkdays++
-                                    }
-
-
-                                }
-                                while (xdate <= currentdate && enddate >= currentdate) {
-
-                                    if (workdaysList.includes(xdate.toDateString()) && xdate < currentdate) {
-                                        workcompleted = workcompleted + 1
-                                    }
-                                    if ((workdaysList.includes(xdate.toDateString()) && xdate.toDateString() == currentdate.toDateString())) {
-                                        chours = currentdate.getHours();
-                                        xhours = xdate.getHours();
-
-                                        if (chours <= 17 && chours > 9) {
-                                            hoursdiff = chours - xhours
-                                            hourscompleted = hoursdiff
-                                        } else if (chours > 17) {
-                                            workcompleted = workcompleted + 1
-                                        }
-                                    }
-                                    xdate.setDate(xdate.getDate() + 1);
-                                }
-
-                                workHoursDifference = totalWorkdays * 8
-                                totalHours = (workcompleted * 8) + hourscompleted
-                                const per = ((workHoursDifference - totalHours) / workHoursDifference) * 100
-
-                                if (startdate <= currentdate && enddate >= currentdate) {
-                                    return Math.ceil(per)
-                                }
-                                else if (startdate > currentdate) {
-                                    return ("")
-                                } else {
-                                    return "0"
-                                }
-
-                            }
-                            if (workdays == 7) {
-                                var excludedDays = [];
-                                totalWorkdays = 0;
-                                hourscompleted = 0
-                                workcompleted = -1
-                                workHoursDifference = 0
-                                workdaysList = []
-                                for (var i = 0; i <= daysDifference - 1; i++) {
-                                    var tempDate = new Date(startdate);
-                                    tempDate.setDate(tempDate.getDate() + i)
-
-                                    if (!excludedDays.includes(tempDate.getDay())) {
-                                        workdaysList.push(tempDate.toDateString())
-                                        totalWorkdays++
-                                    }
-                                }
-
-                                while (xdate <= currentdate && enddate >= currentdate) {
-
-                                    if (workdaysList.includes(xdate.toDateString()) && xdate < currentdate) {
-                                        workcompleted = workcompleted + 1
-                                    }
-                                    if ((workdaysList.includes(xdate.toDateString()) && xdate.toDateString() == currentdate.toDateString())) {
-                                        chours = currentdate.getHours();
-                                        xhours = xdate.getHours();
-
-                                        if (chours <= 17 && chours > 9) {
-                                            hoursdiff = chours - xhours
-                                            hourscompleted = hoursdiff
-                                        } else if (chours > 17) {
-                                            workcompleted = workcompleted + 1
-                                        }
-                                    }
-                                    xdate.setDate(xdate.getDate() + 1);
-                                }
-
-                                workHoursDifference = totalWorkdays * 8
-                                totalHours = (workcompleted * 8) + hourscompleted
-                                const per = ((workHoursDifference - totalHours) / workHoursDifference) * 100
-
-                                if (startdate <= currentdate && enddate >= currentdate) {
-                                    return Math.ceil(per)
-                                }
-                                else if (startdate > currentdate) {
-                                    return ("")
-                                } else {
-                                    return "0"
-                                }
-                            }
-                            // }
-                            return 0
+                            const percentComplete =  calcPercentage(dataItem.workdays, dataItem.start, dataItem.end)
+                            return Math.round((percentComplete ?? 0)*100)
                         }
                     },
                     {
                         field: "status", title: "Task Status", editable: true, width: 200, editor: function (container, options) {
+                            const task = options.model
                             $('<input name="' + options.field + '"/>')
                                 .appendTo(container)
                                 .kendoDropDownList({
@@ -2355,9 +1280,7 @@
                                         { text: "On Hold", value: "On Hold" }
                                     ],
                                     change: function (e) {
-
-                                        var selectedValue = e.sender.value();
-                                        options.model.set("status", selectedValue);
+                                        task.status = e.sender.value();
                                     }
                                 });
                         }
@@ -2378,9 +1301,7 @@
                                         { text: "Raw Material", value: "Raw Material" },
                                         { text: "Scope Changed", value: "Scope Changed" }
                                     ], change: function (e) {
-
-                                        var selectedValue = e.sender.value();
-                                        options.model.set("delayreason", selectedValue);
+                                        task.delayreason = e.sender.value();
                                     }
                                 });
                         }
@@ -2388,24 +1309,14 @@
                     { field: "delaycomments", title: "Delay Comments", type: "text", editable: true, width: 200 },
                     { field: "remarks", title: "Remarks", type: "text", editable: true, width: 200 }
                 ],
-                events: {
-                    dependencyDragEnd: function(e) {
-                        // Handle the dependencyDragEnd event
-                        console.log("Dependency drag end event triggered");
-                        console.log("Source task ID: " + e.source.id);
-                        console.log("Target task ID: " + e.target.id);
-                        const successorTask = getGanttTasks().find(t => t.id === e.target.id)
-                        if (successorTask) {
-                            updatePredecessorTasks({ model: successorTask })
-                        }
-                    }
-                },
 
+                sortable: true,
+                columnResize: () => gantt.refresh(),
                 loading: true,
                 //showPlannedTasks: false,
                 toolbar: ["append", "pdf", "plannedTasks"],
                 editable: { plannedTasks: true, resize: false, move: false },
-                resizable: false,
+                resizable: true,
                 showWorkHours: false,
                 showWorkDays: false,
                 height: 500,
@@ -2441,68 +1352,6 @@
                 }
             });
 
-            function moveTask(gantt, task, startDelta) {
-                var t = gantt.dependencies.filter({
-                    field: "predecessorId",
-                    operator: "equals",
-                    value: task.id
-                });
-
-
-                $(gantt.dependencies.view()).each(function (index, dependency) {
-
-                    var dependentTask = gantt.dataSource.get(dependency.successorId);
-                    var dependentTaskStart = dependentTask.get("start");
-                    var dependentTaskEnd = dependentTask.get("end");
-
-                    dependentTask.set("start", new Date(dependentTaskStart.getTime() + startDelta));
-                    dependentTask.set("end", new Date(dependentTaskEnd.getTime() + startDelta));
-
-                    gantt.dependencies.filter(null);
-
-                    var nextTask = gantt.dataSource.get(dependentTask.id);
-
-                    moveTask(gantt, nextTask, startDelta)
-
-                });
-            }
-
-            // function percentageCalculation(ganttTasks) {
-            //     ganttTasks.data().forEach(function (task) {
-            //         workdays = task.workdays
-            //         startdate = task.start
-            //         endDate = task.end
-            //         percentage = calcPercentage(workdays, startdate, endDate)
-            //         if (percentage) {
-
-            //             task.set("percentComplete", percentage)
-            //         }
-            //         else {
-            //             task.set("percentComplete", 0)
-            //         }
-            //     });
-            //     ganttTasks.sync();
-            // }
-
-            // function varianceCalculation(ganttTasks) {
-            //     ganttTasks.data().forEach(function (task) {
-            //         workdays = task.workdays
-            //         pstart = task.plannedStart
-            //         pend = task.plannedEnd
-            //         astart = task.start
-            //         aend = task.end
-
-            //         variance = calcVariance(workdays, pstart, pend, astart, aend)
-            //         if (variance) {
-
-            //             task.set("variancedays", variance)
-            //         }
-            //         else {
-            //             task.set("variancedays", 0)
-            //         }
-            //     });
-            //     ganttTasks.sync();
-            // }
             $(document).bind("kendo:skinChange", function () {
                 gantt.refresh();
             });

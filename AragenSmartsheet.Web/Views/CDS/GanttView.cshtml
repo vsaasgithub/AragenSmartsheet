@@ -97,12 +97,12 @@
 
         function createStartDate(aDate) {
             const startDate = new Date(aDate)
-            startDate.setHours(9)   // Set to start at 9:00 AM
+            startDate.setHours(9, 0, 0, 0)   // Set to start at 9:00 AM
             return startDate
         }
         function createEndDate(aDate) {
             const endDate = new Date(aDate)
-            endDate.setHours(17)    // Set to end at 5:00 PM
+            endDate.setHours(17, 0, 0, 0)    // Set to end at 5:00 PM
             return endDate
         }
         function getDisableDates(days) {
@@ -139,7 +139,7 @@
                 return null
             }
             if (currentDate > endDate) { // Project has already completed
-                return 0
+                return 1
             }
 
             // Process only prject that endDate has not passed today
@@ -299,6 +299,22 @@
             return workEffordDays
         }
 
+        function getEndDate(startDate, durationdays, workingdays) {
+            var curDate = new Date(startDate);
+            for(var i=0; i<durationdays-1; i++) {
+                curDate = getNextWorkingDate(curDate, workingdays)
+            }
+            return createEndDate(curDate)
+        }
+
+        function getStartDate(endDate, durationdays, workingdays) {
+            var curDate = new Date(endDate);
+            for(var i=0; i<durationdays-1; i++) {
+                curDate = getPreviousWorkingDate(curDate, workingdays)
+            }
+            return createStartDate(curDate)
+        }
+
         // Update task variancedays
         function updateTaskVariance(taskInfo) {
             let task = taskInfo
@@ -306,11 +322,11 @@
                 const ganttTasks = getGanttTasks()
                 task = ganttTasks.find(item => item.id === taskInfo)
             }
-            if (!baselineSet) { // If baseline is not set, do not calculate variancedays
+            if (!baselineSet && task.variancedays !== 0) { // If baseline is not set, do not calculate variancedays
                 task.set("variancedays", 0)
                 return 0
             }
-            if (task?.hasChildren) {
+            if (task?.hasChildren && task.workdays !== 7) {
                 task.set("workdays", 7) // Default parent summary task to 7 days
             }
             var plannedTotalWorkdays = getWorkEffordDays(task.plannedStart, task.plannedEnd, task.workdays);
@@ -320,7 +336,9 @@
             if (variance < 0) {
                 variance = 0
             }
-            task.set("variancedays", variance)
+            if (variance !== task.variancedays) {
+                task.set("variancedays", variance)
+            }
             return variance
         }
 
@@ -346,44 +364,49 @@
                 // Update old parent dates
                 const oldTask = ganttTasks.find(t => t.id === task.id)
                 const oldParentId = oldTask.parentId
-                const oldChildTasks = ganttTasks.filter(t => t.parentId === oldParentId && t.id !== oldTask.id)
                 const oldParentTask = ganttTasks.find(t => t.id === oldParentId)
-                // Extract start and end dates of child tasks
-                const oldChildStartDates = oldChildTasks.map(task => new Date(task.start));
-                const oldChildEndDates = oldChildTasks.map(task => new Date(task.end));
-                const oldChildDurationDays = oldChildTasks.map(task => task.durationdays);
-                const oldChildWorkingDays = oldChildTasks.map(task => task.workdays);
-
-                // Find the earliest start date and latest end date among child tasks
-                const oldParentStartDate = new Date(Math.min(...oldChildStartDates));
-                const oldParentEndDate = new Date(Math.max(...oldChildEndDates));
-                const oldParentWorkingDays = Math.max(...oldChildWorkingDays);
-
-                // Set start and end date for parent task
-                oldParentTask.set('start', oldParentStartDate.toISOString())
-                oldParentTask.set('end', oldParentEndDate.toISOString())
-
-                // Set durationdays for parent task
-                const oldParentDurationInDays = Math.floor((oldParentEndDate - oldParentStartDate) / MILISECONDS_PER_DAY) + 1;
-                oldParentTask.set('durationdays', oldParentDurationInDays);
+               
+                if (oldParentTask) {
+                    const oldChildTasks = ganttTasks.filter(t => t.parentId === oldParentId && t.id !== oldTask.id)
+                    // Extract start and end dates of child tasks
+                    const oldChildStartDates = oldChildTasks.map(task => new Date(task.start))
+                    const oldChildEndDates = oldChildTasks.map(task => new Date(task.end));
+                    const oldChildDurationDays = oldChildTasks.map(task => task.durationdays)
+                    const oldChildWorkingDays = oldChildTasks.map(task => task.workdays)
+                    // Find the earliest start date and latest end date among child tasks
+                    const oldParentStartDate = new Date(Math.min(...oldChildStartDates))
+                    const oldParentEndDate = new Date(Math.max(...oldChildEndDates))
+                    const oldParentWorkingDays = Math.max(...oldChildWorkingDays)
+                    oldParentTask.set('workdays', oldParentWorkingDays)
+                    // Set start and end date for parent task
+                    oldParentTask.set('start', oldParentStartDate.toISOString())
+                    oldParentTask.set('end', oldParentEndDate.toISOString())
+                    // Set durationdays for parent task
+                    //const oldParentDurationInDays = Math.floor((oldParentEndDate - oldParentStartDate) / MILISECONDS_PER_DAY) + 1;
+                    const oldParentDurationInDays = getWorkEffordDays(oldParentStartDate, oldParentEndDate, oldParentWorkingDays)
+                    oldParentTask.set('durationdays', oldParentDurationInDays);
+                }
 
             }
 
             // Extract start and end dates of child tasks
             const childStartDates = childTasks.map(task => new Date(task.start));
             const childEndDates = childTasks.map(task => new Date(task.end));
+            const childWorkingDays = childTasks.map(task => task.workdays);
             const childDurationDays = childTasks.map(task => task.durationdays);
 
             // Find the earliest start date and latest end date among child tasks
             const parentStartDate = new Date(Math.min(...childStartDates));
             const parentEndDate = new Date(Math.max(...childEndDates));
+            const parentWorkingDays = Math.max(...childWorkingDays)
 
             // Set start and end date for parent task
             parentTask.set('start', parentStartDate.toISOString())
             parentTask.set('end', parentEndDate.toISOString())
 
             // set durationdays for parent task
-            const parentDurationInDays = Math.floor((parentEndDate - parentStartDate) / MILISECONDS_PER_DAY) + 1;
+            //const parentDurationInDays = Math.floor((parentEndDate - parentStartDate) / MILISECONDS_PER_DAY) + 1;
+            const parentDurationInDays = getWorkEffordDays(parentStartDate, parentEndDate, parentWorkingDays)
             parentTask.set('durationdays', parentDurationInDays);
 
             updateTaskVariance(parentId)
@@ -642,68 +665,25 @@
                     //showPlannedColumns(false)
                     baselineSet = false;
                     datasource.data().forEach(function (task) {
-                        // if (task.hasChildren == false) {
-                        workdays = task.workdays;
-                        startdate = task.start;
-                        endDate = task.end;
-
-                        if ((workdays == 5) && startdate && endDate) {
-                            var loop = new Date(startdate);
-                            var z = 0;
-                            while (loop <= endDate) {
-                                if (loop.getDay() !== 0 && loop.getDay() !== 6) {
-                                    z = z + 1;
-                                }
-                                let newDate = loop.setDate(loop.getDate() + 1);
-                                loop = new Date(newDate);
-                            }
-                            task.set("durationdays", z);
-                        }
-                        if ((workdays == 6) && startdate && endDate) {
-                            var loop = new Date(startdate);
-                            var z = 0;
-                            while (loop <= endDate) {
-                                console.log('6- loop-' + loop)
-                                console.log('6- endDate-' + endDate)
-                                if (loop.getDay() !== 0) {
-                                    z = z + 1;
-
-                                }
-                                let newDate = loop.setDate(loop.getDate() + 1);
-                                loop = new Date(newDate);
-                            }
-                            task.set("durationdays", z);
-                        }
-                        if ((workdays == 7) && startdate && endDate) {
-                            var loop = new Date(startdate);
-                            var z = 0;
-                            while (loop <= endDate) {
-                                console.log('7- loop-' + loop)
-                                console.log('7- endDate-' + endDate)
-                                z = z + 1;
-                                let newDate = loop.setDate(loop.getDate() + 1);
-                                loop = new Date(newDate);
-                            }
-                            task.set("durationdays", z);
-                        }
-                        //}
-
+                        const durationdays = getWorkEffordDays(task.start, task.end, task.workdays)
+                        task.set("durationdays", durationdays);
                         task.set("baselineSet", false);
-                        task.set("variancedays", 0)
+                        if (task.variancedays !== 0) {
+                            task.set("variancedays", 0)
+                        }
                         task.set("plannedStart", task.start);
                         task.set("plannedEnd", task.end);
                     });
 
-                    gantt.dataSource.sync();
-                    //showPlannedColumns(false);
-                    gantt.refresh();
-
-                })
-                    .fail(function () {
-                        gantt.setOptions({
-                            showPlannedTasks: true
-                        });
+                }).fail(function () {
+                    gantt.setOptions({
+                        showPlannedTasks: true
                     });
+                });
+
+                gantt.dataSource.sync();
+                //showPlannedColumns(false);
+                gantt.refresh();
             }
 
             else {
@@ -715,20 +695,25 @@
                         workdays = task.workdays
                         startdate = task.plannedStart
                         endDate = task.plannedEnd
-                        percentage = calcPercentage(workdays, startdate, endDate)
-                        task.set("percentComplete", percentage ?? 0)
+                        percentage = calcPercentage(workdays, startdate, endDate) ?? 0
+                        if (task.percentComplete !== percentage) {
+                            task.set("percentComplete", percentage)
+                        }
 
                         task.set("baselineSet", true);
-                        task.set("variancedays", 0)
-                        task.set("plannedStart", task.start);
-                        task.set("plannedEnd", task.end);
-
-                        //showPlannedColumns(true);
-
-                        //}
+                        if (task.variancedays !== 0) {
+                            task.set("variancedays", 0)
+                        }
+                        if (task.plannedStart?.getTime() !== task.start.getTime()) {
+                            task.set("plannedStart", task.start);
+                        }
+                        if (task.plannedEnd?.getTime() !== task.end.getTime()) {
+                            task.set("plannedEnd", task.end);
+                        }
 
                     });
                     gantt.dataSource.sync();
+                    //showPlannedColumns(true);
                     gantt.refresh();
                 })
                     .fail(function () {
@@ -766,6 +751,7 @@
                         dataType: "json",
                         type: "POST"
                     },
+                    batch: true,
                     parameterMap: function (options, operation) {
                         if (operation !== "read") {
                             return { models: kendo.stringify(options.models || [options]) };
@@ -819,6 +805,7 @@
                         url: serviceRoot + "/GanttDependencies/Create",
                         dataType: "json"
                     },
+                    batch: true,
                     parameterMap: function (options, operation) {
                         if (operation !== "read") {
                             return { models: kendo.stringify(options.models || [options]) };
@@ -843,7 +830,7 @@
                 dataBound: function (e) {
                     if (!ganttInitialized) {
                         ganttInitialized = true;
-
+                        /*
                         gantt.dataSource['_data'].forEach(event => {
                             var startDate = createStartDate(event.start)
                             var endDate = createEndDate(event.end)
@@ -851,13 +838,17 @@
                             var pstart = createStartDate(event.plannedStart)
                             var pend = createEndDate(event.plannedEnd)
                             percentage = calcPercentage(workdays, startDate, endDate)
-                            event.set("percentComplete", (percentage ?? 0));
-
+                            if (event.percentComplete !== percentage) {
+                                event.set("percentComplete", (percentage ?? 0));
+                            }
                         });
-                        gantt.dataSource.sync();
+                        */
+                        //gantt.dataSource.sync();
                         console.log(gantt.dataSource.data());
                         console.log(gantt.dependencies.data());
-                        baselineSet = gantt.dataSource.data()[0].BaselineSet;
+                        if (gantt.dataSource.data().length > 0) {
+                            baselineSet = gantt.dataSource.data()[0].BaselineSet;
+                        }
                         gantt.setOptions({ showPlannedTasks: baselineSet });
                         gantt.refresh();
                         $('#planned-switch_label').text('Set Baselines');
@@ -891,6 +882,25 @@
                     return true
                 },
                 */
+                add: function (e) {
+                    const isBaselineSet = getGanttTasks()[0].BaselineSet
+                    const startDate = createStartDate(new Date())
+                    const endDate = createEndDate(new Date)
+                    endDate.setDate(endDate.getDate() + 2)
+                    const task = e.task
+                    task.set('start', startDate)
+                    task.set('end', endDate)
+                    const newDuration = getWorkEffordDays(task.start, task.end, task.workdays)
+                    if (task.durationdays != newDuration) {
+                        task.set("durationdays", newDuration)
+                    }
+
+                    task.set('plannedStart', isBaselineSet ? new Date(startDate) : null)
+                    task.set('plannedEnd', isBaselineSet ? new Date(endDate) : null)
+                    task.set("planneddays", newDuration)
+
+                    return true
+                },
                 dependencies: dependenciesDataSource,
                 resources: {
                     field: "resources",
@@ -1013,22 +1023,33 @@
                                             { text: "7", value: "7" }
                                         ],
                                         change: function (e) {
-                                            task.set("workdays", e.sender.value());
+                                            if (task.workdays !== e.sender.value()) {
+                                                task.set("workdays", e.sender.value());
+                                            }
                                             var startDate = new Date(task.start);
 
                                             // Update starting day
                                             if(!isWorkingDay(startDate, task.workdays)) {
                                                 startDate = getNextWorkingDate(startDate, task.workdays)
-                                                task.set("start", createStartDate(startDate))
+                                                const newStartDate = createStartDate(startDate)
+                                                if (task.start.getTime() !== newStartDate.getTime()) {
+                                                    task.set("start", newStartDate)
+                                                }
                                             }
                                             if (task.durationdays) {
                                                 let curDate = new Date(startDate)
                                                 for(var i = 0; i<task.durationdays-1; i++) {
                                                     curDate = getNextWorkingDate(curDate, task.workdays)
                                                 }
-                                                task.set("end", createEndDate(curDate))
+                                                const newEndDate = createEndDate(curDate)
+                                                if (task.end.getTime() !== newEndDate.getTime()) {
+                                                    task.set("end", newEndDate)
+                                                }
                                             } else {
-                                                task.set("durationdays", getWorkEffordDays(task.start, task.end, task.workdays))
+                                                const newDuration = getWorkEffordDays(task.start, task.end, task.workdays)
+                                                if (task.durationdays != newDuration) {
+                                                    task.set("durationdays", newDuration)
+                                                }
                                             }
 
 
@@ -1087,12 +1108,18 @@
                                     min: 1,
                                     change: function (e) {
                                         var durationdays = e.sender.value();
-                                        task.set("durationdays", durationdays);
+                                        if (task.durationdays !== durationdays) {
+                                            task.set("durationdays", durationdays);
+                                        }
                                         var endDate = new Date(task.start);
                                         for(var i=0; i<durationdays-1; i++) {
                                             endDate = getNextWorkingDate(endDate, task.workdays)
                                         }
-                                        task.set("end", createEndDate(endDate))
+                                        const newEndDate = createEndDate(endDate)
+                                        if (task.end.getTime() !== newEndDate.getTime()) {
+                                            task.set("end", newEndDate)
+                                        }
+                                        
 
                                         // If this task has a predecessor, make sure it startDate or endDate depends on its predecessor
                                         updatePredecessorTasks({ task })
@@ -1117,6 +1144,9 @@
                     {
                         field: "plannedStart", title: "Plan Start Date", defaultValue: "", nullable: true, editable: false, format: "{0:dd/MM/yyyy}", width: 100,
                         template: function(task) {
+                            if (!task.plannedStart) {
+                                return ""
+                            }
                             task.plannedStart = createStartDate(task.plannedStart)
                             return kendo.toString(task.plannedStart, "dd/MM/yyyy")
                         },
@@ -1135,14 +1165,21 @@
                                     value: task.columnName,
                                     disableDates: getDisableDates(task.workdays),
                                     change: function (e) {
+                                        const newPlannedStart = createStartDate(task.plannedStart)
+                                        if (task.plannedStart !== newPlannedStart) {
+                                            task.set("plannedStart", newPlannedStart)
+                                        }
                                         
-                                        task.set("plannedStart", createStartDate(task.plannedStart))
                                         var endDate = new Date(task.plannedStart);
                                         var durationdays = task.durationdays;
                                         for(var i = 0; i < durationdays - 1; i++) {
                                             endDate = getNextWorkingDate(endDate, task.workdays)
                                         }
-                                        task.set("plannedEnd", createEndDate(endDate))
+                                        const newEndDate = createEndDate(endDate)
+                                        if (task.plannedEnd.getTime() !== newEndDate.getTime()) {
+                                            task.set("plannedEnd", newEndDate)
+                                        }
+                                        
                                    }
                                 })
                             }
@@ -1151,6 +1188,9 @@
                     {
                         field: "plannedEnd", title: "Plan End Date", editable: false, defaultValue: "", nullable: true, format: "{0:dd/MM/yyyy}", width: 100,
                         template: function(task) {
+                            if (!task.plannedEnd) {
+                                return ""
+                            }
                             task.plannedEnd = createEndDate(task.plannedEnd)
                             return kendo.toString(task.plannedEnd, "dd/MM/yyyy")
                         },
@@ -1167,7 +1207,10 @@
                                     value: task.columnName,
                                     disableDates: getDisableDates(task.workdays),
                                     change: function (e) {
-                                        task.set("durationdays", getWorkEffordDays(task.plannedStart, task.plannedEnd, task.workdays))
+                                        const newWorkEffordDays = getWorkEffordDays(task.plannedStart, task.plannedEnd, task.workdays)
+                                        if (task.durationdays !== newWorkEffordDays) {
+                                            task.set("durationdays", newWorkEffordDays)
+                                        }
                                         updateTaskVariance(task)
                                     }
                                 })
@@ -1193,16 +1236,17 @@
                                     value: task.start,
                                     disableDates: getDisableDates(task.workdays),
                                     change: function (e) {
-                                        task.set("start", createStartDate(e.sender.value()));
-                                        var curDate = new Date(task.start);
-                                        var durationdays = options.model.durationdays;
-                                        for(var i=0; i<durationdays-1; i++) {
-                                            curDate = getNextWorkingDate(curDate, task.workdays)
+                                        const newStartDate = createStartDate(e.sender.value())
+                                        if (task.start.getTime() !== newStartDate.getTime()) {
+                                            task.set("start", newStartDate);
                                         }
-                                        task.end = createEndDate(curDate)
- 
-                                        if (task.workdays && task.start && task.end) {
-                                            task.set("percentComplete", (calcPercentage(task.workdays, task.start, task.end) ?? 0))
+                                        const newEndDate = getEndDate(task.start, task.durationdays, task.workdays)
+                                        if (task.end.getTime() !== newEndDate.getTime()) {
+                                            task.set("end", newEndDate)
+                                        }
+                                        const percentComplete = calcPercentage(task.workdays, task.start, task.end)
+                                        if (percentComplete !== task.percentComplete) {
+                                            task.set("percentComplete", percentComplete)
                                         }
 
                                         // Update the current task info and  all of its related tasks
@@ -1235,12 +1279,20 @@
                                     value: task.end,
                                     disableDates: getDisableDates(task.workdays),
                                     change: function (e) {
-                                        task.set("end", createEndDate(e.sender.value()))
-                                        var durationdays = getWorkEffordDays(task.start, task.end, task.workdays)
-                                        task.set("durationdays", durationdays)
+                                        const newEndDate = createEndDate(e.sender.value())
+                                        if (task.end.getTime() !== newEndDate.getTime()) {
+                                            task.set("end", newEndDate)
+                                        }
+                                        
+                                        var durationdays = getWorkEffordDays(task.start, task.end, task.workdays) ?? 0
+                                        if (task.durationdays !== durationdays) {
+                                            task.set("durationdays", durationdays)
+                                        }
 
                                         percentage = calcPercentage(task.workdays, task.start, task.end)
-                                        task.set("percentComplete", (percentage ?? 0))
+                                        if (task.percentComplete !== percentage) {
+                                            task.set("percentComplete", (percentage))
+                                        }
 
                                         // Update the current task info and  all of its related tasks
                                         // - current task duration and variance
@@ -1254,7 +1306,8 @@
                     },
                     {
                         field: "variancedays", title: "Variance", width: 100, template: function (dataItem) {
-                            return updateTaskVariance(dataItem)
+                           //return updateTaskVariance(dataItem)
+                           return dataItem.variancedays
                         }
                     },
                     { field: "taskManager", title: "Task Manager", editable: false, width: 200 },
@@ -1280,7 +1333,9 @@
                                         { text: "On Hold", value: "On Hold" }
                                     ],
                                     change: function (e) {
-                                        task.set("status", e.sender.value());
+                                        if (task.status !== e.sender.value()) {
+                                            task.set("status", e.sender.value());
+                                        }
                                     }
                                 });
                         }
@@ -1301,7 +1356,9 @@
                                         { text: "Raw Material", value: "Raw Material" },
                                         { text: "Scope Changed", value: "Scope Changed" }
                                     ], change: function (e) {
-                                        task.set("delayreason", e.sender.value());
+                                        if (task.delayreason !== e.sender.values) {
+                                            task.set("delayreason", e.sender.value());
+                                        }
                                     }
                                 });
                         }
@@ -1309,9 +1366,9 @@
                     { field: "delaycomments", title: "Delay Comments", type: "text", editable: true, width: 200 },
                     { field: "remarks", title: "Remarks", type: "text", editable: true, width: 200 }
                 ],
-
                 sortable: true,
                 columnResize: () => gantt.refresh(),
+                toggle: true,
                 loading: true,
                 //showPlannedTasks: false,
                 toolbar: ["append", "pdf", "plannedTasks"],

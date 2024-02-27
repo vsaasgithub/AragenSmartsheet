@@ -289,7 +289,7 @@
         }
         
         function getWorkEffordDays(startDate, endDate, workingdays) {
-            let workEffordDays = 0
+            let workEffordDays = 1
             let curDate = createStartDate(startDate)
             const fullEndDate = createEndDate(endDate)
             while(curDate < fullEndDate) {
@@ -671,8 +671,9 @@
                         if (task.variancedays !== 0) {
                             task.set("variancedays", 0)
                         }
-                        task.set("plannedStart", task.start);
-                        task.set("plannedEnd", task.end);
+                        // Do not change the baseline date when turn baselineSet off.
+                        // task.set("plannedStart", task.start);
+                        // task.set("plannedEnd", task.end);
                     });
 
                 }).fail(function () {
@@ -1074,22 +1075,13 @@
                             var currentDate = new Date();
 
                             var statusField = dataItem.status;
-                            if (statusField === "Completed") {
+                            if (statusField === "Completed" || percentCompleted < .60) {
                                 return '<div style="background-color: green; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
                             }
-                            else if (percentCompleted === null) {
-                                return '<div style="background-color: blue; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
-                            }
-                            else if (percentCompleted === 0) {
-                                return '<div style="background-color: red; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
-                            }
-                            else if (percentCompleted > 0 && percentCompleted <= .60) {
+                            else if (percentCompleted < 1) {
                                 return '<div style="background-color: yellow; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
-                            }
-                            else if (percentCompleted > 0.6 && percentCompleted < 1) {
-                                return '<div style="background-color: green; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
-                            } else if ((percentCompleted == 1) && (statusField != "Completed")) {
-                                return '<div style="background-color: green; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
+                            } else {
+                                return '<div style="background-color: red; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
                             }
                         }
                     },

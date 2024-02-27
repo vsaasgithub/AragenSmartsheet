@@ -54,6 +54,7 @@ namespace AragenSmartsheet.Web.Controllers
             return View("~/views/home/project.cshtml");
         }
 
+
         /// <summary>
         /// Index View which is the main page of the application
         /// </summary>

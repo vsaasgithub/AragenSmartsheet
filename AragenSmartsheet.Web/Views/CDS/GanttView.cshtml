@@ -318,6 +318,10 @@
         // Update task variancedays
         function updateTaskVariance(taskInfo) {
             let task = taskInfo
+            if (!baselineSet) { 
+                task.set("variancedays", 0)
+                return 0
+            }
             if (typeof taskInfo === 'number') {
                 const ganttTasks = getGanttTasks()
                 task = ganttTasks.find(item => item.id === taskInfo)

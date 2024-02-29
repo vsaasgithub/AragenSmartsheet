@@ -20,7 +20,6 @@
 
 <script src="~/js/kendo-ui-license.js"></script>
 
-
 <div id="example">
     <a class="k-button k-button-solid-base k-button-solid k-button-md k-rounded-md" target="_blank" href="@ViewBag.ProjectResources">Project Resources</a>
     <div id="gantt"></div>
@@ -136,7 +135,7 @@
             const currentDate = new Date();
             currentDate.setSeconds(0, 0);
             if (currentDate < startDate) { // Project not started yet
-                return null
+                return 0
             }
             if (currentDate > endDate) { // Project has already completed
                 return 1
@@ -315,7 +314,7 @@
             return createStartDate(curDate)
         }
 
-        // Update task variancedays
+        // perc task variancedays
         function updateTaskVariance(taskInfo) {
             let task = taskInfo
             if (typeof taskInfo === 'number') {
@@ -967,8 +966,8 @@
                 },
                 views: [
                     { type: "day" },
-                    { type: "week" },
-                    { type: "month", selected: true },
+                    { type: "week", selected: true },
+                    { type: "month"},
                     { type: "year" },
                 ],
                 columns: [
@@ -996,7 +995,7 @@
                         }
                     },
                     {
-                        field: "workdays", title: "Work Days", editable: true, width: 50,
+                        field: "workdays", title: "Work Days", editable: true, width: 85,
                         template: function (options) {
                             if (options.hasChildren && options.workdays) {
                                 return "";
@@ -1069,7 +1068,7 @@
                         }
                     },
                     {
-                        field: "health", title: "Health", editable: false, width: 50, template: function (dataItem) {
+                        field: "health", title: "Health", editable: false, width: 80, template: function (dataItem) {
                             var percentCompleted = calcPercentage(dataItem.workdays, dataItem.start, dataItem.end)
 
                             var actualStart = dataItem.start
@@ -1089,7 +1088,7 @@
                         }
                     },
                     {
-                        field: "durationdays", title: "Duration", editable: true, width: 50,
+                        field: "durationdays", title: "Duration", editable: true, width: 100,
                         editor: function (container, options) {
                             const task = options.model ?? options.task
                             var isChecked = $("#planned-switch").prop("checked");
@@ -1304,16 +1303,16 @@
                            return updateTaskVariance(dataItem)
                         }
                     },
-                    { field: "taskManager", title: "Task Manager", editable: false, width: 150 },
+                    { field: "taskManager", title: "Task Manager", editable: false, width: 200 },
                     {
-                        field: "percentComplete", title: "% Complete", type: "number", editable: false, width: 60,
+                        field: "percentComplete", title: "% Complete", type: "number", editable: false, width: 100,
                         template: function (dataItem) {
                             const percentComplete =  calcPercentage(dataItem.workdays, dataItem.start, dataItem.end)
                             return Math.round((percentComplete ?? 0)*100)
                         }
                     },
                     {
-                        field: "status", title: "Task Status", editable: true, width: 150, editor: function (container, options) {
+                        field: "status", title: "Task Status", editable: true, width: 200, editor: function (container, options) {
                             const task = options.model
                             $('<input name="' + options.field + '"/>')
                                 .appendTo(container)
@@ -1370,8 +1369,8 @@
                 resizable: true,
                 showWorkHours: false,
                 showWorkDays: false,
-                height: 950,
-                listWidth: "60%",
+                height: 500,
+                listWidth: "75%",
                 snap: false,
                 tooltip: {
                     visible: true

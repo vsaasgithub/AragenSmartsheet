@@ -757,7 +757,7 @@
 
 
 <div class="loaderoverlay">
-    <span class="minload">Loader...</span>
+    <span class="minload">Please wait...</span>
 </div>
 
 <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
@@ -771,6 +771,9 @@
 
 
     function disableButtonAndSubmitForm() {
+        let text = "The project will be created now, this may take several moments. Click OK to proceed.";
+        if (confirm(text) == true) {
+    
 
         // Submit the form with parameters
         //var form = document.getElementById("ProjectInitiation");
@@ -789,6 +792,9 @@
 
 
 
+        } else {
+
+        }
         //}
     }
 

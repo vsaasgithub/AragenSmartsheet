@@ -289,7 +289,7 @@
         }
         
         function getWorkEffordDays(startDate, endDate, workingdays) {
-            let workEffordDays = 1
+            let workEffordDays = 0
             let curDate = createStartDate(startDate)
             const fullEndDate = createEndDate(endDate)
             while(curDate < fullEndDate) {
@@ -318,15 +318,11 @@
         // Update task variancedays
         function updateTaskVariance(taskInfo) {
             let task = taskInfo
-            if (!baselineSet) { 
-                task.set("variancedays", 0)
-                return 0
-            }
             if (typeof taskInfo === 'number') {
                 const ganttTasks = getGanttTasks()
                 task = ganttTasks.find(item => item.id === taskInfo)
             }
-            if (!baselineSet && task.variancedays !== 0) { // If baseline is not set, do not calculate variancedays
+            if (!baselineSet) { 
                 task.set("variancedays", 0)
                 return 0
             }
@@ -970,7 +966,10 @@
                     }
                 },
                 views: [
-                    { type: "week", selected: true }
+                    { type: "day" },
+                    { type: "week" },
+                    { type: "month", selected: true },
+                    { type: "year" },
                 ],
                 columns: [
                     { field: "id", title: "ID", width: 50 },
@@ -997,7 +996,7 @@
                         }
                     },
                     {
-                        field: "workdays", title: "Work Days", editable: true, width: 85,
+                        field: "workdays", title: "Work Days", editable: true, width: 50,
                         template: function (options) {
                             if (options.hasChildren && options.workdays) {
                                 return "";
@@ -1070,7 +1069,7 @@
                         }
                     },
                     {
-                        field: "health", title: "Health", editable: false, width: 80, template: function (dataItem) {
+                        field: "health", title: "Health", editable: false, width: 50, template: function (dataItem) {
                             var percentCompleted = calcPercentage(dataItem.workdays, dataItem.start, dataItem.end)
 
                             var actualStart = dataItem.start
@@ -1090,7 +1089,7 @@
                         }
                     },
                     {
-                        field: "durationdays", title: "Duration", editable: true, width: 100,
+                        field: "durationdays", title: "Duration", editable: true, width: 50,
                         editor: function (container, options) {
                             const task = options.model ?? options.task
                             var isChecked = $("#planned-switch").prop("checked");
@@ -1301,21 +1300,20 @@
                         }
                     },
                     {
-                        field: "variancedays", title: "Variance", width: 100, template: function (dataItem) {
-                           //return updateTaskVariance(dataItem)
-                           return dataItem.variancedays
+                        field: "variancedays", title: "Variance", width: 50, template: function (dataItem) {
+                           return updateTaskVariance(dataItem)
                         }
                     },
-                    { field: "taskManager", title: "Task Manager", editable: false, width: 200 },
+                    { field: "taskManager", title: "Task Manager", editable: false, width: 150 },
                     {
-                        field: "percentComplete", title: "% Complete", type: "number", editable: false, width: 100,
+                        field: "percentComplete", title: "% Complete", type: "number", editable: false, width: 60,
                         template: function (dataItem) {
                             const percentComplete =  calcPercentage(dataItem.workdays, dataItem.start, dataItem.end)
                             return Math.round((percentComplete ?? 0)*100)
                         }
                     },
                     {
-                        field: "status", title: "Task Status", editable: true, width: 200, editor: function (container, options) {
+                        field: "status", title: "Task Status", editable: true, width: 150, editor: function (container, options) {
                             const task = options.model
                             $('<input name="' + options.field + '"/>')
                                 .appendTo(container)
@@ -1372,8 +1370,8 @@
                 resizable: true,
                 showWorkHours: false,
                 showWorkDays: false,
-                height: 500,
-                listWidth: "75%",
+                height: 950,
+                listWidth: "60%",
                 snap: false,
                 tooltip: {
                     visible: true

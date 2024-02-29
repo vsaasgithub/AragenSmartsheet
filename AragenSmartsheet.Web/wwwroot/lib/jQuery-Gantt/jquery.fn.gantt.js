@@ -6597,9 +6597,8 @@ function baseClick() {
 
             break;
         }
-        
+        LoadChart();
     }
-    LoadChart();
     var rowCount = 1;
     var data = baseLineOnClick(rowCount);
     if (isNaN(basdays)) {

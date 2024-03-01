@@ -42723,7 +42723,7 @@ div.k-grid-norecords {
 .k-column-title {
     min-width: 0;
     text-overflow: ellipsis;
-    /*white-space: nowrap;*/
+    white-space: normal;
     flex-shrink: 1;
     overflow: hidden;
 }

@@ -60,9 +60,9 @@
 <div id="example">
     <div class="row">
         <div class="col-md-9">
-        <h5 style="float:left; font-weight:bold;" class="text-primary">Project Name: @ViewBag.ProjectName</h5>
+            <h5 style="float:left; font-weight:bold;" class="text-primary">Project Name: @ViewBag.ProjectName</h5>
         </div><div class="col-md-3 pull-right" style="float:right;">
-    <a class="k-button k-button-solid-base k-button-solid k-button-md k-rounded-md" target="_blank" style="float:right;" href="@ViewBag.ProjectResources">Project Resources</a>
+            <a class="k-button k-button-solid-base k-button-solid k-button-md k-rounded-md" target="_blank" style="float:right;" href="@ViewBag.ProjectResources">Project Resources</a>
         </div>
     </div>
     <div id="gantt"></div>
@@ -76,7 +76,6 @@
         .k-pdf-export .k-gantt-toolbar {
             display: none;
         }
-       
     </style>
 
     <script>
@@ -691,7 +690,9 @@
                 })
             }
             if (!showPlanned) {
-                kendo.confirm("Your action will reset the baselines. Do you wish to continue?").done(function () {
+                if (confirm('Your action will reset the baselines. This may take several moments, Do you wish to continue?') == true) {
+                    loadershow();
+                    // kendo.confirm("Your action will reset the baselines. This may take several moments, Do you wish to continue?").done(function () {
                     //showPlannedColumns(false)
 
                     baselineSet = false;
@@ -703,27 +704,29 @@
                         if (task.variancedays !== 0) {
                             task.set("variancedays", 0)
                         }
-
-                        // Do not change the baseline date when turn baselineSet off.
-                        // task.set("plannedStart", task.start);
-                        // task.set("plannedEnd", task.end);
                     });
-
-
-                }).fail(function () {
+                    // }).fail(function () {
+                    //     gantt.setOptions({
+                    //         showPlannedTasks: true
+                    //     });
+                    // });
+                    gantt.dataSource.sync();
+                    //showPlannedColumns(false);
+                    gantt.refresh();
+                    loaderhide();
+                }
+                else {
                     gantt.setOptions({
                         showPlannedTasks: true
                     });
-                });
-                gantt.dataSource.sync();
-                //showPlannedColumns(false);
-                gantt.refresh();
+                }
             }
 
             else {
-                kendo.confirm("Your action will set the baselines. Do you wish to continue?").done(function () {
+                if (confirm('Your action will set the baselines. This may take several moments, Do you wish to continue?') == true) {
+                    // kendo.confirm("Your action will set the baselines. This may take several moments, Do you wish to continue?").done(function () {
                     //showPlannedColumns(true)
-
+                    loadershow();
                     baselineSet = true;
                     gantt.dataSource.data().forEach(function (task) {
 
@@ -746,20 +749,19 @@
                         if (task.plannedEnd?.getTime() !== task.end.getTime()) {
                             task.set("plannedEnd", task.end);
                         }
-
-
-
                     });
                     gantt.dataSource.sync();
                     //showPlannedColumns(true);
                     gantt.refresh();
-                })
-                    .fail(function () {
-                        gantt.setOptions({
-                            showPlannedTasks: false
-                        });
+
+                    loaderhide();
+                }
+                else {
+                    gantt.setOptions({
+                        showPlannedTasks: false
                     });
 
+                }
             }
         }
 

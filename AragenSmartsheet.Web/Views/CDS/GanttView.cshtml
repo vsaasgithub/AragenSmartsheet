@@ -12,6 +12,7 @@
         display: none;
     }
 </style>
+
 <title>CDS Gantt</title>
 
 
@@ -57,7 +58,13 @@
 </div>
 
 <div id="example">
-    <a class="k-button k-button-solid-base k-button-solid k-button-md k-rounded-md" target="_blank" href="@ViewBag.ProjectResources">Project Resources</a>
+    <div class="row">
+        <div class="col-md-9">
+        <h5 style="float:left; font-weight:bold;" class="text-primary">Project Name: @ViewBag.ProjectName</h5>
+        </div><div class="col-md-3 pull-right" style="float:right;">
+    <a class="k-button k-button-solid-base k-button-solid k-button-md k-rounded-md" target="_blank" style="float:right;" href="@ViewBag.ProjectResources">Project Resources</a>
+        </div>
+    </div>
     <div id="gantt"></div>
 
     <style>
@@ -69,18 +76,7 @@
         .k-pdf-export .k-gantt-toolbar {
             display: none;
         }
-        /* Hide Percent Complete input in Task Editor */
-        .k-form-field.k-colspan-1.k-col-span-1 {
-            display: none;
-        }
-        /* Hide Percent Complete Slider on Gantt Chart Task */
-        .k-task-draghandle {
-            display: none;
-        }
-        /* Hide dragable dot for creating dependency */
-        .k-task-wrap:hover .k-task-dot, .k-task-wrap.k-origin .k-task-dot {
-            display: none;
-        }
+       
     </style>
 
     <script>
@@ -769,8 +765,8 @@
 
 
         $(document).ready(function () {
-            //var serviceRoot = "https://aragencdsgantt2.azurewebsites.net/CDS";
-            var serviceRoot = "https://localhost:44380/CDS";
+            var serviceRoot = "https://aragencdsgantt2.azurewebsites.net/CDS";
+            //var serviceRoot = "https://localhost:44380/CDS";
             //var serviceRoot = "https://localhost:5001/CDS";
 
             var ganttInitialized = false;
@@ -1372,7 +1368,7 @@
                                                     id: { from: "Id", type: "number" }
                                                 }
                                             }
-                                        }                                    
+                                        }
                                     },
                                     change: function (e) {
                                         if (task.taskManager !== e.sender.text()) {
@@ -1452,6 +1448,10 @@
                 snap: false,
                 tooltip: {
                     visible: true
+                },
+                pdf: {
+                    fileName: "Kendo UI Gantt Export.pdf",
+                    proxyURL: "https://demos.telerik.com/kendo-ui/service/export"
                 },
                 togglePlannedTasks: function (e) {
                     changeValue(e.showPlannedTasks);

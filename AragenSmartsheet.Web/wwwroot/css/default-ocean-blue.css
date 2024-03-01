@@ -42723,7 +42723,7 @@ div.k-grid-norecords {
 .k-column-title {
     min-width: 0;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    /*white-space: nowrap;*/
     flex-shrink: 1;
     overflow: hidden;
 }
@@ -48120,6 +48120,7 @@ kendo-grid.k-grid .k-table-row.k-hover .k-grid-content-sticky.k-selected {
 
 .k-gantt-footer {
     box-shadow: none;
+    display:none;
 }
 
 .k-gantt-treelist .k-treelist,

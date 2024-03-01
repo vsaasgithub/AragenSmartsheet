@@ -114,6 +114,7 @@
         public const string DelayComments = "Delay Comments";
         public const string Remarks = "Remarks";
         public const string BaselineSet = "Baseline Set";
+        public const string TaskManager = "Task Manager";
 
     }
 

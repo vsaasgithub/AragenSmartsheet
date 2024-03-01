@@ -465,6 +465,7 @@ namespace AragenSmartsheet.Data.Repository
                         taskModel.ShortStartDate = "";
                         taskModel.ShortEndDate = "";
                     }
+                   
                     if (taskModel.DelayReason == "Chemistry/Lab Developmen")
                     {
                         taskModel.DelayReason = "Chemistry/Lab Development";
@@ -514,6 +515,11 @@ namespace AragenSmartsheet.Data.Repository
                {
                      ColumnId =columnMap["Task Status"],
                     Value =taskModel.TaskStatus == null ||taskModel.TaskStatus=="Select" ? string.Empty : taskModel.TaskStatus
+               },
+                     new Cell
+               {
+                     ColumnId =columnMap["Task Manager"],
+                    Value =taskModel.TaskManager == null ||taskModel.TaskManager=="Select" ? string.Empty : taskModel.TaskStatus
                },
                    new Cell
                     {
@@ -704,6 +710,11 @@ namespace AragenSmartsheet.Data.Repository
                {
                      ColumnId =columnMap["Task Status"],
                     Value =taskModel.TaskStatus == null ||taskModel.TaskStatus=="Select" ? string.Empty : taskModel.TaskStatus
+               },
+              new Cell
+               {
+                   ColumnId = columnMap["Task Manager"],
+                   Value =taskModel.TaskManager == null ||taskModel.TaskManager=="Select"? string.Empty : taskModel.TaskManager
                },
              new Cell
                {
@@ -990,9 +1001,11 @@ namespace AragenSmartsheet.Data.Repository
                     task.DurationDays = Convert.ToInt32(SmartsheetHelper.GetCellByColumnName(row, "Duration", ProjectPlanColumnMap).Value);
                     task.VarianceDays = Convert.ToInt32(SmartsheetHelper.GetCellByColumnName(row, "Variance", ProjectPlanColumnMap).Value);
                     task.TaskStatus = Convert.ToString(SmartsheetHelper.GetCellByColumnName(row, "Task Status", ProjectPlanColumnMap).Value);
+                    task.TaskManager = Convert.ToString(SmartsheetHelper.GetCellByColumnName(row, "Task Manager", ProjectPlanColumnMap).Value);
                     task.DelayReason = Convert.ToString(SmartsheetHelper.GetCellByColumnName(row, "Delay Reason", ProjectPlanColumnMap).Value);
                     task.DelayComments = Convert.ToString(SmartsheetHelper.GetCellByColumnName(row, "Delay Comments", ProjectPlanColumnMap).Value);
                     task.Remarks = Convert.ToString(SmartsheetHelper.GetCellByColumnName(row, "Remarks", ProjectPlanColumnMap).Value);
+                    task.TaskManager = Convert.ToString(SmartsheetHelper.GetCellByColumnName(row, "Task Manager", ProjectPlanColumnMap).Value);
                     task.BaselineSet = Convert.ToBoolean(SmartsheetHelper.GetCellByColumnName(row, "Baseline Set", ProjectPlanColumnMap).Value);
 
                     //task.CommitedEndDate = !string.IsNullOrEmpty(task.CommitedEndDate) ? Convert.ToDateTime(task.CommitedEndDate).ToString("dd-MM-yyyy") : "";
@@ -1094,6 +1107,11 @@ namespace AragenSmartsheet.Data.Repository
                         {
                             ColumnId = ProjectPlanColumnMap[CDSProjectPlan.Variance],
                             Value = task.VarianceDays
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.TaskManager],
+                            Value = task.TaskManager
                         },
                         new Cell
                         {
@@ -1224,6 +1242,11 @@ namespace AragenSmartsheet.Data.Repository
                         {
                             ColumnId = ProjectPlanColumnMap[CDSProjectPlan.Variance],
                             Value = task.VarianceDays
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.TaskManager],
+                            Value = task.TaskManager
                         },
                         new Cell
                         {
@@ -1429,7 +1452,8 @@ namespace AragenSmartsheet.Data.Repository
                     resources = new MCDSResources();
                     resources.RowID = Convert.ToInt64(row.Id);
                     resources.ID = Convert.ToInt32(SmartsheetHelper.GetCellByColumnName(row, "ID", ResourcesColumnMap).Value);
-                    resources.Name = Convert.ToString(SmartsheetHelper.GetCellByColumnName(row, "Name", ResourcesColumnMap).Value);
+                    //resources.Name = Convert.ToString(SmartsheetHelper.GetCellByColumnName(row, "Name", ResourcesColumnMap).Value);
+                    resources.Name = Convert.ToString(SmartsheetHelper.GetCellByColumnName(row, "Email", ResourcesColumnMap).Value);
                     resources.Color = "#0E61C2";
 
                     lstResources.Add(resources);

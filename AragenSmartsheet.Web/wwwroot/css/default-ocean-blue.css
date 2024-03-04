@@ -48120,7 +48120,8 @@ kendo-grid.k-grid .k-table-row.k-hover .k-grid-content-sticky.k-selected {
 
 .k-gantt-footer {
     box-shadow: none;
-    display:none;
+    opacity:0;
+    height:0px;
 }
 
 .k-gantt-treelist .k-treelist,

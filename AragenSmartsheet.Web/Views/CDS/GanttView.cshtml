@@ -60,7 +60,7 @@
 <div id="example">
     <div class="row">
         <div class="col-md-9">
-            <h5 style="float:left; font-weight:bold;" class="text-primary">Project Name: @ViewBag.ProjectName</h5>
+            <span style="float:left; font-weight:bold; padding:5px;" class="text-primary">Project Name: @ViewBag.ProjectName</span>
         </div><div class="col-md-3 pull-right" style="float:right;">
             <a class="k-button k-button-solid-base k-button-solid k-button-md k-rounded-md" target="_blank" style="float:right;" href="@ViewBag.ProjectResources">Project Resources</a>
         </div>
@@ -361,7 +361,7 @@
             }
             var plannedTotalWorkdays = getWorkEffordDays(task.plannedStart, task.plannedEnd, task.workdays);
             var actualTotalWorkdays = getWorkEffordDays(task.start, task.end, task.workdays);
-
+            
             var variance = actualTotalWorkdays - plannedTotalWorkdays;
             if (variance < 0) {
                 variance = 0
@@ -945,6 +945,7 @@
                 },
                 dependencies: dependenciesDataSource,
                 resources: {
+                    filter: "startswith",
                     field: "resources",
                     dataColorField: "Color",
                     dataTextField: "Name",
@@ -1440,7 +1441,7 @@
                 toggle: true,
                 loading: true,
                 //showPlannedTasks: false,
-                toolbar: ["append", "pdf", "plannedTasks"],
+                toolbar: ["append", "plannedTasks"],
                 editable: { plannedTasks: true, resize: false, move: false },
                 resizable: true,
                 showWorkHours: false,
@@ -1452,8 +1453,8 @@
                     visible: true
                 },
                 pdf: {
-                    fileName: "Kendo UI Gantt Export.pdf",
-                    proxyURL: "https://demos.telerik.com/kendo-ui/service/export"
+                    fileName: "Kendo UI Gantt Export.pdf"
+                    // proxyURL: "https://demos.telerik.com/kendo-ui/service/export"
                 },
                 togglePlannedTasks: function (e) {
                     changeValue(e.showPlannedTasks);

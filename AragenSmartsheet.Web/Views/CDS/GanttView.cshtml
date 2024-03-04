@@ -154,7 +154,9 @@
             plannedDaysDifference = Math.ceil((pend - pstart) / MILISECONDS_PER_DAY);
             actualDaysDifference = Math.ceil((aend - astart) / MILISECONDS_PER_DAY);
             plannedtotalWorkdays = getWorkEffordDays(pstart, pend, workdays)
-            actualtotalWorkdays = getWorkEffordDays(astart, aend, workdays)
+            //variance logic updated
+            //actualtotalWorkdays = getWorkEffordDays(astart, aend, workdays)
+            actualtotalWorkdays = getWorkEffordDays(pstart, aend, workdays)
             var variance = (actualtotalWorkdays - plannedtotalWorkdays) - 1;
             if (variance < 0) {
                 variance = 0;
@@ -359,8 +361,12 @@
             if (task?.hasChildren && task.workdays !== 7) {
                 task.set("workdays", 7) // Default parent summary task to 7 days
             }
+            
+            
             var plannedTotalWorkdays = getWorkEffordDays(task.plannedStart, task.plannedEnd, task.workdays);
-            var actualTotalWorkdays = getWorkEffordDays(task.start, task.end, task.workdays);
+            //variance logic updated
+            //var actualTotalWorkdays = getWorkEffordDays(task.start, task.end, task.workdays);
+            var actualTotalWorkdays = getWorkEffordDays(task.plannedStart, task.end, task.workdays);
             
             var variance = actualTotalWorkdays - plannedTotalWorkdays;
             if (variance < 0) {

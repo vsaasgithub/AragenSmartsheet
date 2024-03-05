@@ -276,6 +276,72 @@ namespace AragenSmartsheet.Web.Controllers
                     if (data != null)
                     {
                         FolderID = TempData["FolderId"] as string;
+                    }
+                }
+                if (FolderName == null)
+                {
+                    FolderName = TempData["ProjectName"] as string;
+                    ViewBag.ProjectName = FolderName;
+                }
+                else { ViewBag.ProjectName = FolderName; }
+                HttpContext.Session.SetString("SelectedFolderID", FolderID);
+                HttpContext.Session.SetString("FolderName", FolderName);
+                var check = HttpContext.Session.GetString("CDSFolderList");
+                if (check != null)
+                {
+                    FolderList = JsonConvert.DeserializeObject<List<MCDSFolder>>(HttpContext.Session.GetString("CDSFolderList"));
+                }
+                else
+                {
+                    FolderList = cdsRepo.GetProjectList();
+                }
+
+                folderSheets = FolderList.Where(x => x.FolderID == Convert.ToInt64(FolderID)).Select(y => y.FolderSheets).FirstOrDefault();
+                if (folderSheets == null)
+                {
+                    FolderList = cdsRepo.GetProjectList();
+                    folderSheets = FolderList.Where(x => x.FolderID == Convert.ToInt64(FolderID)).Select(y => y.FolderSheets).FirstOrDefault();
+                }
+                var Name = FolderList.Where(x => x.FolderID == Convert.ToInt64(FolderID)).Select(y => y.FolderName).FirstOrDefault();
+                ViewBag.ProjectName = Name;
+                ViewBag.FolderID = FolderID;
+                ViewBag.ProjectFolderLink = FolderLink;
+                ViewBag.ProjectResources = folderSheets.Where(x => x.SheetName == "Project Resources").Select(y => y.SheetLink).FirstOrDefault();
+
+                var ProjPlanSheetID = folderSheets.Where(x => x.SheetName == "Project Plan").Select(y => y.SheetID).FirstOrDefault();
+                var ProjResourcesSheetID = folderSheets.Where(x => x.SheetName == "Project Resources").Select(y => y.SheetID).FirstOrDefault();
+                var GanttResourceAssignmentsSheetID = folderSheets.Where(x => x.SheetName == "Gantt Resource Assignments").Select(y => y.SheetID).FirstOrDefault();
+                var GanttDependenciesSheetID = folderSheets.Where(x => x.SheetName == "Gantt Dependencies").Select(y => y.SheetID).FirstOrDefault();
+
+                
+
+                HttpContext.Session.SetString("ProjPlanSheetID", JsonConvert.SerializeObject(ProjPlanSheetID));
+                HttpContext.Session.SetString("ProjResourcesSheetID", JsonConvert.SerializeObject(ProjResourcesSheetID));
+                HttpContext.Session.SetString("GanttResourceAssignmentsSheetID", JsonConvert.SerializeObject(GanttResourceAssignmentsSheetID));
+                HttpContext.Session.SetString("GanttDependenciesSheetID", JsonConvert.SerializeObject(GanttDependenciesSheetID));
+
+                return View("~/Views/CDS/GanttView.cshtml");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.Message);
+                Log.Error(ex.StackTrace);
+                return null;
+            }
+        }
+
+        public IActionResult GanttView_PDF(string FolderID, string FolderName, string FolderLink)
+        {
+            List<MCDSFolderSheets> folderSheets = new();
+            List<MCDSFolder> FolderList;
+            try
+            {
+                if (FolderID == null)
+                {
+                    var data = TempData["FolderId"];
+                    if (data != null)
+                    {
+                        FolderID = TempData["FolderId"] as string;
 
                     }
                 }
@@ -313,14 +379,14 @@ namespace AragenSmartsheet.Web.Controllers
                 var GanttResourceAssignmentsSheetID = folderSheets.Where(x => x.SheetName == "Gantt Resource Assignments").Select(y => y.SheetID).FirstOrDefault();
                 var GanttDependenciesSheetID = folderSheets.Where(x => x.SheetName == "Gantt Dependencies").Select(y => y.SheetID).FirstOrDefault();
 
-                
+
 
                 HttpContext.Session.SetString("ProjPlanSheetID", JsonConvert.SerializeObject(ProjPlanSheetID));
                 HttpContext.Session.SetString("ProjResourcesSheetID", JsonConvert.SerializeObject(ProjResourcesSheetID));
                 HttpContext.Session.SetString("GanttResourceAssignmentsSheetID", JsonConvert.SerializeObject(GanttResourceAssignmentsSheetID));
                 HttpContext.Session.SetString("GanttDependenciesSheetID", JsonConvert.SerializeObject(GanttDependenciesSheetID));
 
-                return View("~/Views/CDS/GanttView.cshtml");
+                return View("~/Views/CDS/GanttView_PDF.cshtml");
             }
             catch (Exception ex)
             {

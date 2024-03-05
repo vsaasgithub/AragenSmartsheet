@@ -18,7 +18,7 @@
 
 <link href="~/css/default-ocean-blue.css" rel="stylesheet" />
 <script src="~/js/jquery-3.7.0.min.js"></script>
-<script src="~/js/kendo.all.min.js"></script>
+<script src="~/js/old/kendo.all.min.js"></script>
 
 <script src="~/js/kendo-ui-license.js"></script>
 <script>
@@ -28,11 +28,24 @@
     function loaderhide() {
         $(".loaderoverlay").hide();
     }
-
+    function dl() {
+        sleep(10000).then(() => { document.querySelector('.k-i-file-pdf').click(); });
+        sleep(18000).then(() => {
+            window.open("", "_self");
+            window.close();
+        });
+    }
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    var count = 20, timer = setInterval(function () {
+        $("#counter").html(count--);
+        if (count == 1) clearInterval(timer);
+    }, 1000);
 </script>
 <style>
     .loaderoverlay {
-        background: rgba(0,0,0,0.2);
+        background: rgba(0,0,0,1);
         position: absolute;
         width: 100%;
         z-index: 99;
@@ -54,7 +67,7 @@
     }
 </style>
 <div class="loaderoverlay">
-    <span class="minload">Please wait...</span>
+    <span class="minload"><span onclick="dl();">Please wait for <span id="counter"></span> Seconds, your file will be downloaded</span></span>
 </div>
 
 <div id="example">
@@ -62,7 +75,6 @@
         <div class="col-md-9">
             <span style="float:left; font-weight:bold; padding:5px;" class="text-primary">Project Name: @ViewBag.ProjectName</span>
         </div><div class="col-md-3 pull-right" style="float:right;">
-            <a class="k-button k-button-solid-base k-button-solid k-button-md k-rounded-md" target="_blank" style="float:right;" href="@Url.Action("GanttView_PDF", "CDS", new { FolderID = @ViewBag.FolderID, FolderName = @ViewBag.ProjectName, FolderLink = @ViewBag.ProjectFolderLink})" target="_parent">Export to PDF</a>
             <a class="k-button k-button-solid-base k-button-solid k-button-md k-rounded-md" target="_blank" style="float:right;" href="@ViewBag.ProjectResources">Project Resources</a>
         </div>
     </div>
@@ -362,13 +374,13 @@
             if (task?.hasChildren && task.workdays !== 7) {
                 task.set("workdays", 7) // Default parent summary task to 7 days
             }
-            
-            
+
+
             var plannedTotalWorkdays = getWorkEffordDays(task.plannedStart, task.plannedEnd, task.workdays);
             //variance logic updated
             //var actualTotalWorkdays = getWorkEffordDays(task.start, task.end, task.workdays);
             var actualTotalWorkdays = getWorkEffordDays(task.plannedStart, task.end, task.workdays);
-            
+
             var variance = actualTotalWorkdays - plannedTotalWorkdays;
             if (variance < 0) {
                 variance = 0
@@ -712,7 +724,7 @@
                             task.set("variancedays", 0)
                         }
                     });
-                   
+
                     gantt.dataSource.sync();
                     //showPlannedColumns(false);
                     gantt.refresh();
@@ -768,8 +780,14 @@
                 }
             }
         }
+        function dropdownlist_filtering(e) {
+            //get filter descriptor
+            var filter = e.filter;
 
-        
+            // handle the event
+        }
+
+
         $(document).ready(function () {
             var serviceRoot = "https://aragencdsgantt2.azurewebsites.net/CDS";
             //var serviceRoot = "https://localhost:44380/CDS";
@@ -949,7 +967,15 @@
                 },
                 dependencies: dependenciesDataSource,
                 resources: {
-                    filter: "startswith",
+                    filter: "contains",
+                    filtering: function (e) {
+                        var filter = e.filter;
+
+                        if (filter != undefined && !filter.value) {
+                            //prevent filtering if the filter does not value
+                            e.preventDefault();
+                        }
+                    },
                     field: "resources",
                     dataColorField: "Color",
                     dataTextField: "Name",
@@ -1345,108 +1371,109 @@
                                 });
                             }
                         }
-                    },
-                    {
-                        field: "variancedays", title: "Variance", width: 50, template: function (dataItem) {
-                            return updateTaskVariance(dataItem)
-                        }
-                    },
-                    {
-                        field: "taskManager", title: "Task Manager", editable: true, width: 200, editor: function (container, options) {
-                            const task = options.model
-                            $('<input name="' + options.field + '"/>')
-                                .appendTo(container)
-                                .kendoDropDownList({
-                                    filter: "startswith",
-                                    field: "resources",
-                                    dataColorField: "Color",
-                                    dataTextField: "Name",
-                                    dataValueField: "Name",
-                                    dataSource: {
-                                        transport: {
-                                            read: {
-                                                url: serviceRoot + "/GanttResources",
-                                                dataType: "json"
-                                            }
-                                        },
-                                        schema: {
-                                            model: {
-                                                id: "ID",
-                                                fields: {
-                                                    id: { from: "Id", type: "number" }
-                                                }
-                                            }
-                                        }
-                                    },
-                                    change: function (e) {
-                                        if (task.taskManager !== e.sender.text()) {
-                                            task.set("taskManager", e.sender.text());
-                                        }
-                                    }
-                                });
-                        }
-                    },
-                    {
-                        field: "percentComplete", title: "% Complete", type: "number", editable: false, width: 100,
-                        template: function (dataItem) {
-                            const percentComplete = calcPercentage(dataItem.workdays, dataItem.start, dataItem.end)
-                            return Math.round((percentComplete ?? 0) * 100)
-                        }
-                    },
-                    {
-                        field: "status", title: "Task Status", editable: true, width: 200, editor: function (container, options) {
-                            const task = options.model
-                            $('<input name="' + options.field + '"/>')
-                                .appendTo(container)
-                                .kendoDropDownList({
-                                    dataTextField: "text",
-                                    dataValueField: "value",
-                                    dataSource: [
-                                        { text: "Completed", value: "Completed" },
-                                        { text: "In Progress", value: "In Progress" },
-                                        { text: "Not Started", value: "Not Started" },
-                                        { text: "On Hold", value: "On Hold" }
-                                    ],
-                                    change: function (e) {
-                                        if (task.status !== e.sender.value()) {
-                                            task.set("status", e.sender.value());
-                                        }
-                                    }
-                                });
-                        }
-                    },
-                    {
-                        field: "delayreason", title: "Delay Reason", editable: true, width: 250, editor: function (container, options) {
-                            $('<input name="' + options.field + '"/>')
-                                .appendTo(container)
-                                .kendoDropDownList({
-                                    dataTextField: "text",
-                                    dataValueField: "value",
-                                    dataSource: [
-                                        { text: "Chemistry/Lab Development", value: "Chemistry/Lab Development" },
-                                        { text: "Customer Approval", value: "Customer Approval" },
-                                        { text: "Documentation", value: "Documentation" },
-                                        { text: "Facility Availability", value: "Facility Availability" },
-                                        { text: "Manufacturing", value: "Manufacturing" },
-                                        { text: "Raw Material", value: "Raw Material" },
-                                        { text: "Scope Changed", value: "Scope Changed" }
-                                    ], change: function (e) {
-                                        if (task.delayreason !== e.sender.values) {
-                                            task.set("delayreason", e.sender.value());
-                                        }
-                                    }
-                                });
-                        }
-                    },
-                    { field: "delaycomments", title: "Delay Comments", type: "text", editable: true, width: 200 },
-                    { field: "remarks", title: "Remarks", type: "text", editable: true, width: 200 }
+                    }
+                    // ,
+                    // {
+                    //     field: "variancedays", title: "Variance", width: 50, template: function (dataItem) {
+                    //         return updateTaskVariance(dataItem)
+                    //     }
+                    // },
+                    // {
+                    //     field: "taskManager", title: "Task Manager", editable: true, width: 200, editor: function (container, options) {
+                    //         const task = options.model
+                    //         $('<input name="' + options.field + '"/>')
+                    //             .appendTo(container)
+                    //             .kendoDropDownList({
+                    //                 filter: "startswith",
+                    //                 field: "resources",
+                    //                 dataColorField: "Color",
+                    //                 dataTextField: "Name",
+                    //                 dataValueField: "Name",
+                    //                 dataSource: {
+                    //                     transport: {
+                    //                         read: {
+                    //                             url: serviceRoot + "/GanttResources",
+                    //                             dataType: "json"
+                    //                         }
+                    //                     },
+                    //                     schema: {
+                    //                         model: {
+                    //                             id: "ID",
+                    //                             fields: {
+                    //                                 id: { from: "Id", type: "number" }
+                    //                             }
+                    //                         }
+                    //                     }
+                    //                 },
+                    //                 change: function (e) {
+                    //                     if (task.taskManager !== e.sender.text()) {
+                    //                         task.set("taskManager", e.sender.text());
+                    //                     }
+                    //                 }
+                    //             });
+                    //     }
+                    // },
+                    // {
+                    //     field: "percentComplete", title: "% Complete", type: "number", editable: false, width: 100,
+                    //     template: function (dataItem) {
+                    //         const percentComplete = calcPercentage(dataItem.workdays, dataItem.start, dataItem.end)
+                    //         return Math.round((percentComplete ?? 0) * 100)
+                    //     }
+                    // },
+                    // {
+                    //     field: "status", title: "Task Status", editable: true, width: 200, editor: function (container, options) {
+                    //         const task = options.model
+                    //         $('<input name="' + options.field + '"/>')
+                    //             .appendTo(container)
+                    //             .kendoDropDownList({
+                    //                 dataTextField: "text",
+                    //                 dataValueField: "value",
+                    //                 dataSource: [
+                    //                     { text: "Completed", value: "Completed" },
+                    //                     { text: "In Progress", value: "In Progress" },
+                    //                     { text: "Not Started", value: "Not Started" },
+                    //                     { text: "On Hold", value: "On Hold" }
+                    //                 ],
+                    //                 change: function (e) {
+                    //                     if (task.status !== e.sender.value()) {
+                    //                         task.set("status", e.sender.value());
+                    //                     }
+                    //                 }
+                    //             });
+                    //     }
+                    // },
+                    // {
+                    //     field: "delayreason", title: "Delay Reason", editable: true, width: 250, editor: function (container, options) {
+                    //         $('<input name="' + options.field + '"/>')
+                    //             .appendTo(container)
+                    //             .kendoDropDownList({
+                    //                 dataTextField: "text",
+                    //                 dataValueField: "value",
+                    //                 dataSource: [
+                    //                     { text: "Chemistry/Lab Development", value: "Chemistry/Lab Development" },
+                    //                     { text: "Customer Approval", value: "Customer Approval" },
+                    //                     { text: "Documentation", value: "Documentation" },
+                    //                     { text: "Facility Availability", value: "Facility Availability" },
+                    //                     { text: "Manufacturing", value: "Manufacturing" },
+                    //                     { text: "Raw Material", value: "Raw Material" },
+                    //                     { text: "Scope Changed", value: "Scope Changed" }
+                    //                 ], change: function (e) {
+                    //                     if (task.delayreason !== e.sender.values) {
+                    //                         task.set("delayreason", e.sender.value());
+                    //                     }
+                    //                 }
+                    //             });
+                    //     }
+                    // },
+                    // { field: "delaycomments", title: "Delay Comments", type: "text", editable: true, width: 200 },
+                    // { field: "remarks", title: "Remarks", type: "text", editable: true, width: 200 }
                 ],
                 sortable: true,
                 columnResize: () => gantt.refresh(),
                 toggle: true,
                 loading: true,
                 //showPlannedTasks: false,
-                toolbar: ["append", "plannedTasks"],
+                toolbar: ["append", "pdf", "plannedTasks"],
                 editable: { plannedTasks: true, resize: false, move: false },
                 resizable: true,
                 showWorkHours: false,
@@ -1458,8 +1485,7 @@
                     visible: true
                 },
                 pdf: {
-                    fileName: "Kendo UI Gantt Export.pdf"
-                    // proxyURL: "https://demos.telerik.com/kendo-ui/service/export"
+                    fileName: "CDS.pdf"
                 },
                 togglePlannedTasks: function (e) {
                     changeValue(e.showPlannedTasks);
@@ -1489,6 +1515,12 @@
             $(document).bind("kendo:skinChange", function () {
                 gantt.refresh();
             });
+
+            loadershow();
+            dl();
+
         });
+
+
     </script>
 </div>

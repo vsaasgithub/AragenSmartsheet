@@ -38,20 +38,20 @@
     function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
-    var count = 20, timer = setInterval(function () {
-        $("#counter").html(count--);
-        if (count == 1) clearInterval(timer);
-    }, 1000);
+    // var count = 20, timer = setInterval(function () {
+    //     $("#counter").html(count--);
+    //     if (count == 1) clearInterval(timer);
+    // }, 1000);
 </script>
 <style>
     .loaderoverlay {
-        background: rgba(0,0,0,1);
+        background: rgba(255,255,255,1);
         position: absolute;
         width: 100%;
         z-index: 99;
-        color: #fff;
+        color: #000;
         font-weight: bold;
-        text-align: center;
+        /* text-align: center; */
         padding: 20px;
         top: 0;
         min-height: 100%;
@@ -67,7 +67,7 @@
     }
 </style>
 <div class="loaderoverlay">
-    <span class="minload"><span onclick="dl();">Please wait for <span id="counter"></span> Seconds, your file will be downloaded</span></span>
+    <span class="minload"><span>Your download will begin in sometime, you can close this window once the download completes if now auto closed @* <span id="counter"></span> *@</span></span>
 </div>
 
 <div id="example">

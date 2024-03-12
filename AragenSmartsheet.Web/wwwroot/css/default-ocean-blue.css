@@ -27753,14 +27753,14 @@ kendo-sortable {
 }
 
 .k-table-alt-row {
-    background-color: rgba(0, 0, 0, 0.04);
+    /*background-color: rgba(0, 0, 0, 0.04);*/
 }
 
 .k-table-tbody .k-table-row:hover,
 .k-table-list .k-table-row:hover,
 .k-table-tbody .k-table-row.k-hover,
 .k-table-list .k-table-row.k-hover {
-    background-color: #ededed;
+    /*background-color: #ededed;*/
 }
 
 .k-table-tbody .k-table-row.k-focus, .k-table-tbody .k-table-row:focus,
@@ -43302,12 +43302,12 @@ div.k-grid-norecords {
 }
 
 .k-grid .k-table-row.k-table-alt-row {
-    background-color: rgba(0, 0, 0, 0.04);
+    /*background-color: rgba(0, 0, 0, 0.04);*/
 }
 
 .k-grid .k-table-tbody > .k-table-row:not(.k-detail-row):hover,
 .k-grid .k-table-tbody > .k-table-row:not(.k-detail-row).k-hover {
-    background-color: #ededed;
+    /*background-color: #ededed;*/
 }
 
 .k-grid td.k-selected,
@@ -45786,6 +45786,9 @@ kendo-grid.k-grid .k-table-row.k-hover .k-grid-content-sticky.k-selected {
 .k-treelist tr.k-footer,
 .k-treelist tr.k-footer-template {
     background-color: #ededed;
+}
+.k-treelist-group {
+background-color:lightgrey;
 }
 
 .k-filter {

@@ -465,7 +465,7 @@ namespace AragenSmartsheet.Data.Repository
                         taskModel.ShortStartDate = "";
                         taskModel.ShortEndDate = "";
                     }
-                   
+
                     if (taskModel.DelayReason == "Chemistry/Lab Developmen")
                     {
                         taskModel.DelayReason = "Chemistry/Lab Development";
@@ -968,12 +968,14 @@ namespace AragenSmartsheet.Data.Repository
                     ProjectPlanColumnMap.Add(column.Title, (long)column.Id);
                 }
 
+                int id_auto = 1;
                 foreach (var row in ProjectPlanDataSheet.Rows)
                 {
                     task = new MCDSTask();
 
                     task.RowID = Convert.ToInt64(row.Id);
-
+                    task.ID_Auto = id_auto;
+                    id_auto++;
                     task.ID = Convert.ToInt32(SmartsheetHelper.GetCellByColumnName(row, "ID", ProjectPlanColumnMap).Value);
 
                     int ParentID = Convert.ToInt32(SmartsheetHelper.GetCellByColumnName(row, "ParentID", ProjectPlanColumnMap).Value);

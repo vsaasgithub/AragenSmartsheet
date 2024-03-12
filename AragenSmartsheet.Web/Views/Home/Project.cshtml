@@ -25,7 +25,7 @@
     }
 
     .minbodydetails { /*
-                                padding: 0 15px;*/
+                                    padding: 0 15px;*/
     }
 
     .minbodyview {
@@ -217,7 +217,7 @@
 
                                                     <div class="col-md-6">
                                                         <div class="form-group">
-                                                            <label>Project type</label>
+                                                            <label>Project Type</label>
 
                                                             <select class="form-control" id="ProjectType1" name="ProjectType" required>
                                                                 <option value="" disabled selected> Select One</option>
@@ -772,29 +772,31 @@
 
     function disableButtonAndSubmitForm() {
         let text = "The project will be created now, this may take several moments. Click OK to proceed.";
-        if (confirm(text) == true) {
-    
+
+
 
         // Submit the form with parameters
         //var form = document.getElementById("ProjectInitiation");
         var form = $("#ProjectInitiation");
 
         if (form.valid()) {
-            $(".loaderoverlay").show();
+            if (confirm(text) == true) {
+                $(".loaderoverlay").show();
+                form.action = "../Home/CreateProject";
+                form.method = "post";
+                form.submit();
+                //alert("ok");
+            } 
+            else {
 
-            form.action = "../Home/CreateProject";
-            form.method = "post";
-            form.submit();
-            //alert("ok");
+            }
         } else {
             $(".error").css("color", "red")
         }
 
 
 
-        } else {
 
-        }
         //}
     }
 

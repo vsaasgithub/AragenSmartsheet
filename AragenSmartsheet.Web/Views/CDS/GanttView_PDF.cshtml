@@ -67,7 +67,7 @@
     }
 </style>
 <div class="loaderoverlay">
-    <span class="minload"><span>Your download will begin in sometime, you can close this window once the download completes if now auto closed @* <span id="counter"></span> *@</span></span>
+    <span class="minload"><span>Your download will begin in sometime, you can close this window once the download completes if not auto closed @* <span id="counter"></span> *@</span></span>
 </div>
 
 <div id="example">
@@ -789,8 +789,8 @@
 
 
         $(document).ready(function () {
-            var serviceRoot = "https://aragencdsgantt2.azurewebsites.net/CDS";
-            //var serviceRoot = "https://localhost:44380/CDS";
+            //var serviceRoot = "https://aragencdsgantt2.azurewebsites.net/CDS";
+            var serviceRoot = "https://localhost:44380/CDS";
             //var serviceRoot = "https://localhost:5001/CDS";
 
             var ganttInitialized = false;
@@ -1046,7 +1046,7 @@
                 columns: [
                     { field: "id", title: "ID", width: 50 },
                     {
-                        field: "title", title: "Title", editable: true, sortable: true, width: 200,
+                        field: "title", title: "Title", editable: true, sortable: true, width: 300,
                         template: function (task) {
                             let level = 0
                             // Count parents

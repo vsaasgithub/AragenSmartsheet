@@ -362,13 +362,13 @@
             if (task?.hasChildren && task.workdays !== 7) {
                 task.set("workdays", 7) // Default parent summary task to 7 days
             }
-            
-            
+
+
             var plannedTotalWorkdays = getWorkEffordDays(task.plannedStart, task.plannedEnd, task.workdays);
             //variance logic updated
             //var actualTotalWorkdays = getWorkEffordDays(task.start, task.end, task.workdays);
             var actualTotalWorkdays = getWorkEffordDays(task.plannedStart, task.end, task.workdays);
-            
+
             var variance = actualTotalWorkdays - plannedTotalWorkdays;
             if (variance < 0) {
                 variance = 0
@@ -712,7 +712,7 @@
                             task.set("variancedays", 0)
                         }
                     });
-                   
+
                     gantt.dataSource.sync();
                     //showPlannedColumns(false);
                     gantt.refresh();
@@ -769,7 +769,7 @@
             }
         }
 
-        
+
         $(document).ready(function () {
             var serviceRoot = "https://aragencdsgantt2.azurewebsites.net/CDS";
             //var serviceRoot = "https://localhost:44380/CDS";
@@ -804,6 +804,7 @@
                         }
                     }
                 },
+                scrollable: false,
                 schema: {
                     model: {
                         id: "id",
@@ -971,6 +972,7 @@
                     }
                 },
                 assignments: {
+                    filter: "startswith",
                     dataTaskIdField: "TaskID",
                     dataResourceIdField: "ResourceID",
                     dataValueField: "Units",
@@ -1018,7 +1020,16 @@
                     { type: "year" },
                 ],
                 columns: [
-                    { field: "id", title: "ID", width: 50 },
+                    { field: "ID_Auto", title: "ID", width: 50 },
+                    // {
+                    //     field: "ID_Auto", title: "ID_Auto", type: "number", editable: false, width: 50,
+                    //     template: function (dataItem) {
+                    //         // const percentComplete = calcPercentage(dataItem.workdays, dataItem.start, dataItem.end)
+                    //         // return Math.round((percentComplete ?? 0) * 100)
+                    //         return this.id
+                    //     }
+                    // },
+                    { field: "id", title: "ID", width: 0, visible: false },
                     {
                         field: "title", title: "Title", editable: true, sortable: true, width: 200,
                         template: function (task) {
@@ -1451,7 +1462,7 @@
                 resizable: true,
                 showWorkHours: false,
                 showWorkDays: false,
-                height: 950,
+                // height: 100%,
                 listWidth: "70%",
                 snap: false,
                 tooltip: {

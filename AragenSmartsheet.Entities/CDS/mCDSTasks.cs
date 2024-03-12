@@ -70,6 +70,7 @@ namespace AragenSmartsheet.Entities.CDS
     {
         public long RowID { get; set; }
         public int ID { get; set; }
+        public int ID_Auto { get; set; }
         public string Title { get; set; }
         public int? ParentID { get; set; }
         public int OrderID { get; set; }

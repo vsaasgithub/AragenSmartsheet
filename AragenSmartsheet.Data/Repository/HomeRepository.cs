@@ -1534,7 +1534,7 @@ namespace AragenSmartsheet.Data.Repository
 
                     //Copy Folder
                     folder = SmartsheetAppIntegration.AccessClient().FolderResources.CopyFolder(CDSTempelate, destination, new FolderCopyInclusion[] { FolderCopyInclusion.ATTACHMENTS, FolderCopyInclusion.CELL_LINKS, FolderCopyInclusion.DATA, FolderCopyInclusion.DISCUSSIONS, FolderCopyInclusion.FILTERS, FolderCopyInclusion.FORMS, FolderCopyInclusion.RULES, FolderCopyInclusion.RULE_RECIPIENTS, FolderCopyInclusion.SHARES }, null);
-
+                                     
                     //Getting Folder object
                     Folder folderObj = SmartsheetAppIntegration.AccessClient().FolderResources.GetFolder(
                       Convert.ToInt64(folder.Id),
@@ -1544,6 +1544,9 @@ namespace AragenSmartsheet.Data.Repository
                     string strFolderLink = folderObj.Permalink;
                     string Name = folderObj.Name.ToString();
                     string FolderID = folderObj.Id.ToString() + '+' + Name.ToString() + '+' + folderObj.Permalink;
+
+                    //Move dashboard to other work space
+                    
 
                     //ProjectPlan project = new ProjectPlan { URL= strFolderLink,
                     //Name=Name,FolderId=FolderID};

@@ -896,9 +896,17 @@
                         if (gantt.dataSource.data().length > 0) {
                             baselineSet = gantt.dataSource.data()[0].BaselineSet;
                         }
+                        //alert(baselineSet);
+                        
                         gantt.setOptions({ showPlannedTasks: baselineSet });
                         gantt.refresh();
                         $('#planned-switch_label').text('Set Baseline');
+                        // debugger;
+                        // if (baselineSet === false) {
+                        //     var grid = $("#gantt").data("kendoGantt");
+                        //     grid.hideColumn("plannedStart");
+                        //     grid.hideColumn("plannedEnd");
+                        // }
                     }
                 },
                 edit: function (e) {
@@ -1020,7 +1028,7 @@
                     { type: "year" },
                 ],
                 columns: [
-                    
+
                     { field: "id", title: "ID", width: 50, visible: false },
                     {
                         field: "title", title: "Title", editable: true, sortable: true, width: 200,
@@ -1034,7 +1042,7 @@
                                 parentTask = tasks.find(t => t.id === parentId)
                                 parentId = parentTask?.parentId
                             }
-                            const indentSize = task.hasChildren ? 4 : 8; // Number of spaces per indent level
+                            const indentSize = task.hasChildren ? 2 : 4; // Number of spaces per indent level
                             const indent = "&nbsp;".repeat(indentSize); // HTML encoded space character for indent
                             // Generate indents based on the level of orderId
                             let indents = "";
@@ -1046,7 +1054,7 @@
                         }
                     },
                     {
-                        field: "workdays", title: "Work Days", editable: true, width: 85,
+                        field: "workdays", title: "Work Days", editable: true, width: 70,
                         template: function (options) {
                             if (options.hasChildren && options.workdays) {
                                 return "";
@@ -1119,7 +1127,7 @@
                         }
                     },
                     {
-                        field: "health", title: "Health", editable: false, width: 80, template: function (dataItem) {
+                        field: "health", title: "Health", editable: false, width: 70, template: function (dataItem) {
                             var percentCompleted = calcPercentage(dataItem.workdays, dataItem.start, dataItem.end)
 
                             var actualStart = dataItem.start
@@ -1139,7 +1147,7 @@
                         }
                     },
                     {
-                        field: "durationdays", title: "Duration", editable: true, width: 100,
+                        field: "durationdays", title: "Duration", editable: true, width: 80,
                         editor: function (container, options) {
                             const task = options.model ?? options.task
                             var isChecked = $("#planned-switch").prop("checked");

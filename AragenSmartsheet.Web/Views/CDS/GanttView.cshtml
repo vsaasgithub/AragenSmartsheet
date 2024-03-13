@@ -66,7 +66,7 @@
             <a class="k-button k-button-solid-base k-button-solid k-button-md k-rounded-md" target="_blank" style="float:right;" href="@ViewBag.ProjectResources">Project Resources</a>
         </div>
     </div>
-    <div id="gantt"></div>
+    <div id="gantt" style="height:100%!important;"></div>
 
     <style>
         .k-gantt {
@@ -697,9 +697,9 @@
                 })
             }
             if (!showPlanned) {
-                if (confirm('Your action will reset the baselines. This may take several moments, Do you wish to continue?') == true) {
+                if (confirm('Your action will reset the baseline. This may take several moments, Do you wish to continue?') == true) {
                     loadershow();
-                    // kendo.confirm("Your action will reset the baselines. This may take several moments, Do you wish to continue?").done(function () {
+                    // kendo.confirm("Your action will reset the baseline. This may take several moments, Do you wish to continue?").done(function () {
                     //showPlannedColumns(false)
                     debugger;
                     baselineSet = false;
@@ -726,8 +726,8 @@
             }
 
             else {
-                if (confirm('Your action will set the baselines. This may take several moments, Do you wish to continue?') == true) {
-                    // kendo.confirm("Your action will set the baselines. This may take several moments, Do you wish to continue?").done(function () {
+                if (confirm('Your action will set the baseline. This may take several moments, Do you wish to continue?') == true) {
+                    // kendo.confirm("Your action will set the baseline. This may take several moments, Do you wish to continue?").done(function () {
                     //showPlannedColumns(true)
                     debugger;
                     loadershow();
@@ -898,7 +898,7 @@
                         }
                         gantt.setOptions({ showPlannedTasks: baselineSet });
                         gantt.refresh();
-                        $('#planned-switch_label').text('Set Baselines');
+                        $('#planned-switch_label').text('Set Baseline');
                     }
                 },
                 edit: function (e) {
@@ -950,7 +950,7 @@
                 },
                 dependencies: dependenciesDataSource,
                 resources: {
-                    filter: "startswith",
+                    // filter: "startswith",
                     field: "resources",
                     dataColorField: "Color",
                     dataTextField: "Name",
@@ -972,7 +972,7 @@
                     }
                 },
                 assignments: {
-                    filter: "startswith",
+                    // filter: "startswith",
                     dataTaskIdField: "TaskID",
                     dataResourceIdField: "ResourceID",
                     dataValueField: "Units",
@@ -1020,16 +1020,8 @@
                     { type: "year" },
                 ],
                 columns: [
-                    { field: "ID_Auto", title: "ID", width: 50 },
-                    // {
-                    //     field: "ID_Auto", title: "ID_Auto", type: "number", editable: false, width: 50,
-                    //     template: function (dataItem) {
-                    //         // const percentComplete = calcPercentage(dataItem.workdays, dataItem.start, dataItem.end)
-                    //         // return Math.round((percentComplete ?? 0) * 100)
-                    //         return this.id
-                    //     }
-                    // },
-                    { field: "id", title: "ID", width: 0, visible: false },
+                    
+                    { field: "id", title: "ID", width: 50, visible: false },
                     {
                         field: "title", title: "Title", editable: true, sortable: true, width: 200,
                         template: function (task) {
@@ -1365,36 +1357,42 @@
                     {
                         field: "taskManager", title: "Task Manager", editable: true, width: 200, editor: function (container, options) {
                             const task = options.model
-                            $('<input name="' + options.field + '"/>')
-                                .appendTo(container)
-                                .kendoDropDownList({
-                                    filter: "startswith",
-                                    field: "resources",
-                                    dataColorField: "Color",
-                                    dataTextField: "Name",
-                                    dataValueField: "Name",
-                                    dataSource: {
-                                        transport: {
-                                            read: {
-                                                url: serviceRoot + "/GanttResources",
-                                                dataType: "json"
-                                            }
-                                        },
-                                        schema: {
-                                            model: {
-                                                id: "ID",
-                                                fields: {
-                                                    id: { from: "Id", type: "number" }
+                            if (task.hasChildren) {
+                                container.html(task.taskManager)
+                            }
+                            else {
+                                const task = options.model
+                                $('<input name="' + options.field + '"/>')
+                                    .appendTo(container)
+                                    .kendoDropDownList({
+                                        //filter: "startswith",
+                                        field: "resources",
+                                        dataColorField: "Color",
+                                        dataTextField: "Name",
+                                        dataValueField: "Name",
+                                        dataSource: {
+                                            transport: {
+                                                read: {
+                                                    url: serviceRoot + "/GanttResources",
+                                                    dataType: "json"
+                                                }
+                                            },
+                                            schema: {
+                                                model: {
+                                                    id: "ID",
+                                                    fields: {
+                                                        id: { from: "Id", type: "number" }
+                                                    }
                                                 }
                                             }
+                                        },
+                                        change: function (e) {
+                                            if (task.taskManager !== e.sender.text()) {
+                                                task.set("taskManager", e.sender.text());
+                                            }
                                         }
-                                    },
-                                    change: function (e) {
-                                        if (task.taskManager !== e.sender.text()) {
-                                            task.set("taskManager", e.sender.text());
-                                        }
-                                    }
-                                });
+                                    });
+                            }
                         }
                     },
                     {
@@ -1407,46 +1405,57 @@
                     {
                         field: "status", title: "Task Status", editable: true, width: 200, editor: function (container, options) {
                             const task = options.model
-                            $('<input name="' + options.field + '"/>')
-                                .appendTo(container)
-                                .kendoDropDownList({
-                                    dataTextField: "text",
-                                    dataValueField: "value",
-                                    dataSource: [
-                                        { text: "Completed", value: "Completed" },
-                                        { text: "In Progress", value: "In Progress" },
-                                        { text: "Not Started", value: "Not Started" },
-                                        { text: "On Hold", value: "On Hold" }
-                                    ],
-                                    change: function (e) {
-                                        if (task.status !== e.sender.value()) {
-                                            task.set("status", e.sender.value());
+                            if (task.hasChildren) {
+                                container.html(task.taskManager)
+                            }
+                            else {
+                                $('<input name="' + options.field + '"/>')
+                                    .appendTo(container)
+                                    .kendoDropDownList({
+                                        dataTextField: "text",
+                                        dataValueField: "value",
+                                        dataSource: [
+                                            { text: "Completed", value: "Completed" },
+                                            { text: "In Progress", value: "In Progress" },
+                                            { text: "Not Started", value: "Not Started" },
+                                            { text: "On Hold", value: "On Hold" }
+                                        ],
+                                        change: function (e) {
+                                            if (task.status !== e.sender.value()) {
+                                                task.set("status", e.sender.value());
+                                            }
                                         }
-                                    }
-                                });
+                                    });
+                            }
                         }
                     },
                     {
                         field: "delayreason", title: "Delay Reason", editable: true, width: 250, editor: function (container, options) {
-                            $('<input name="' + options.field + '"/>')
-                                .appendTo(container)
-                                .kendoDropDownList({
-                                    dataTextField: "text",
-                                    dataValueField: "value",
-                                    dataSource: [
-                                        { text: "Chemistry/Lab Development", value: "Chemistry/Lab Development" },
-                                        { text: "Customer Approval", value: "Customer Approval" },
-                                        { text: "Documentation", value: "Documentation" },
-                                        { text: "Facility Availability", value: "Facility Availability" },
-                                        { text: "Manufacturing", value: "Manufacturing" },
-                                        { text: "Raw Material", value: "Raw Material" },
-                                        { text: "Scope Changed", value: "Scope Changed" }
-                                    ], change: function (e) {
-                                        if (task.delayreason !== e.sender.values) {
-                                            task.set("delayreason", e.sender.value());
+                            const task = options.model
+                            if (task.hasChildren) {
+                                container.html(task.taskManager)
+                            }
+                            else {
+                                $('<input name="' + options.field + '"/>')
+                                    .appendTo(container)
+                                    .kendoDropDownList({
+                                        dataTextField: "text",
+                                        dataValueField: "value",
+                                        dataSource: [
+                                            { text: "Chemistry/Lab Development", value: "Chemistry/Lab Development" },
+                                            { text: "Customer Approval", value: "Customer Approval" },
+                                            { text: "Documentation", value: "Documentation" },
+                                            { text: "Facility Availability", value: "Facility Availability" },
+                                            { text: "Manufacturing", value: "Manufacturing" },
+                                            { text: "Raw Material", value: "Raw Material" },
+                                            { text: "Scope Changed", value: "Scope Changed" }
+                                        ], change: function (e) {
+                                            if (task.delayreason !== e.sender.values) {
+                                                task.set("delayreason", e.sender.value());
+                                            }
                                         }
-                                    }
-                                });
+                                    });
+                            }
                         }
                     },
                     { field: "delaycomments", title: "Delay Comments", type: "text", editable: true, width: 200 },

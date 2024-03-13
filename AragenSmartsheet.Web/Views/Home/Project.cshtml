@@ -115,14 +115,14 @@
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <div class="form-group">
-
-                                                        <label name="lblName2" id="lblName2" class="" style="border-color:white;font-weight:bold;">Client Location</label>
+                                                        <label>Client Location</label>
+                                                        <label name="lblName2" id="lblName2" class="" style="border-color:white;font-weight:bold;"></label>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <div class="form-group">
-                                                        @*<label>Client City</label>*@
-                                                        <label name="lblCity" id="lblCity" class="" style="border-color:white;font-weight:bold;">Client City</label>
+                                                        <label>Client City</label>
+                                                        <label name="lblCity" id="lblCity" class="" style="border-color:white;font-weight:bold;"></label>
                                                     </div>
                                                 </div>
                                             </div>
@@ -160,10 +160,10 @@
 
                                                         <select class="form-control" id="ProjectCategoryCDS" name="ProjectCategoryCDS" required>
                                                             <option value="" disabled selected> Select Project Category</option>
-                                                            <option value="CCS">CCS</option>
-                                                            <option value="CM New">CM New</option>
-                                                            <option value="PRD">PRD</option>
-                                                            <option value="FC">FC</option>
+                                                            <option value="CCS">CCS(Custom Chemical Synthesis)</option>
+                                                            <option value="CM New">CM (Contract Manufacturing)</option>
+                                                            <option value="FC">FC (Fine Chemical)</option>
+                                                            <option value="PRD">PRD (Product Research & Development)</option>                                                            
                                                         </select>
                                                         <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
                                                     </div>
@@ -268,6 +268,7 @@
                                                                 <option>Phase 2</option>
                                                                 <option>Phase 3</option>
                                                                 <option>Preclinical</option>
+                                                                <option>Others</option>
                                                             </select>
                                                         </div>
                                                     </div>
@@ -916,13 +917,14 @@
 
     $(document).on('change', '#Client', function (e) {
         var selClient = $(this).val();
+        
         $.ajax({
             type: 'GET',
             data: { selClient },
             url: '/Home/GetClientDetails',
             success: function (data) {
-                $("#lblName2").html(data.name2);
-                $("#lblCity").html(data.city);
+                $("#lblName2").html(data.Name2);
+                $("#lblCity").html(data.City);
             }
         });
     });

@@ -27635,14 +27635,14 @@ kendo-sortable {
 }
 
 .k-table-md {
-    font-size: 14px;
+    font-size: 12px;
     line-height: 1.4285714286;
 }
 
 .k-table-md .k-table-th,
 .k-table-md .k-table-td {
-    padding-block: 8px;
-    padding-inline: 12px;
+    /*padding-block: 8px;
+    padding-inline: 12px;*/
 }
 
 .k-table-md .k-table-list .k-table-group-td > span {
@@ -42837,8 +42837,8 @@ div.k-grid-norecords {
 
 .k-grid-md td,
 .k-grid-md .k-table-td {
-    padding-block: 8px;
-    padding-inline: 12px;
+    /*padding-block: 8px;
+    padding-inline: 12px;*/
 }
 
 .k-grid-md .k-grouping-header {

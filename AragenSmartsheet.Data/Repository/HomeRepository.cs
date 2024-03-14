@@ -36,10 +36,10 @@ namespace AragenSmartsheet.Data.Repository
             Dictionary<string, long> columnMap = new();
             List<Row> liRowsToAdd = new();
             Row row;
-
+            string FYear = GetFYear();
             try
             {
-                var FTEIntakeSheetID = long.Parse(configurationBuilder.Build().GetSection("FTEIntakeSheet").Value);
+                var FTEIntakeSheetID = long.Parse(configurationBuilder.Build().GetSection("FTEIntakeSheet" + FYear).Value);
 
                 var ColumnsInSheet = SmartsheetAppIntegration.AccessClient().SheetResources.GetSheet(FTEIntakeSheetID, null, null, null, null, null, null, null, null, null).Columns;
                 foreach (var column in ColumnsInSheet)
@@ -153,8 +153,8 @@ namespace AragenSmartsheet.Data.Repository
                 {
                     //Create Folder
                     Folder folder = new();
-                    var DestinationFolderFTE = long.Parse(configurationBuilder.Build().GetSection("DestinationFolderBioFTE").Value);
-                    var FTETempelate = long.Parse(configurationBuilder.Build().GetSection("BioFTETempelate").Value);
+                    var DestinationFolderFTE = long.Parse(configurationBuilder.Build().GetSection("DestinationFolderBioFTE" + FYear).Value);
+                    var FTETempelate = long.Parse(configurationBuilder.Build().GetSection("BioFTETempelate" + FYear).Value);
 
                     // Specify destination older
                     string ClientName = projectIntake.BiologyProject.FTE.Client;
@@ -230,10 +230,11 @@ namespace AragenSmartsheet.Data.Repository
             List<Row> liRowsToAdd = new();
             List<Row> liRowsToUpdate = new();
             Row row;
+            string FYear = GetFYear();
 
             try
             {
-                var OPOIntakeSheetID = long.Parse(configurationBuilder.Build().GetSection("OPOIntakeSheet").Value);
+                var OPOIntakeSheetID = long.Parse(configurationBuilder.Build().GetSection("OPOIntakeSheet" + FYear).Value);
 
                 var ColumnsInSheetOPOIntake = SmartsheetAppIntegration.AccessClient().SheetResources.GetSheet(OPOIntakeSheetID, null, null, null, null, null, null, null, null, null).Columns;
                 foreach (var column in ColumnsInSheetOPOIntake)
@@ -355,8 +356,8 @@ namespace AragenSmartsheet.Data.Repository
 
                     //Create Folder
                     Folder folder = new();
-                    var DestinationFolderOPO = long.Parse(configurationBuilder.Build().GetSection("DestinationFolderBioOPO").Value);
-                    var OPOTempelate = long.Parse(configurationBuilder.Build().GetSection("BioOPOTempelate").Value);
+                    var DestinationFolderOPO = long.Parse(configurationBuilder.Build().GetSection("DestinationFolderBioOPO" + FYear).Value);
+                    var OPOTempelate = long.Parse(configurationBuilder.Build().GetSection("BioOPOTempelate" + FYear).Value);
 
                     // Specify destination older
                     string ClientName = projectIntake.BiologyProject.OpenPO.Client;
@@ -590,9 +591,11 @@ namespace AragenSmartsheet.Data.Repository
             List<Row> liRowsToAdd = new();
             Row row;
 
+            string FYear = GetFYear();
+
             try
             {
-                var SPOIntakeSheetID = long.Parse(configurationBuilder.Build().GetSection("SPOIntakeSheet").Value);
+                var SPOIntakeSheetID = long.Parse(configurationBuilder.Build().GetSection("SPOIntakeSheet" + FYear).Value);
 
                 var ColumnsInSheet = SmartsheetAppIntegration.AccessClient().SheetResources.GetSheet(SPOIntakeSheetID, null, null, null, null, null, null, null, null, null).Columns;
                 foreach (var column in ColumnsInSheet)
@@ -1534,7 +1537,7 @@ namespace AragenSmartsheet.Data.Repository
 
                     //Copy Folder
                     folder = SmartsheetAppIntegration.AccessClient().FolderResources.CopyFolder(CDSTempelate, destination, new FolderCopyInclusion[] { FolderCopyInclusion.ATTACHMENTS, FolderCopyInclusion.CELL_LINKS, FolderCopyInclusion.DATA, FolderCopyInclusion.DISCUSSIONS, FolderCopyInclusion.FILTERS, FolderCopyInclusion.FORMS, FolderCopyInclusion.RULES, FolderCopyInclusion.RULE_RECIPIENTS, FolderCopyInclusion.SHARES }, null);
-                                     
+
                     //Getting Folder object
                     Folder folderObj = SmartsheetAppIntegration.AccessClient().FolderResources.GetFolder(
                       Convert.ToInt64(folder.Id),
@@ -1546,7 +1549,7 @@ namespace AragenSmartsheet.Data.Repository
                     string FolderID = folderObj.Id.ToString() + '+' + Name.ToString() + '+' + folderObj.Permalink;
 
                     //Move dashboard to other work space
-                    
+
 
                     //ProjectPlan project = new ProjectPlan { URL= strFolderLink,
                     //Name=Name,FolderId=FolderID};
@@ -2806,6 +2809,62 @@ namespace AragenSmartsheet.Data.Repository
                 Log.Error(ex.StackTrace);
                 return null;
             }
+        }
+
+        private string GetFYear()
+        {
+            string FYear = "";
+            if (DateTime.Now >= Convert.ToDateTime("2023/04/01") && DateTime.Now <= Convert.ToDateTime("2024/03/31"))
+            {
+                FYear = "_2024";
+            }
+            else if (DateTime.Now >= Convert.ToDateTime("2024/04/01") && DateTime.Now <= Convert.ToDateTime("2025/03/31"))
+            {
+                FYear = "_2025";
+            }
+            else if (DateTime.Now >= Convert.ToDateTime("2025/04/01") && DateTime.Now <= Convert.ToDateTime("2026/03/31"))
+            {
+                FYear = "_2026";
+            }
+            else if (DateTime.Now >= Convert.ToDateTime("2026/04/01") && DateTime.Now <= Convert.ToDateTime("2027/03/31"))
+            {
+                FYear = "_2027";
+            }
+            else if (DateTime.Now >= Convert.ToDateTime("2027/04/01") && DateTime.Now <= Convert.ToDateTime("2028/03/31"))
+            {
+                FYear = "_2028";
+            }
+            else if (DateTime.Now >= Convert.ToDateTime("2028/04/01") && DateTime.Now <= Convert.ToDateTime("2029/03/31"))
+            {
+                FYear = "_2029";
+            }
+            else if (DateTime.Now >= Convert.ToDateTime("2029/04/01") && DateTime.Now <= Convert.ToDateTime("2030/03/31"))
+            {
+                FYear = "_2030";
+            }
+            else if (DateTime.Now >= Convert.ToDateTime("2030/04/01") && DateTime.Now <= Convert.ToDateTime("2031/03/31"))
+            {
+                FYear = "_2031";
+            }
+            else if (DateTime.Now >= Convert.ToDateTime("2031/04/01") && DateTime.Now <= Convert.ToDateTime("2032/03/31"))
+            {
+                FYear = "_2032";
+            }
+            else if (DateTime.Now >= Convert.ToDateTime("2032/04/01") && DateTime.Now <= Convert.ToDateTime("2033/03/31"))
+            {
+                FYear = "_2033";
+            }
+            else if (DateTime.Now >= Convert.ToDateTime("2033/04/01") && DateTime.Now <= Convert.ToDateTime("2034/03/31"))
+            {
+                FYear = "_2034";
+            }
+            else if (DateTime.Now >= Convert.ToDateTime("2034/04/01") && DateTime.Now <= Convert.ToDateTime("2035/03/31"))
+            {
+                FYear = "_2035";
+            }
+
+            //return FYear;
+            return "";
         }
     }
 }

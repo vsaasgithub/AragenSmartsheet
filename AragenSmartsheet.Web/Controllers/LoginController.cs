@@ -102,7 +102,7 @@ namespace AragenSmartsheet.Web.Controllers
             ////For local dev
             MUser UserInfo = new()
             {
-                Name = "Abhishek Mor",
+                Name = "Aragen User",
                 Email = "abhishek@copernicusworld.com",
                 Department = "CDS",
                 Company = "CCPL"

@@ -307,13 +307,14 @@ namespace AragenSmartsheet.Web.Controllers
                 ViewBag.FolderID = FolderID;
                 ViewBag.ProjectFolderLink = FolderLink;
                 ViewBag.ProjectResources = folderSheets.Where(x => x.SheetName == "Project Resources").Select(y => y.SheetLink).FirstOrDefault();
+                //ViewBag.ProjectDashboard = folderSheets.Where(x => x.SheetName == "Project Dashboard").Select(y => y.SheetLink).FirstOrDefault();
 
                 var ProjPlanSheetID = folderSheets.Where(x => x.SheetName == "Project Plan").Select(y => y.SheetID).FirstOrDefault();
                 var ProjResourcesSheetID = folderSheets.Where(x => x.SheetName == "Project Resources").Select(y => y.SheetID).FirstOrDefault();
                 var GanttResourceAssignmentsSheetID = folderSheets.Where(x => x.SheetName == "Gantt Resource Assignments").Select(y => y.SheetID).FirstOrDefault();
                 var GanttDependenciesSheetID = folderSheets.Where(x => x.SheetName == "Gantt Dependencies").Select(y => y.SheetID).FirstOrDefault();
 
-                
+
 
                 HttpContext.Session.SetString("ProjPlanSheetID", JsonConvert.SerializeObject(ProjPlanSheetID));
                 HttpContext.Session.SetString("ProjResourcesSheetID", JsonConvert.SerializeObject(ProjResourcesSheetID));
@@ -460,6 +461,8 @@ namespace AragenSmartsheet.Web.Controllers
             {
                 if (models != null)
                 {
+                    var GanttDependenciesSheetID = HttpContext.Session.GetString("GanttDependenciesSheetID");
+
                     var TasksToUpdate = JsonConvert.DeserializeObject<IEnumerable<MCDSTask>>(models);
 
                     //var tasks = HttpContext.Session.GetString("GanttTasks");
@@ -467,7 +470,7 @@ namespace AragenSmartsheet.Web.Controllers
                     if (!string.IsNullOrEmpty(ProjPlanSheetID))
                     {
                         //var GanttTasks = JsonConvert.DeserializeObject<List<MCDSTask>>(tasks);
-                        cdsRepo.UpdateTask(TasksToUpdate.ToList(), ProjPlanSheetID);
+                        cdsRepo.UpdateTask(TasksToUpdate.ToList(), ProjPlanSheetID, GanttDependenciesSheetID);
                     }
                     else
                     {
@@ -484,6 +487,12 @@ namespace AragenSmartsheet.Web.Controllers
                 Log.Error(ex.StackTrace);
                 return null;
             }
+        }
+
+        public void Baseline(string baselineSet)
+        {
+            var ProjPlanSheetID = HttpContext.Session.GetString("ProjPlanSheetID");
+            cdsRepo.BaselineSet(baselineSet, ProjPlanSheetID);
         }
 
         [Route("CDS/GanttTasks/Destroy")]

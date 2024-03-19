@@ -60,9 +60,11 @@ namespace AragenSmartsheet.Data.IRepository
         public List<MCDSFolder> GetProjectList();
 
         public List<MCDSTask> GetAllTasks(string ProjPlanSheetID);
-        public void UpdateTask(List<MCDSTask> Tasks, string ProjPlanSheetID);
+        public void UpdateTask(List<MCDSTask> Tasks, string ProjPlanSheetID, string GanttDependenciesSheetID);
         public void DeleteTask(List<MCDSTask> Tasks, string ProjPlanSheetID);
         public void CreateTask(List<MCDSTask> Tasks, string ProjPlanSheetID);
+
+        public void BaselineSet(string baselineSet, string ProjPlanSheetID);
 
         public List<MCDSDependency> GetGanttDependencies(string GanttDependenciesSheetID);
         public void UpdateGanttDependencies(List<MCDSDependency> Dependencies, string GanttDependenciesSheetID);

@@ -108,6 +108,7 @@ namespace AragenSmartsheet.Entities.CDS
         public int PredecessorID { get; set; }
         public int SuccessorID { get; set; }
         public int Type { get; set; }
+        public int Days { get; set; }
 
     }
 

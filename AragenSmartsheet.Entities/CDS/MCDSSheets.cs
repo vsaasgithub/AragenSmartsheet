@@ -124,6 +124,7 @@
         public const string PredecessorID = "PredecessorID";
         public const string SuccessorID = "SuccessorID";
         public const string Type = "Type";
+        public const string Days = "Days";
     }
 
     public static class CDSGanttResourceAssignments

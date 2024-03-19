@@ -6,15 +6,20 @@ using AragenSmartsheet.Entities.Home;
 using AragenSmartsheet.Integration.SmartsheetIntegration;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using Microsoft.VisualBasic;
+using Newtonsoft.Json;
 using NLog.Fluent;
 using Smartsheet.Api.Models;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Resources;
 using System.Security.Cryptography.X509Certificates;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace AragenSmartsheet.Data.Repository
@@ -1026,8 +1031,676 @@ namespace AragenSmartsheet.Data.Repository
                 return null;
             }
         }
+        private void DeleteDependencyFromString(int PId, string GanttDependenciesSheetID)
+        {
+            Dictionary<string, long> DependenciesColumnMap = new();
+            var DependenciesDataSheet = SmartsheetAppIntegration.AccessClient().SheetResources.GetSheet(Convert.ToInt64(GanttDependenciesSheetID), null, null, null, null, null, null, null, null, null);
 
-        public void UpdateTask(List<MCDSTask> Tasks, string ProjPlanSheetID)
+            foreach (var column in DependenciesDataSheet.Columns)
+            {
+                DependenciesColumnMap.Add(column.Title, (long)column.Id);
+            }
+
+            MCDSDependency dependency;
+            List<MCDSDependency> lstDependency = new();
+
+            foreach (var row in DependenciesDataSheet.Rows)
+            {
+                dependency = new MCDSDependency();
+                dependency.RowID = Convert.ToInt64(row.Id);
+                dependency.ID = Convert.ToInt32(SmartsheetHelper.GetCellByColumnName(row, "ID", DependenciesColumnMap).Value);
+                dependency.PredecessorID = Convert.ToInt32(SmartsheetHelper.GetCellByColumnName(row, "PredecessorID", DependenciesColumnMap).Value);
+                dependency.SuccessorID = Convert.ToInt32(SmartsheetHelper.GetCellByColumnName(row, "SuccessorID", DependenciesColumnMap).Value);
+                dependency.Type = Convert.ToInt32(SmartsheetHelper.GetCellByColumnName(row, "Type", DependenciesColumnMap).Value);
+
+                lstDependency.Add(dependency);
+            }
+
+            lstDependency = lstDependency.Where(x => x.SuccessorID == PId).ToList();
+            var RowIDs = lstDependency.Select(x => x.RowID).ToList();
+            if (RowIDs.Count > 0)
+            {
+                SmartsheetAppIntegration.AccessClient().SheetResources.RowResources.DeleteRows(Convert.ToInt64(GanttDependenciesSheetID), RowIDs, true);
+            }
+        }
+        //private void UpdateDependencyFromString(int PredecessorId, int SuccessorId, int type, int days, string GanttDependenciesSheetID)
+        //{
+
+        //    //add
+        //    Dictionary<string, long> GanttDependenciesColumnMap = new();
+        //    Row row;
+        //    List<Row> liRowsToAdd = new();
+        //    try
+        //    {
+        //        var ColumnsInSheet = SmartsheetAppIntegration.AccessClient().SheetResources.GetSheet(Convert.ToInt64(GanttDependenciesSheetID), null, null, null, null, null, null, null, null, null).Columns;
+        //        foreach (var column in ColumnsInSheet)
+        //        {
+        //            GanttDependenciesColumnMap.Add(column.Title, (long)column.Id);
+        //        }
+
+        //        foreach (var dependency in Dependencies)
+        //        {
+        //            Cell[] cellsToInsert = new Cell[]
+        //            {
+        //                new Cell
+        //                {
+        //                    ColumnId = GanttDependenciesColumnMap[CDSGanttDependencies.PredecessorID],
+        //                    Value = dependency.PredecessorID
+        //                },
+        //                new Cell
+        //                {
+        //                    ColumnId = GanttDependenciesColumnMap[CDSGanttDependencies.SuccessorID],
+        //                    Value = dependency.SuccessorID
+        //                },
+        //                new Cell
+        //                {
+        //                    ColumnId = GanttDependenciesColumnMap[CDSGanttDependencies.Type],
+        //                    Value = dependency.Type
+        //                }
+        //            };
+
+        //            row = new Row
+        //            {
+        //                ToBottom = true,
+        //                Cells = cellsToInsert
+        //            };
+
+        //            liRowsToAdd.Add(row);
+        //        }
+        //        SmartsheetAppIntegration.AccessClient().SheetResources.RowResources.AddRows(Convert.ToInt64(GanttDependenciesSheetID), liRowsToAdd);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Log.Error(ex.Message);
+        //        Log.Error(ex.StackTrace);
+        //    }
+        //}
+        private bool isWorkingDays(DateTime currentDate, int WorkingDays)
+        {
+            var dayOfWeek = currentDate.DayOfWeek;
+            if (WorkingDays == 5 && (dayOfWeek == DayOfWeek.Saturday || dayOfWeek == DayOfWeek.Sunday))
+            {
+                return false;
+            }
+            if (WorkingDays == 6 && dayOfWeek == DayOfWeek.Sunday)
+            {
+                return false;
+            }
+            return true;
+        }
+        private DateTime getNextWorkingDate(DateTime currentDate, int workingDays)
+        {
+            // Calculate next date
+            var nextDate = currentDate;
+            nextDate = nextDate.AddDays(1);
+            while (!isWorkingDays(nextDate, workingDays))
+            {
+                nextDate = nextDate.AddDays(1);
+            }
+            return nextDate;
+        }
+
+        // Get the previous working day
+        private DateTime getPreviousWorkingDate(DateTime currentDate, int workingDays)
+        {
+            // Calculate prev date
+            var prevDate = currentDate;
+            prevDate = prevDate.AddDays(-1);
+            while (!isWorkingDays(prevDate, workingDays))
+            {
+                prevDate = prevDate.AddDays(-1);
+            }
+            return prevDate;
+        }
+        private DateTime createStartDate(DateTime aDate)
+        {
+            var startDate = aDate;
+            TimeSpan ts = new TimeSpan(0, 0, 0);
+            startDate = startDate.Date + ts;// Set to start at 9:00 AM
+            return startDate;
+        }
+        private DateTime createEndDate(DateTime aDate)
+        {
+            var endDate = aDate;
+            TimeSpan ts = new TimeSpan(17, 0, 0);    // Set to end at 5:00 PM
+            endDate = endDate.Date + ts;
+            return endDate;
+        }
+        //private void UpdateDependentTask(int DependentId, int Type, DateTime start, DateTime end, string ProjPlanSheetID, string GanttDependenciesSheetID, int days, int nextTask)
+        //{
+
+        //}
+        private int getWorkEffordDays(DateTime startDate, DateTime endDate, int workingdays)
+        {
+            var workEffordDays = 0;
+            var curDate = createStartDate(startDate);
+            var fullEndDate = createEndDate(endDate);
+            while (curDate < fullEndDate)
+            {
+                workEffordDays++;
+                curDate = getNextWorkingDate(curDate, workingdays);
+            }
+            return workEffordDays;
+        }
+        private int calcPercentage(int workdays, DateTime startDate, DateTime endDate)
+        {
+            var currentDate = new DateTime();
+            //currentDate.setSeconds(0, 0);
+            if (currentDate < startDate)
+            { // Project not started yet
+                return 0;
+            }
+            if (currentDate > endDate)
+            { // Project has already completed
+                return 1;
+            }
+
+            // Process only prject that endDate has not passed today
+            var totalWorkdays = getWorkEffordDays(startDate, endDate, workdays);
+            var daysCompleted = getWorkEffordDays(startDate, currentDate, workdays) - 1; // -1 to exclude today
+            var todayHoursCompleted = 0;
+
+            var currentHours = currentDate.Hour;
+            // If current time has passed 5:00 PM, then count it as a whole day
+            if (currentHours > 17)
+            {
+                todayHoursCompleted = 8; // Add fullday hours
+            }
+            else if (currentHours > 9)
+            {
+                todayHoursCompleted = currentHours - 9;// Add partial hours
+            }
+
+            var totalWorkHours = totalWorkdays * 8;
+            var totalHoursCompleted = (daysCompleted * 8) + todayHoursCompleted;
+            var percentCompleted = totalWorkHours > totalHoursCompleted ? totalHoursCompleted / totalWorkHours : 0;
+            return percentCompleted;
+        }
+        public void BaselineSet(string baselineSet, string ProjPlanSheetID)
+        {
+            var allTask = GetAllTasks(ProjPlanSheetID);
+            if (baselineSet == "F")
+            {
+                foreach (var item in allTask)
+                {
+                    item.DurationDays = getWorkEffordDays(item.Start, item.End, Convert.ToInt32(item.Workdays));
+                    item.BaselineSet = false;
+                    item.VarianceDays = 0;
+                }
+            }
+            else
+            {
+                foreach (var task in allTask)
+                {
+                    var workdays = task.Workdays;
+                    var startdate = Convert.ToDateTime(task.PlannedStart);
+                    var endDate = Convert.ToDateTime(task.PlannedEnd);
+                    var percentage = calcPercentage(Convert.ToInt32(workdays), startdate, endDate);
+                    if (task.PercentComplete != percentage)
+                    {
+                        task.PercentComplete = percentage;
+                    }
+                    task.BaselineSet = true;
+                    if (task.VarianceDays != 0)
+                    {
+                        task.VarianceDays = 0;
+                    }
+                    if (task.PlannedStart != task.Start)
+                    {
+                        task.PlannedStart = task.Start;
+                    }
+                    if (task.PlannedEnd != task.End)
+                    {
+                        task.PlannedEnd = task.End;
+                    }
+                }
+            }
+            UpdateTask_WithoutDependency(allTask, ProjPlanSheetID);
+        }
+        private bool isPredecessor(int taskId1, int taskId2, string GanttDependenciesSheetID)
+        {
+            if (taskId1 == taskId2)
+            {
+                return true;
+            }
+            var dependencies = GetGanttDependencies(GanttDependenciesSheetID);
+            var curDependencies = dependencies.Where(d => d.PredecessorID == taskId1);
+            var isDependency = curDependencies.Where(d => d.SuccessorID == taskId2);
+            if (isDependency.Count() > 0)
+            {
+                return true;
+            }
+
+            //check for duplicate need to check this code
+            //curDependencies = dependencies.Where(d => d.PredecessorID == taskId2);
+            //isDependency = curDependencies.Where(d => d.SuccessorID == taskId1);
+            //if (isDependency.Count() > 0)
+            //{
+            //    return true;
+            //}
+
+
+            var subPredecessor = false;
+            // taskId2 is not direct successor of taskId1, check if taskId2 is a successor of taskId2 dependencies recursively
+            foreach (var item in curDependencies)
+            {
+                if (isPredecessor(item.SuccessorID, taskId2, GanttDependenciesSheetID))
+                {
+                    subPredecessor = true;
+                    return true;
+                }
+            }
+            return subPredecessor;
+        }
+        private void UpdateSuccessorTasks(List<MCDSTask> Tasks, string ProjPlanSheetID, string GanttDependenciesSheetID)
+        {
+            var dList = GetGanttDependencies(GanttDependenciesSheetID);
+            foreach (var task in Tasks)            {
+                
+                var singleDList = dList.Where(p => p.PredecessorID == task.ID).ToList();
+                if (singleDList.Count() > 0)
+                {
+
+                    List<MCDSTask> allTasks = GetAllTasks(ProjPlanSheetID);
+                    List<MCDSTask> taskToSend = new List<MCDSTask>();
+
+                    foreach (var d in singleDList)
+                    {
+                        MCDSTask pTask = allTasks.Where(p => p.ID == d.SuccessorID).FirstOrDefault();
+                        taskToSend.Add(pTask);
+                    }
+
+                    UpdateTask(taskToSend, ProjPlanSheetID, GanttDependenciesSheetID);
+                }
+            }
+        }
+        public void UpdateTask(List<MCDSTask> Tasks, string ProjPlanSheetID, string GanttDependenciesSheetID)
+        {
+            Row row;
+            List<Row> liRowsToUpdate = new();
+            try
+            {
+                Dictionary<string, long> ProjectPlanColumnMap = new();
+                var ProjectPlanDataSheet = SmartsheetAppIntegration.AccessClient().SheetResources.GetSheet(Convert.ToInt64(ProjPlanSheetID), null, null, null, null, null, null, null, null, null);
+
+                foreach (var column in ProjectPlanDataSheet.Columns)
+                {
+                    ProjectPlanColumnMap.Add(column.Title, (long)column.Id);
+                }
+
+                List<MCDSDependency> Dependencies = new List<MCDSDependency>();
+                //check for dependency update
+
+                foreach (var task in Tasks)
+                {
+                    string FinalDependencyString = string.Empty;
+                    
+                    //delete existing dependeicies
+                    DeleteDependencyFromString(task.ID, GanttDependenciesSheetID);
+                    
+                    if (Convert.ToString(task.Remarks) != "")
+                    {
+                        string mainStr = task.Remarks;
+                        string[] mainAr = mainStr.Split(',');
+
+                        foreach (var item in mainAr)
+                        {
+                            MCDSDependency mCDSDependency = new MCDSDependency();
+                            string[] arSpaceMain = new string[3];
+                            string[] arSpace = item.Split(' ');
+
+                            //number
+                            arSpaceMain[0] = Regex.Match(arSpace[0], @"\d+").Value;
+                            //type
+                            string strType = arSpace[0].Replace(arSpaceMain[0], string.Empty);
+                            if (strType.ToUpper() == "")
+                            {
+                                strType = "SF";
+                            }
+
+                            //Set types
+                            if (strType.ToUpper() == "FF")
+                            {
+                                arSpaceMain[1] = "0";
+                            }
+                            else if (strType.ToUpper() == "FS")
+                            {
+                                arSpaceMain[1] = "1";
+                            }
+                            else if (strType.ToUpper() == "SF")
+                            {
+                                arSpaceMain[1] = "2";
+                            }
+                            else if (strType.ToUpper() == "SS")
+                            {
+                                arSpaceMain[1] = "3";
+                            }
+                            else //need to check this one
+                            {
+                                arSpaceMain[1] = "2";
+                            }
+
+                            //set days payload
+                            if (arSpace.Length != 2)
+                            {
+                                arSpaceMain[2] = "0";
+                            }
+                            else
+                            {
+                                arSpaceMain[2] = Regex.Match(arSpace[1], @"-?\d+").Value;
+                            }
+
+                            mCDSDependency.PredecessorID = Convert.ToInt32(arSpaceMain[0]);
+                            mCDSDependency.SuccessorID = task.ID;
+                            //mCDSDependency.PredecessorID = task.ID;
+                            //mCDSDependency.SuccessorID = Convert.ToInt32(arSpaceMain[0]);
+                            mCDSDependency.Type = Convert.ToInt32(arSpaceMain[1]);
+                            mCDSDependency.Days = Convert.ToInt32(arSpaceMain[2]);
+                            Dependencies.Add(mCDSDependency);
+
+
+                            if (isPredecessor(mCDSDependency.SuccessorID, mCDSDependency.PredecessorID, GanttDependenciesSheetID))
+                            {
+                                //circular dependency                                
+                            }
+                            else
+                            {
+                                if (FinalDependencyString != "")
+                                {
+                                    FinalDependencyString = FinalDependencyString + "," + item.ToString();
+                                }
+                                else
+                                {
+                                    FinalDependencyString = item.ToString();
+                                }
+                                //update dependency row dates
+                                //UpdateDependentTask(Convert.ToInt32(arSpaceMain[0]), Convert.ToInt32(arSpaceMain[1]), task.Start, task.End, ProjPlanSheetID, GanttDependenciesSheetID, Convert.ToInt32(arSpaceMain[2]));
+                                //UpdateDependentTask(task.ID, Convert.ToInt32(arSpaceMain[1]), task.Start, task.End, ProjPlanSheetID, GanttDependenciesSheetID, Convert.ToInt32(arSpaceMain[2]), Convert.ToInt32(arSpaceMain[0]));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                List<MCDSTask> allTasks = GetAllTasks(ProjPlanSheetID);
+                                MCDSTask pTask = allTasks.Where(p => p.ID == Convert.ToInt32(arSpaceMain[0])).FirstOrDefault();
+                                //FinishFinish: 0,
+                                //FinishStart: 1,
+                                //StartFinish: 2,
+                                //StartStart: 3,
+
+                                //return parameters
+                                var start = pTask.Start;
+                                var end = pTask.End;
+                                DateTime FinalStartDate = task.Start, FinalEndDate = task.End;
+                                var workingDays = task.Workdays;
+                                var duration = task.DurationDays;
+                                int days = Convert.ToInt32(arSpaceMain[2]);
+                                if (days > 0)
+                                {
+                                    for (int i = 0; i < days; i++)
+                                    {
+                                        start = getNextWorkingDate(start, Convert.ToInt32(workingDays));
+                                        end = getNextWorkingDate(end, Convert.ToInt32(workingDays));
+                                    }
+                                }
+                                else if (days < 0)
+                                {
+                                    days = days * -1;
+                                    for (int i = 0; i < days; i++)
+                                    {
+                                        start = getPreviousWorkingDate(start, Convert.ToInt32(workingDays));
+                                        end = getPreviousWorkingDate(end, Convert.ToInt32(workingDays));
+                                    }
+                                }
+                                if (mCDSDependency.Type == 0)
+                                {
+                                    var endDate = end;
+                                    if (!isWorkingDays(endDate, Convert.ToInt32(workingDays)))
+                                    {
+                                        endDate = getPreviousWorkingDate(endDate, Convert.ToInt32(workingDays));
+                                    }
+                                    var startDate = endDate;
+                                    var remainingDays = duration;
+                                    while (remainingDays > 0)
+                                    {
+                                        if (isWorkingDays(startDate, Convert.ToInt32(workingDays)))
+                                        {
+                                            remainingDays--;
+                                        }
+                                        startDate = startDate.AddDays(-1);
+                                    }
+                                    startDate = getNextWorkingDate(startDate, Convert.ToInt32(workingDays)); //Get the next working day
+
+                                    FinalStartDate = createStartDate(startDate);
+                                    FinalEndDate = createEndDate(endDate);
+                                }
+                                else if (mCDSDependency.Type == 1)
+                                {
+                                    // Calculate start date based on predecessor's end date
+                                    var startDate = getNextWorkingDate(end, Convert.ToInt32(workingDays));
+
+                                    // Calculate end date based on duration and working days per week
+                                    var remainingDays = duration;
+                                    var endDate = startDate;
+                                    while (remainingDays > 0)
+                                    {
+                                        if (isWorkingDays(endDate, Convert.ToInt32(workingDays)))
+                                        {
+                                            remainingDays--;
+                                        }
+                                        endDate = getNextWorkingDate(endDate, Convert.ToInt32(workingDays));
+
+                                        //endDate.setDate(endDate.getDate() + 1)
+                                    }
+
+                                    endDate = getPreviousWorkingDate(endDate, Convert.ToInt32(workingDays)); //Get the last working day;
+                                    FinalStartDate = createStartDate(startDate);
+                                    FinalEndDate = createEndDate(endDate);
+                                }
+                                else if (mCDSDependency.Type == 2)
+                                {
+                                    // Calculate end date based on predecessor's start date
+                                    var endDate = getPreviousWorkingDate(start, Convert.ToInt32(workingDays));
+
+                                    // Calculate start date based on duration and working days per week
+                                    var remainingDays = duration;
+                                    var startDate = endDate;
+                                    while (remainingDays > 0)
+                                    {
+                                        if (isWorkingDays(endDate, Convert.ToInt32(workingDays)))
+                                        {
+                                            remainingDays--;
+                                        }
+                                        startDate = getPreviousWorkingDate(startDate, Convert.ToInt32(workingDays));
+                                        //startDate.setDate(startDate.getDate() - 1)
+                                    }
+
+                                    startDate = getNextWorkingDate(startDate, Convert.ToInt32(workingDays)); //Get the next working day
+                                    FinalStartDate = createStartDate(startDate);
+                                    FinalEndDate = createEndDate(endDate);
+                                }
+                                else if (mCDSDependency.Type == 3)
+                                {
+                                    var startDate = start;
+                                    if (!isWorkingDays(startDate, Convert.ToInt32(workingDays)))
+                                    {
+                                        startDate = getNextWorkingDate(startDate, Convert.ToInt32(workingDays));
+                                    }
+                                    var endDate = startDate;
+                                    var remainingDays = duration;
+                                    while (remainingDays > 0)
+                                    {
+                                        if (isWorkingDays(endDate, Convert.ToInt32(workingDays)))
+                                        {
+                                            remainingDays--;
+                                        }
+                                        endDate = endDate.AddDays(+1);
+                                    }
+
+                                    endDate = getPreviousWorkingDate(endDate, Convert.ToInt32(workingDays)); //Get the last working day
+                                    FinalStartDate = createStartDate(startDate);
+                                    FinalEndDate = createEndDate(endDate);
+                                }
+
+                                task.Start = FinalStartDate;
+                                task.End = FinalEndDate;
+                                List<MCDSTask> postTasks = new List<MCDSTask>();
+                                postTasks.Add(pTask);
+                                UpdateTask(postTasks, ProjPlanSheetID, GanttDependenciesSheetID);
+
+                                
+
+
+
+
+
+
+
+
+
+
+
+
+                            }
+                        }
+                    }
+                    task.Remarks = FinalDependencyString;
+                }
+
+                if (Dependencies != null && Dependencies.Count > 0)
+                {
+                    CreateGanttDependencies(Dependencies.ToList(), GanttDependenciesSheetID);
+                }
+                foreach (var task in Tasks)
+                {
+                    Cell[] CellsToUpdate = new Cell[]
+                    {
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.ParentID],
+                            Value = task.ParentID == null ? 0 : task.ParentID
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.OrderID],
+                            Value = task.OrderID
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.Expanded],
+                            Value = task.Expanded ? 1 : 0
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.Summary],
+                            Value = task.Summary ? 1 : 0
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.Task],
+                            Value = task.Title
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.PlannedStartDate],
+                            Value = task.PlannedStart == null ? string.Empty : task.PlannedStart
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.PlannedEndDate],
+                            Value = task.PlannedEnd == null ? string.Empty : task.PlannedEnd
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.ActualStartDate],
+                            Value = task.Start
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.ActualEndDate],
+                            Value = task.End
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.PercentCompleteDuration],
+                            Value = task.PercentComplete
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.Workdays],
+                            Value = task.Workdays
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.Duration],
+                            Value = task.DurationDays
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.Variance],
+                            Value = task.VarianceDays
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.TaskManager],
+                            Value = task.TaskManager
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.TaskStatus],
+                            Value = task.TaskStatus
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.DelayReason],
+                            Value = task.DelayReason
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.DelayComments],
+                            Value = task.DelayComments
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.Remarks],
+                            Value = task.Remarks
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.BaselineSet],
+                            Value = task.BaselineSet
+                        },
+                    };
+                    row = new Row
+                    {
+                        Id = task.RowID,
+                        Cells = CellsToUpdate
+                    };
+                    liRowsToUpdate.Add(row);
+
+                    
+                }
+                SmartsheetAppIntegration.AccessClient().SheetResources.RowResources.UpdateRows(Convert.ToInt64(ProjPlanSheetID), liRowsToUpdate);
+                
+                UpdateSuccessorTasks(Tasks, ProjPlanSheetID, GanttDependenciesSheetID);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.Message);
+                Log.Error(ex.StackTrace);
+            }
+        }
+        public void UpdateTask_WithoutDependency(List<MCDSTask> Tasks, string ProjPlanSheetID)
         {
             Row row;
             List<Row> liRowsToUpdate = new();
@@ -1359,6 +2032,11 @@ namespace AragenSmartsheet.Data.Repository
                         {
                             ColumnId = GanttDependenciesColumnMap[CDSGanttDependencies.Type],
                             Value = dependency.Type
+                        },
+                        new Cell
+                        {
+                            ColumnId = GanttDependenciesColumnMap[CDSGanttDependencies.Days],
+                            Value = dependency.Days
                         }
                     };
                     row = new Row
@@ -1404,16 +2082,23 @@ namespace AragenSmartsheet.Data.Repository
                         {
                             ColumnId = GanttDependenciesColumnMap[CDSGanttDependencies.PredecessorID],
                             Value = dependency.PredecessorID
+                            //Value = dependency.SuccessorID
                         },
                         new Cell
                         {
                             ColumnId = GanttDependenciesColumnMap[CDSGanttDependencies.SuccessorID],
                             Value = dependency.SuccessorID
+                            //Value = dependency.PredecessorID
                         },
                         new Cell
                         {
                             ColumnId = GanttDependenciesColumnMap[CDSGanttDependencies.Type],
                             Value = dependency.Type
+                        },
+                        new Cell
+                        {
+                            ColumnId = GanttDependenciesColumnMap[CDSGanttDependencies.Days],
+                            Value = dependency.Days
                         }
                     };
 

@@ -124,6 +124,7 @@
 
         function refreshGanntView() {
             $('#gantt').data('kendoGantt')?.refresh()
+            //alert();
         }
 
         function createStartDate(aDate) {
@@ -370,9 +371,9 @@
             var actualTotalWorkdays = getWorkEffordDays(task.plannedStart, task.end, task.workdays);
 
             var variance = actualTotalWorkdays - plannedTotalWorkdays;
-            if (variance < 0) {
-                variance = 0
-            }
+            // if (variance < 0) {
+            //     variance = 0
+            // }
             if (variance !== task.variancedays) {
                 task.set("variancedays", variance)
             }
@@ -682,7 +683,21 @@
 
             refreshGanntView();
         }
+        function baselineCallMethod(baselineSet) {
+            loadershow();
+            $.ajax({
+                url: "/CDS/Baseline?baselineSet=" + baselineSet,
+                success: function (result, status, xhr) {
+                    //refresh page
+                    refreshGanntView();
+                    loaderhide();
+                },
+                error: function (xhr, status, error) {
+                    loaderhide();
+                }
+            });
 
+        }
         function changeValue(showPlanned) {
             var gantt = $('#gantt').data('kendoGantt')
             var datasource = gantt.dataSource;
@@ -698,25 +713,28 @@
             }
             if (!showPlanned) {
                 if (confirm('Your action will reset the baseline. This may take several moments, Do you wish to continue?') == true) {
-                    loadershow();
+
                     // kendo.confirm("Your action will reset the baseline. This may take several moments, Do you wish to continue?").done(function () {
                     //showPlannedColumns(false)
-                    debugger;
                     baselineSet = false;
-                    datasource.data().forEach(function (task) {
+                    baselineCallMethod("F");
 
-                        const durationdays = getWorkEffordDays(task.start, task.end, task.workdays)
-                        task.set("durationdays", durationdays);
-                        task.set("baselineSet", false);
-                        if (task.variancedays !== 0) {
-                            task.set("variancedays", 0)
-                        }
-                    });
+                    // datasource.data().forEach(function (task) {
 
-                    gantt.dataSource.sync();
+                    //     const durationdays = getWorkEffordDays(task.start, task.end, task.workdays)
+                    //     task.set("durationdays", durationdays);
+                    //     task.set("baselineSet", false);
+                    //     if (task.variancedays !== 0) {
+                    //         task.set("variancedays", 0)
+                    //     }
+                    // });
+
+                    //gantt.dataSource.sync();
                     //showPlannedColumns(false);
-                    gantt.refresh();
-                    loaderhide();
+                    //gantt.refresh();
+
+
+                    //location.reload();
                 }
                 else {
                     gantt.setOptions({
@@ -729,36 +747,35 @@
                 if (confirm('Your action will set the baseline. This may take several moments, Do you wish to continue?') == true) {
                     // kendo.confirm("Your action will set the baseline. This may take several moments, Do you wish to continue?").done(function () {
                     //showPlannedColumns(true)
-                    debugger;
-                    loadershow();
                     baselineSet = true;
-                    gantt.dataSource.data().forEach(function (task) {
+                    baselineCallMethod("T");
+                    // gantt.dataSource.data().forEach(function (task) {
 
-                        //if (task.hasChildren == false) {
-                        workdays = task.workdays
-                        startdate = task.plannedStart
-                        endDate = task.plannedEnd
-                        percentage = calcPercentage(workdays, startdate, endDate) ?? 0
-                        if (task.percentComplete !== percentage) {
-                            task.set("percentComplete", percentage)
-                        }
+                    //     //if (task.hasChildren == false) {
+                    //     workdays = task.workdays
+                    //     startdate = task.plannedStart
+                    //     endDate = task.plannedEnd
+                    //     percentage = calcPercentage(workdays, startdate, endDate) ?? 0
+                    //     if (task.percentComplete !== percentage) {
+                    //         task.set("percentComplete", percentage)
+                    //     }
 
-                        task.set("baselineSet", true);
-                        if (task.variancedays !== 0) {
-                            task.set("variancedays", 0)
-                        }
-                        if (task.plannedStart?.getTime() !== task.start.getTime()) {
-                            task.set("plannedStart", task.start);
-                        }
-                        if (task.plannedEnd?.getTime() !== task.end.getTime()) {
-                            task.set("plannedEnd", task.end);
-                        }
-                    });
-                    gantt.dataSource.sync();
+                    //     task.set("baselineSet", true);
+                    //     if (task.variancedays !== 0) {
+                    //         task.set("variancedays", 0)
+                    //     }
+                    //     if (task.plannedStart?.getTime() !== task.start.getTime()) {
+                    //         task.set("plannedStart", task.start);
+                    //     }
+                    //     if (task.plannedEnd?.getTime() !== task.end.getTime()) {
+                    //         task.set("plannedEnd", task.end);
+                    //     }
+                    // });
+                    //gantt.dataSource.sync();
                     //showPlannedColumns(true);
-                    gantt.refresh();
+                    //gantt.refresh();
 
-                    loaderhide();
+                    //location.reload();
                 }
                 else {
                     gantt.setOptions({
@@ -786,7 +803,6 @@
                         url: serviceRoot + "/GanttTasks/Update",
                         dataType: "json",
                         type: "POST"
-
                     },
                     destroy: {
                         url: serviceRoot + "/GanttTasks/Destroy",
@@ -873,6 +889,9 @@
             });
 
             var gantt = $("#gantt").kendoGantt({
+                // filterable: true,
+                // selectable: "multiple cell",
+                // allowCopy: true,
                 dataSource: tasksDataSource,
                 dataBound: function (e) {
                     if (!ganttInitialized) {
@@ -897,7 +916,7 @@
                             baselineSet = gantt.dataSource.data()[0].BaselineSet;
                         }
                         //alert(baselineSet);
-                        
+
                         gantt.setOptions({ showPlannedTasks: baselineSet });
                         gantt.refresh();
                         $('#planned-switch_label').text('Set Baseline');
@@ -1029,9 +1048,11 @@
                 ],
                 columns: [
 
-                    { field: "id", title: "ID", width: 50, visible: false },
                     {
-                        field: "title", title: "Title", editable: true, sortable: true, width: 200,
+                        field: "id", title: "ID", width: 40, locked: true
+                    },
+                    {
+                        field: "title", title: "Tasks", locked: true, editable: true, width:300,
                         template: function (task) {
                             let level = 0
                             // Count parents
@@ -1136,14 +1157,37 @@
                             var currentDate = new Date();
 
                             var statusField = dataItem.status;
-                            if (statusField === "Completed" || percentCompleted < .60) {
-                                return '<div style="background-color: green; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
+                            var isChecked = $("#planned-switch").prop("checked");
+                            var varience = updateTaskVariance(dataItem);
+                            if (!isChecked) {
+                                return '<div style="background-color: gray; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
                             }
-                            else if (percentCompleted < 1) {
-                                return '<div style="background-color: yellow; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
-                            } else {
+                            else if (varience > 0) {
                                 return '<div style="background-color: red; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
                             }
+                            else if (varience === 0 && statusField === "Completed") {
+                                return '<div style="background-color: green; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
+                            }
+                            else if (varience === 0 && statusField != "Completed" && percentCompleted <= .60) {
+                                return '<div style="background-color: green; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
+                            }
+                            else if (varience === 0 && statusField != "Completed" && percentCompleted > .60) {
+                                return '<div style="background-color: yellow; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
+                            }
+                            else if (varience < 0 && statusField === "Completed") {
+                                return '<div style="background-color: green; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
+                            }
+                            else if (varience < 0 && statusField != "Completed" && percentCompleted <= .60) {
+                                return '<div style="background-color: green; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
+                            }
+                            else if (varience < 0 && statusField != "Completed" && percentCompleted > .60) {
+                                return '<div style="background-color: yellow; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
+                            }
+                            // else if (percentCompleted < 1) {
+                            //     return '<div style="background-color: yellow; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
+                            // } else {
+                            //     return '<div style="background-color: red; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
+                            // }
                         }
                     },
                     {
@@ -1499,6 +1543,14 @@
             $("#gantt").data("kendoGantt").dataSource.bind("requestEnd", function (e) {
                 if (e.type === "create") {
                     gantt.dataSource.read();
+
+                }
+                else if (e.type === "update") {
+                    loadershow();
+                    location.reload();
+                }
+                else if (e.type === "destroy") {
+                    location.reload();
                 }
             });
             // Intercept event after dependency is saved, we need to assigned the new created dependency

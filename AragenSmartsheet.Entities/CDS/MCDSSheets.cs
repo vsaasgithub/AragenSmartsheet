@@ -99,7 +99,7 @@
         public const string PlannedEndDate = "Planned End Date";
         public const string ActualStartDate = "Actual Start Date";
         public const string ActualEndDate = "Actual End Date";
-        public const string PercentCompleteDuration = "% Complete - Duration";
+        public const string PercentCompleteDuration = "% Complete - Duration"; 
 
         public const string ID = "ID";
         public const string ParentID = "ParentID";

@@ -92,7 +92,7 @@ namespace AragenSmartsheet.Web.Controllers
             }
             return Json("Success");
         }
-         
+
         /// <summary>
         /// Session using set and get the smartsheet FoldeId and Foldername 
         /// </summary>
@@ -470,7 +470,7 @@ namespace AragenSmartsheet.Web.Controllers
                     if (!string.IsNullOrEmpty(ProjPlanSheetID))
                     {
                         //var GanttTasks = JsonConvert.DeserializeObject<List<MCDSTask>>(tasks);
-                        cdsRepo.UpdateTask(TasksToUpdate.ToList(), ProjPlanSheetID, GanttDependenciesSheetID);
+                        cdsRepo.UpdateTask(TasksToUpdate.ToList(), ProjPlanSheetID, GanttDependenciesSheetID, true);
                     }
                     else
                     {
@@ -506,10 +506,11 @@ namespace AragenSmartsheet.Web.Controllers
 
                     //var tasks = HttpContext.Session.GetString("GanttTasks");
                     var ProjPlanSheetID = HttpContext.Session.GetString("ProjPlanSheetID");
+                    var GanttDependenciesSheetID = HttpContext.Session.GetString("GanttDependenciesSheetID");
                     if (!string.IsNullOrEmpty(ProjPlanSheetID))
                     {
                         //var GanttTasks = JsonConvert.DeserializeObject<List<MCDSTask>>(tasks);
-                        cdsRepo.DeleteTask(TasksToDelete.ToList(), ProjPlanSheetID);
+                        cdsRepo.DeleteTask(TasksToDelete.ToList(), ProjPlanSheetID, GanttDependenciesSheetID);
                     }
                     else
                     {
@@ -839,6 +840,19 @@ namespace AragenSmartsheet.Web.Controllers
                 Log.Error(ex.StackTrace);
                 return null;
             }
+        }
+        public bool CodeCheck(string Code)
+        {
+            var FolderList = cdsRepo.GetProjectsList_ToCheckName();
+            foreach (var item in FolderList)
+            {
+                if (item.FolderName.Split('_')[0] == Code)
+                {
+                    return false;
+                }
+
+            }
+            return true;
         }
 
     }

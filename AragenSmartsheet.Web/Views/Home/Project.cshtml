@@ -25,7 +25,7 @@
     }
 
     .minbodydetails { /*
-                                    padding: 0 15px;*/
+                                        padding: 0 15px;*/
     }
 
     .minbodyview {
@@ -163,7 +163,7 @@
                                                             <option value="CCS">CCS(Custom Chemical Synthesis)</option>
                                                             <option value="CM New">CM (Contract Manufacturing)</option>
                                                             <option value="FC">FC (Fine Chemical)</option>
-                                                            <option value="PRD">PRD (Product Research & Development)</option>                                                            
+                                                            <option value="PRD">PRD (Product Research & Development)</option>
                                                         </select>
                                                         <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
                                                     </div>
@@ -201,7 +201,7 @@
                                                         <div class="form-group">
                                                             <label>Project Code</label>
 
-                                                            <input type="text" class="form-control" name="ProjectCode" id="ProjectCode" required>
+                                                            <input type="text" onchange="codeCheck(this.value)" class="form-control" name="ProjectCode" id="ProjectCode" required>
                                                             <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
                                                         </div>
                                                     </div>
@@ -714,7 +714,7 @@
                                             </div>
                                             <div class="row" style="padding:0 3px;margin-top:10px">
                                                 <div class="col-md-12">
-                                                    <div class="form-group col-sm-4" style="margin:15px auto">
+                                                    <div class="form-group col-sm-4" style="margin:15px auto" id="divSubmit">
                                                         <input type="submit" onclick="disableButtonAndSubmitForm()" value="Submit" class="btn btn-primary btn-block">
 
                                                         <div class="submitting"> </div>
@@ -756,7 +756,15 @@
         </div>
     </div>
 </section>
+<script>
+    function loadershow() {
+        $(".loaderoverlay").show();
+    }
+    function loaderhide() {
+        $(".loaderoverlay").hide();
+    }
 
+</script>
 
 <div class="loaderoverlay">
     <span class="minload">Please wait...</span>
@@ -788,7 +796,7 @@
                 form.method = "post";
                 form.submit();
                 //alert("ok");
-            } 
+            }
             else {
 
             }
@@ -918,7 +926,7 @@
 
     $(document).on('change', '#Client', function (e) {
         var selClient = $(this).val();
-        
+
         $.ajax({
             type: 'GET',
             data: { selClient },
@@ -978,5 +986,27 @@
     //        }
     //    });
     //});
-
+    function codeCheck(code) {
+        //alert(code);
+        loadershow();
+        $.ajax({
+            url: "/CDS/CodeCheck?Code=" + code,
+            success: function (result, status, xhr) {
+                //refresh page
+                //alert(result);
+                if (result === false) {
+                    alert("WBS Code/Project Code already exists, please enter another code");                    
+                    $("#divSubmit").children().attr('disabled', 'disabled');
+                    document.getElementById("ProjectCode").value = ""; 
+                }
+                else {
+                    $("#divSubmit").children().removeAttr('disabled', 'disabled');
+                }
+                loaderhide();
+            },
+            error: function (xhr, status, error) {
+                loaderhide();
+            }
+        });
+    }
 </script>

@@ -11,6 +11,7 @@ namespace AragenSmartsheet.Data.IRepository
         /// </summary>
         /// <returns>List of Projects(folders in smartsheet)</returns>
         public List<MCDSFolder> GetProjectsList();
+        public List<MCDSFolder> GetProjectsList_ToCheckName(); 
 
         /// <summary>
         /// FolderID using ProjectPlanDataSheet Id get then particuluar datasheet all details recovered  
@@ -60,8 +61,8 @@ namespace AragenSmartsheet.Data.IRepository
         public List<MCDSFolder> GetProjectList();
 
         public List<MCDSTask> GetAllTasks(string ProjPlanSheetID);
-        public void UpdateTask(List<MCDSTask> Tasks, string ProjPlanSheetID, string GanttDependenciesSheetID);
-        public void DeleteTask(List<MCDSTask> Tasks, string ProjPlanSheetID);
+        public void UpdateTask(List<MCDSTask> Tasks, string ProjPlanSheetID, string GanttDependenciesSheetID,bool dCheck);
+        public void DeleteTask(List<MCDSTask> Tasks, string ProjPlanSheetID, string GanttDependenciesSheetID);
         public void CreateTask(List<MCDSTask> Tasks, string ProjPlanSheetID);
 
         public void BaselineSet(string baselineSet, string ProjPlanSheetID);

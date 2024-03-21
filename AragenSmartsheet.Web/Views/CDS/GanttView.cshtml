@@ -689,7 +689,7 @@
                 url: "/CDS/Baseline?baselineSet=" + baselineSet,
                 success: function (result, status, xhr) {
                     //refresh page
-                    refreshGanntView();
+                    location.reload();
                     loaderhide();
                 },
                 error: function (xhr, status, error) {
@@ -1046,7 +1046,7 @@
                     { type: "month" },
                     { type: "year" },
                 ],
-                columns: [
+                columns: [                    
 
                     {
                         field: "id", title: "ID", width: 40, locked: true
@@ -1160,7 +1160,7 @@
                             var isChecked = $("#planned-switch").prop("checked");
                             var varience = updateTaskVariance(dataItem);
                             if (!isChecked) {
-                                return '<div style="background-color: gray; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
+                                return '<div style="background-color: lightblue; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
                             }
                             else if (varience > 0) {
                                 return '<div style="background-color: red; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
@@ -1530,8 +1530,7 @@
                     visible: true
                 },
                 pdf: {
-                    fileName: "Kendo UI Gantt Export.pdf"
-                    // proxyURL: "https://demos.telerik.com/kendo-ui/service/export"
+                    fileName: "Kendo UI Gantt Export.pdf"                    
                 },
                 togglePlannedTasks: function (e) {
                     changeValue(e.showPlannedTasks);

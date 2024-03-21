@@ -24,17 +24,17 @@ using System.Linq;
 
 namespace AragenSmartsheet.Web.Controllers
 {
-   [SessionTimeout]
+    [SessionTimeout]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> logger;
         private readonly IHomeRepository homeRepo;
-
+        private readonly ICDSRepository cdsRepo;
         public HomeController(IHomeRepository _homeRepo, ILogger<HomeController> _logger)
         {
             homeRepo = _homeRepo;
             logger = _logger;
-        }       
+        }
 
         /// <summary>
         /// Action Method to return Project View which helps to create new project
@@ -60,7 +60,7 @@ namespace AragenSmartsheet.Web.Controllers
         /// </summary>
         /// <returns></returns>
         public IActionResult Index()
-        {            
+        {
             return View();
         }
 
@@ -124,7 +124,9 @@ namespace AragenSmartsheet.Web.Controllers
         {
             try
             {
-                var client = HttpContext.Session.GetString("ClientList");
+                var data = homeRepo.GetClients();
+                var client = JsonConvert.SerializeObject(data);
+                //var client = HttpContext.Session.GetString("ClientList");
                 var clientList = JsonConvert.DeserializeObject<List<MClient>>(client);
                 var clientData = clientList.Where(x => x.ClientID == selClient).Select(y => y).FirstOrDefault();
 
@@ -154,12 +156,12 @@ namespace AragenSmartsheet.Web.Controllers
             try
             {
                 MProjectIntake projectIntake = new();
-                 var data = homeRepo.GetClients();
+                var data = homeRepo.GetClients();
                 var client = JsonConvert.SerializeObject(data);
                 //var client = HttpContext.Sess(ion.GetString("ClientList");               
                 var clientList = JsonConvert.DeserializeObject<List<MClient>>(client);
                 var clientData = clientList.Where(x => x.ClientID == Convert.ToString(form["Client"])).Select(y => y).FirstOrDefault();
-             var submitter = (JsonConvert.DeserializeObject<MUser>(HttpContext.Session.GetString("UserInfo"))).Email;
+                var submitter = (JsonConvert.DeserializeObject<MUser>(HttpContext.Session.GetString("UserInfo"))).Email;
 
                 //string wwwPath = Environment.WebRootPath;
                 //string contentPath = Environment.ContentRootPath;
@@ -211,11 +213,11 @@ namespace AragenSmartsheet.Web.Controllers
                             BDName = form["BDName"],
                             ProjectManager = form["ProjectManager"],
                         };
-                         //response = new ProjectPlan();
+                        //response = new ProjectPlan();
                         var response = homeRepo.CreateCDSCCSProject(projectIntake, submitter);
                         if (!String.IsNullOrEmpty(response))
                         {
-                            ViewBag.Success = "true";                           
+                            ViewBag.Success = "true";
                             string[] e = response.Split("+");
                             ViewBag.FolderId = e[0];
                             ViewBag.Name = e[1];
@@ -248,7 +250,7 @@ namespace AragenSmartsheet.Web.Controllers
                             BDName = form["BDName"],
                             ProjectManager = form["ProjectManager"],
                         };
-                       
+
                         var response = homeRepo.CreateCDSFCProject(projectIntake, submitter);
                         if (!String.IsNullOrEmpty(response))
                         {
@@ -343,7 +345,7 @@ namespace AragenSmartsheet.Web.Controllers
                         var response = homeRepo.CreateBiologySPOProject(projectIntake, submitter);
                         if (!String.IsNullOrEmpty(response))
                         {
-                            ViewBag.Success = "smartsheet";                          
+                            ViewBag.Success = "smartsheet";
                             ViewBag.FolderId = response;
                             ViewBag.Name = response;
                         }
@@ -464,6 +466,6 @@ namespace AragenSmartsheet.Web.Controllers
             }
             return count;
         }
-
+        
     }
 }

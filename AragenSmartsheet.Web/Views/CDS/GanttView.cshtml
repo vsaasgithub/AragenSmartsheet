@@ -64,9 +64,9 @@
         <div class="col-md-9">
             <span style="float:left; font-weight:bold; padding:5px;" class="text-primary">Project Name: @ViewBag.ProjectName</span>
         </div><div class="col-md-3 pull-right" style="float:right;">
-            <a class="btn btn-danger" target="_blank" style="float:right;" href="@Url.Action("GanttView_PDF", "CDS", new { FolderID = @ViewBag.FolderID, FolderName = @ViewBag.ProjectName, FolderLink = @ViewBag.ProjectFolderLink})" target="_parent">Export to PDF</a>
-            <a class="btn btn-info" target="_blank" style="float:right;" href="@ViewBag.ProjectResources">Project Resources</a>
-            <a class="btn btn-success" style="float:right;" onclick="Save();" id="btnSave">Save</a>
+            &nbsp;<a class="btn btn-danger" target="_blank" style="float:right;" href="@Url.Action("GanttView_PDF", "CDS", new { FolderID = @ViewBag.FolderID, FolderName = @ViewBag.ProjectName, FolderLink = @ViewBag.ProjectFolderLink})" target="_parent">Export to PDF</a>
+            &nbsp;<a class="btn btn-info" target="_blank" style="float:right;" href="@ViewBag.ProjectResources">Project Resources</a>
+            &nbsp;<a class="btn btn-success" style="float:right;color:white;" onclick="Save();" id="btnSave">Save</a>
         </div>
     </div>
     <div id="gantt" style="height:100%!important;"></div>

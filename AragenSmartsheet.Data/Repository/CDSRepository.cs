@@ -1633,6 +1633,7 @@ namespace AragenSmartsheet.Data.Repository
                 Log.Error(ex.StackTrace);
             }
         }
+
         public void calc(MCDSTask task, string ProjPlanSheetID, string GanttDependenciesSheetID, bool dCheck)
         {
             List<MCDSTask> postTasks = new List<MCDSTask>();

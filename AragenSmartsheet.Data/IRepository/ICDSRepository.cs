@@ -78,5 +78,6 @@ namespace AragenSmartsheet.Data.IRepository
         public void UpdateGanttResourceAssignments(List<MCDSResourceAssignment> ResourceAssignments, string GanttResourceAssignmentsSheetID);
         public void DeleteGanttResourceAssignments(List<MCDSResourceAssignment> ResourceAssignments, string GanttResourceAssignmentsSheetID);
         public void CreateGanttResourceAssignments(List<MCDSResourceAssignment> ResourceAssignments, string GanttResourceAssignmentsSheetID);
+        public void ArrangeTasks(List<MCDSTask> Tasks, string ProjPlanSheetID, string GanttDependenciesSheetID);
     }
 }

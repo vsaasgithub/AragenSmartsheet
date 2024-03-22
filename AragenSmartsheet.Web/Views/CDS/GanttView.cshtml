@@ -52,6 +52,8 @@
         font-size: 30px;
         font: bold;
     }
+    
+
 </style>
 <div class="loaderoverlay">
     <span class="minload">Please wait...</span>
@@ -62,8 +64,9 @@
         <div class="col-md-9">
             <span style="float:left; font-weight:bold; padding:5px;" class="text-primary">Project Name: @ViewBag.ProjectName</span>
         </div><div class="col-md-3 pull-right" style="float:right;">
-            <a class="k-button k-button-solid-base k-button-solid k-button-md k-rounded-md" target="_blank" style="float:right;" href="@Url.Action("GanttView_PDF", "CDS", new { FolderID = @ViewBag.FolderID, FolderName = @ViewBag.ProjectName, FolderLink = @ViewBag.ProjectFolderLink})" target="_parent">Export to PDF</a>
-            <a class="k-button k-button-solid-base k-button-solid k-button-md k-rounded-md" target="_blank" style="float:right;" href="@ViewBag.ProjectResources">Project Resources</a>
+            <a class="btn btn-danger" target="_blank" style="float:right;" href="@Url.Action("GanttView_PDF", "CDS", new { FolderID = @ViewBag.FolderID, FolderName = @ViewBag.ProjectName, FolderLink = @ViewBag.ProjectFolderLink})" target="_parent">Export to PDF</a>
+            <a class="btn btn-info" target="_blank" style="float:right;" href="@ViewBag.ProjectResources">Project Resources</a>
+            <a class="btn btn-success" style="float:right;" onclick="Save();" id="btnSave">Save</a>
         </div>
     </div>
     <div id="gantt" style="height:100%!important;"></div>
@@ -800,7 +803,7 @@
                         dataType: "json"
                     },
                     update: {
-                        url: serviceRoot + "/GanttTasks/Update",
+                        url: serviceRoot + "/GanttTasks/Update_Nothing",
                         dataType: "json",
                         type: "POST"
                     },
@@ -1046,13 +1049,13 @@
                     { type: "month" },
                     { type: "year" },
                 ],
-                columns: [                    
+                columns: [
 
                     {
                         field: "id", title: "ID", width: 40, locked: true
                     },
                     {
-                        field: "title", title: "Tasks", locked: true, editable: true, width:300,
+                        field: "title", title: "Tasks", locked: true, editable: true, width: 300,
                         template: function (task) {
                             let level = 0
                             // Count parents
@@ -1530,7 +1533,7 @@
                     visible: true
                 },
                 pdf: {
-                    fileName: "Kendo UI Gantt Export.pdf"                    
+                    fileName: "Kendo UI Gantt Export.pdf"
                 },
                 togglePlannedTasks: function (e) {
                     changeValue(e.showPlannedTasks);
@@ -1545,8 +1548,12 @@
 
                 }
                 else if (e.type === "update") {
-                    loadershow();
-                    location.reload();
+                    // loadershow();
+                    // location.reload();
+                    // refreshGanntView();
+                    // gantt.refresh();
+                    $('#btnSave').addClass('blink_me');
+
                 }
                 else if (e.type === "destroy") {
                     location.reload();
@@ -1569,5 +1576,29 @@
                 gantt.refresh();
             });
         });
+
+        function Save() {
+            loadershow();
+            $('#btnSave').removeClass('blink_me');
+            $.ajax({
+                url: "/CDS/SaveManually",
+                type: "POST",
+                dataType: "json",
+                data: { models: JSON.stringify(getGanttTasks()) },
+                success: function (result, status, xhr) {
+                    //refresh page
+                    //alert("saved");
+                    location.reload();
+                    loaderhide();
+
+                },
+                error: function (xhr, status, error) {
+                    //alert("failed");
+                    location.reload();
+                    loaderhide();
+                }
+            });
+            //alert('Saved');
+        }
     </script>
 </div>

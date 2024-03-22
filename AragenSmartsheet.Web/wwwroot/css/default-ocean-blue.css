@@ -52073,3 +52073,13 @@ kendo-scrollview.k-scrollview .k-scrollview-nav {
 .k-signature .k-signature-line {
     border-bottom-color: rgba(0, 88, 233, 0.24);
 }
+
+.blink_me {
+    animation: blinker 1s linear infinite;
+}
+
+@keyframes blinker {
+    50% {
+        opacity: 0;
+    }
+}

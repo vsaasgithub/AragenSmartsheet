@@ -489,10 +489,45 @@ namespace AragenSmartsheet.Web.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("CDS/GanttTasks/Update_Nothing")]
+        public IActionResult GanttTasksUpdateNothing(string models)
+        {
+            return new JsonResult(null);
+        }
+
         public void Baseline(string baselineSet)
         {
             var ProjPlanSheetID = HttpContext.Session.GetString("ProjPlanSheetID");
             cdsRepo.BaselineSet(baselineSet, ProjPlanSheetID);
+        }
+
+        [HttpPost]
+        //public void SaveManually([FromBody] IEnumerable<MCDSTask> models)
+        public void SaveManually(string models)
+        {
+            try
+            {
+                if (models != null)
+                {
+                    var GanttDependenciesSheetID = HttpContext.Session.GetString("GanttDependenciesSheetID");
+                    var ProjPlanSheetID = HttpContext.Session.GetString("ProjPlanSheetID");
+
+                    var TasksToUpdate = JsonConvert.DeserializeObject<IEnumerable<MCDSTask>>(models);
+
+                    if (!string.IsNullOrEmpty(ProjPlanSheetID))
+                    {
+                        cdsRepo.ArrangeTasks(TasksToUpdate.ToList(), ProjPlanSheetID, GanttDependenciesSheetID);
+                    }
+                    else { }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.Message);
+                Log.Error(ex.StackTrace);
+                //return null;
+            }
         }
 
         [Route("CDS/GanttTasks/Destroy")]

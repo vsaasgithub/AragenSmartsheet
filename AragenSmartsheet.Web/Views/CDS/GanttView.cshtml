@@ -52,8 +52,6 @@
         font-size: 30px;
         font: bold;
     }
-    
-
 </style>
 <div class="loaderoverlay">
     <span class="minload">Please wait...</span>
@@ -64,9 +62,9 @@
         <div class="col-md-9">
             <span style="float:left; font-weight:bold; padding:5px;" class="text-primary">Project Name: @ViewBag.ProjectName</span>
         </div><div class="col-md-3 pull-right" style="float:right;">
-            &nbsp;<a class="btn btn-danger" target="_blank" style="float:right;" href="@Url.Action("GanttView_PDF", "CDS", new { FolderID = @ViewBag.FolderID, FolderName = @ViewBag.ProjectName, FolderLink = @ViewBag.ProjectFolderLink})" target="_parent">Export to PDF</a>
-            &nbsp;<a class="btn btn-info" target="_blank" style="float:right;" href="@ViewBag.ProjectResources">Project Resources</a>
-            &nbsp;<a class="btn btn-success" style="float:right;color:white;" onclick="Save();" id="btnSave">Save</a>
+            &nbsp;&nbsp;<a class="btn btn-danger" target="_blank" style="float:right;" href="@Url.Action("GanttView_PDF", "CDS", new { FolderID = @ViewBag.FolderID, FolderName = @ViewBag.ProjectName, FolderLink = @ViewBag.ProjectFolderLink})" target="_parent">Export to PDF</a>
+            &nbsp;&nbsp;<a class="btn btn-info" target="_blank" style="float:right;" href="@ViewBag.FolderLink">Project Folder</a>
+            &nbsp;&nbsp;<a class="btn btn-success" style="float:right;color:white;" onclick="Save();" id="btnSave">Save</a>
         </div>
     </div>
     <div id="gantt" style="height:100%!important;"></div>
@@ -1404,6 +1402,7 @@
                             }
                         }
                     },
+                    { field: "remarks", title: "Dependencies", type: "text", editable: true, width: 200 },
                     {
                         field: "variancedays", title: "Variance", width: 50, template: function (dataItem) {
                             return updateTaskVariance(dataItem)
@@ -1513,8 +1512,7 @@
                             }
                         }
                     },
-                    { field: "delaycomments", title: "Delay Comments", type: "text", editable: true, width: 200 },
-                    { field: "remarks", title: "Remarks", type: "text", editable: true, width: 200 }
+                    { field: "delaycomments", title: "Delay Comments", type: "text", editable: true, width: 200 }                    
                 ],
                 sortable: true,
                 columnResize: () => gantt.refresh(),
@@ -1562,6 +1560,7 @@
             // Intercept event after dependency is saved, we need to assigned the new created dependency
             // and ID, other wise the id of 0 will be treated as a new dependency to be
             $('#gantt').data('kendoGantt').dependencies.bind("requestEnd", function (e) {
+                e.preventDefault();
                 const TEMP_ID = 9999
                 if (e.type === "create") {
                     // This code will be executed after data is saved
@@ -1571,7 +1570,7 @@
                     }
                     console.log("Data saved successfully");
                 }
-            });
+            });           
             $(document).bind("kendo:skinChange", function () {
                 gantt.refresh();
             });

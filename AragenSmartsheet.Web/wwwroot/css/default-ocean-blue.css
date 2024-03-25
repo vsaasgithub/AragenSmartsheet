@@ -31667,6 +31667,7 @@ kendo-label > .k-label {
 .k-edit-form-container .k-columnmenu-actions,
 .k-edit-form-container .k-form-buttons {
     margin: 16px -16px -16px;
+    display:none;
 }
 
 .k-edit-label {
@@ -37752,6 +37753,7 @@ select.k-picker-lg {
 }
 
 .k-window {
+    display:none !important;
     border-color: rgba(0, 0, 0, 0.08);
     color: #424242;
     background-color: #ffffff;
@@ -47999,6 +48001,7 @@ background-color:lightgrey;
 
 .k-gantt-edit-form .k-gantt-delete {
     float: left;
+    display:none;
 }
 
 .k-rtl .k-gantt-rows,
@@ -52082,4 +52085,7 @@ kendo-scrollview.k-scrollview .k-scrollview-nav {
     50% {
         opacity: 0;
     }
+}
+.k-gantt-edit-tabstrip {
+    display: none !important;
 }

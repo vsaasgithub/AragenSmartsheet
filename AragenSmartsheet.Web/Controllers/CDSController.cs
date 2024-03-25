@@ -297,6 +297,7 @@ namespace AragenSmartsheet.Web.Controllers
                 }
 
                 folderSheets = FolderList.Where(x => x.FolderID == Convert.ToInt64(FolderID)).Select(y => y.FolderSheets).FirstOrDefault();
+                ViewBag.FolderLink = FolderList.Where(x => x.FolderID == Convert.ToInt64(FolderID)).FirstOrDefault().FolderLink;
                 if (folderSheets == null)
                 {
                     FolderList = cdsRepo.GetProjectList();
@@ -365,6 +366,7 @@ namespace AragenSmartsheet.Web.Controllers
                 }
 
                 folderSheets = FolderList.Where(x => x.FolderID == Convert.ToInt64(FolderID)).Select(y => y.FolderSheets).FirstOrDefault();
+                ViewBag.FolderLink = FolderList.Where(x => x.FolderID == Convert.ToInt64(FolderID)).FirstOrDefault().FolderLink;
                 if (folderSheets == null)
                 {
                     FolderList = cdsRepo.GetProjectList();

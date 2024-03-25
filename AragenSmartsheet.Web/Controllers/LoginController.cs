@@ -33,7 +33,6 @@ namespace AragenSmartsheet.Web.Controllers
         /// <returns></returns>
         public IActionResult Authenticate(string username, string password)
         {
-
             System.DirectoryServices.SearchResult result;
             //try
             //{

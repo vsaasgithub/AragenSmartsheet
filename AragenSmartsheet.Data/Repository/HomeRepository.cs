@@ -187,7 +187,6 @@ namespace AragenSmartsheet.Data.Repository
                             ProjPlanSheetID = Convert.ToInt64(item.Id);
                         }
                     }
-
                     ProjectPlanRowID = Convert.ToInt64(sheetProjectPlan.Rows.First().Id);
                     var ProjPlanColIDTask = sheetProjectPlan.Columns.Where(x => x.Title == "Task").Select(y => y.Id).FirstOrDefault();
 

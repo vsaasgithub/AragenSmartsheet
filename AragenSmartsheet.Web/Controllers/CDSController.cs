@@ -552,7 +552,6 @@ namespace AragenSmartsheet.Web.Controllers
             cdsRepo.BaselineSet(baselineSet, ProjPlanSheetID);
         }
 
-
         [HttpPost]
         //public void SaveManually([FromBody] IEnumerable<MCDSTask> models)
         public void SaveManually(string models)

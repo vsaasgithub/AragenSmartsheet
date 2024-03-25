@@ -1260,6 +1260,7 @@ namespace AragenSmartsheet.Data.Repository
             var percentCompleted = totalWorkHours > totalHoursCompleted ? totalHoursCompleted / totalWorkHours : 0;
             return percentCompleted;
         }
+
         public void BaselineSet(string baselineSet, string ProjPlanSheetID)
         {
             var allTask = GetAllTasks(ProjPlanSheetID);

@@ -789,7 +789,7 @@
 
 
         $(document).ready(function () {
-            var serviceRoot = "https://aragencdsgantt2.azurewebsites.net/CDS";
+            var serviceRoot = '@ViewBag.serviceRoot';// "https://aragencdsgantt2.azurewebsites.net/CDS";
             //var serviceRoot = "https://localhost:44380/CDS";
             //var serviceRoot = "https://localhost:5001/CDS";
 
@@ -1485,7 +1485,7 @@
                     visible: true
                 },
                 pdf: {
-                    fileName: "CDS.pdf"
+                    fileName: '@ViewBag.ProjectName' + ".pdf"
                 },
                 togglePlannedTasks: function (e) {
                     changeValue(e.showPlannedTasks);

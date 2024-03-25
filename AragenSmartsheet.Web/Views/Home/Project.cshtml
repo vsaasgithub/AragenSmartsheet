@@ -201,7 +201,7 @@
                                                         <div class="form-group">
                                                             <label>Project Code</label>
 
-                                                            <input type="text" onchange="codeCheck(this.value)" class="form-control" name="ProjectCode" id="ProjectCode" required>
+                                                            <input type="text" onkeydown="checkUS(this.value)" onchange="codeCheck(this.value)" class="form-control" name="ProjectCode" id="ProjectCode" required>
                                                             <span style="float: right; position: absolute; right: 21px; top: 9px; color: red;">*</span>
                                                         </div>
                                                     </div>
@@ -1008,5 +1008,9 @@
                 loaderhide();
             }
         });
+    }
+    function checkUS(code){
+        code = code.replace("_", "-");
+        $("#ProjectCode").val(code);
     }
 </script>

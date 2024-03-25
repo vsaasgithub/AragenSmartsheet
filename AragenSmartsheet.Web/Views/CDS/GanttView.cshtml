@@ -61,10 +61,11 @@
     <div class="row">
         <div class="col-md-9">
             <span style="float:left; font-weight:bold; padding:5px;" class="text-primary">Project Name: @ViewBag.ProjectName</span>
-        </div><div class="col-md-3 pull-right" style="float:right;">
-            &nbsp;&nbsp;<a class="btn btn-danger" target="_blank" style="float:right;" href="@Url.Action("GanttView_PDF", "CDS", new { FolderID = @ViewBag.FolderID, FolderName = @ViewBag.ProjectName, FolderLink = @ViewBag.ProjectFolderLink})" target="_parent">Export to PDF</a>
-            &nbsp;&nbsp;<a class="btn btn-info" target="_blank" style="float:right;" href="@ViewBag.FolderLink">Project Folder</a>
-            &nbsp;&nbsp;<a class="btn btn-success" style="float:right;color:white;" onclick="Save();" id="btnSave">Save</a>
+        </div>
+        <div class="col-md-3 pull-right">
+            <a class="btn btn-danger" target="_blank" style="float:right;" href="@Url.Action("GanttView_PDF", "CDS", new { FolderID = @ViewBag.FolderID, FolderName = @ViewBag.ProjectName, FolderLink = @ViewBag.ProjectFolderLink})" target="_parent">Export to PDF</a>
+            <a class="btn btn-info" target="_blank" style="float:right;" href="@ViewBag.FolderLink">Project Folder</a>
+            <a class="btn btn-success" style="float:right;color:white;margin:2px;" onclick="Save();" id="btnSave">Save</a>
         </div>
     </div>
     <div id="gantt" style="height:100%!important;"></div>
@@ -789,8 +790,8 @@
 
 
         $(document).ready(function () {
-            var serviceRoot = "https://aragencdsgantt2.azurewebsites.net/CDS";
-            //var serviceRoot = "https://localhost:44380/CDS";
+            //var serviceRoot = "https://aragencdsgantt2.azurewebsites.net/CDS";
+            var serviceRoot = '@ViewBag.serviceRoot';//"https://localhost:44380/CDS";
             //var serviceRoot = "https://localhost:5001/CDS";
 
             var ganttInitialized = false;
@@ -1050,7 +1051,7 @@
                 columns: [
 
                     {
-                        field: "id", title: "ID", width: 40, locked: true
+                        field: "id", title: "ID", width: 40, locked: false
                     },
                     {
                         field: "title", title: "Tasks", locked: true, editable: true, width: 300,
@@ -1512,7 +1513,7 @@
                             }
                         }
                     },
-                    { field: "delaycomments", title: "Delay Comments", type: "text", editable: true, width: 200 }                    
+                    { field: "delaycomments", title: "Delay Comments", type: "text", editable: true, width: 200 }
                 ],
                 sortable: true,
                 columnResize: () => gantt.refresh(),
@@ -1551,6 +1552,7 @@
                     // refreshGanntView();
                     // gantt.refresh();
                     $('#btnSave').addClass('blink_me');
+                    window.onbeforeunload = "You have some unsaved records, are you sure you want to leave?";
 
                 }
                 else if (e.type === "destroy") {
@@ -1570,7 +1572,7 @@
                     }
                     console.log("Data saved successfully");
                 }
-            });           
+            });
             $(document).bind("kendo:skinChange", function () {
                 gantt.refresh();
             });
@@ -1578,6 +1580,7 @@
 
         function Save() {
             loadershow();
+
             $('#btnSave').removeClass('blink_me');
             $.ajax({
                 url: "/CDS/SaveManually",
@@ -1596,8 +1599,15 @@
                     location.reload();
                     loaderhide();
                 }
+
             });
             //alert('Saved');
+            window.onbeforeunload = null;
+        }
+        function pdf(FolderID, ProjectName, FolderLink) {
+            debugger;
+            window.open('@ViewBag.serviceRoot' + "/GanttView_PDF?FolderID=" + FolderID + "&FolderName=" + ProjectName + "&FolderLink=" + FolderLink + "&Views=Week"
+                , '_blank');
         }
     </script>
 </div>

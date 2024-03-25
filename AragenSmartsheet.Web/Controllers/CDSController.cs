@@ -1,16 +1,20 @@
 ﻿using AragenSmartsheet.Data.IRepository;
 using AragenSmartsheet.Entities.CDS;
+using AragenSmartsheet.Integration.SmartsheetIntegration;
 using AragenSmartsheet.Web.Helper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using NLog.Fluent;
 using Smartsheet.Api.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Resources;
@@ -24,11 +28,14 @@ namespace AragenSmartsheet.Web.Controllers
     {
         private readonly ILogger<CDSController> _logger;
         private readonly ICDSRepository cdsRepo;
+        readonly ConfigurationBuilder configurationBuilder = new();
 
         public CDSController(ICDSRepository _cdsRepo, ILogger<CDSController> logger)
         {
             cdsRepo = _cdsRepo;
             _logger = logger;
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
+            configurationBuilder.AddJsonFile(path, false);
         }
 
         /// <summary>
@@ -308,6 +315,7 @@ namespace AragenSmartsheet.Web.Controllers
                 ViewBag.FolderID = FolderID;
                 ViewBag.ProjectFolderLink = FolderLink;
                 ViewBag.ProjectResources = folderSheets.Where(x => x.SheetName == "Project Resources").Select(y => y.SheetLink).FirstOrDefault();
+                ViewBag.serviceRoot = configurationBuilder.Build().GetSection("serviceRoot").Value;
                 //ViewBag.ProjectDashboard = folderSheets.Where(x => x.SheetName == "Project Dashboard").Select(y => y.SheetLink).FirstOrDefault();
 
                 var ProjPlanSheetID = folderSheets.Where(x => x.SheetName == "Project Plan").Select(y => y.SheetID).FirstOrDefault();
@@ -376,13 +384,29 @@ namespace AragenSmartsheet.Web.Controllers
                 ViewBag.ProjectName = Name;
                 ViewBag.ProjectFolderLink = FolderLink;
                 ViewBag.ProjectResources = folderSheets.Where(x => x.SheetName == "Project Resources").Select(y => y.SheetLink).FirstOrDefault();
+                //if (Views.ToUpper() == "DAY")
+                //{
+                //    ViewBag.Views = "{ type: \"day\", selected: true },\r\n { type: \"week\"},\r\n{ type: \"month\" },\r\n{ type: \"year\" },";
+                //}
+                //else if (Views.ToUpper() == "WEEK")
+                //{
+                //    ViewBag.Views = "{ type: \"day\" },\r\n { type: \"week\", selected: true },\r\n{ type: \"month\" },\r\n{ type: \"year\" },";
+                //}
+                //else if (Views.ToUpper() == "MONTH")
+                //{
+                //    ViewBag.Views = "{ type: \"day\" },\r\n { type: \"week\"},\r\n{ type: \"month\" , selected: true },\r\n{ type: \"year\" },";
+                //}
+                //else if (Views.ToUpper() == "YEAR")
+                //{
+                //    ViewBag.Views = "{ type: \"day\" },\r\n { type: \"week\" },\r\n{ type: \"month\" },\r\n{ type: \"year\", selected: true },";
+                //}
 
                 var ProjPlanSheetID = folderSheets.Where(x => x.SheetName == "Project Plan").Select(y => y.SheetID).FirstOrDefault();
                 var ProjResourcesSheetID = folderSheets.Where(x => x.SheetName == "Project Resources").Select(y => y.SheetID).FirstOrDefault();
                 var GanttResourceAssignmentsSheetID = folderSheets.Where(x => x.SheetName == "Gantt Resource Assignments").Select(y => y.SheetID).FirstOrDefault();
                 var GanttDependenciesSheetID = folderSheets.Where(x => x.SheetName == "Gantt Dependencies").Select(y => y.SheetID).FirstOrDefault();
 
-
+                ViewBag.serviceRoot = configurationBuilder.Build().GetSection("serviceRoot").Value;
 
                 HttpContext.Session.SetString("ProjPlanSheetID", JsonConvert.SerializeObject(ProjPlanSheetID));
                 HttpContext.Session.SetString("ProjResourcesSheetID", JsonConvert.SerializeObject(ProjResourcesSheetID));
@@ -501,6 +525,30 @@ namespace AragenSmartsheet.Web.Controllers
         public void Baseline(string baselineSet)
         {
             var ProjPlanSheetID = HttpContext.Session.GetString("ProjPlanSheetID");
+            if (baselineSet != "F")
+            {
+
+                Folder folderObj = SmartsheetAppIntegration.AccessClient().FolderResources.GetFolder(Convert.ToInt64(HttpContext.Session.GetString("SelectedFolderID")), null);
+                long FID = 0;
+                foreach (var item in folderObj.Folders)
+                {
+                    if (item.Name == "Baseline Backups")
+                    {
+                        FID = Convert.ToInt64(item.Id);
+                    }
+                }
+                //var FID = long.Parse(HttpContext.Session.GetString("SelectedFolderID"));
+                ContainerDestination destination = new()
+                {
+                    DestinationId = FID,
+                    DestinationType = DestinationType.FOLDER,
+                    NewName = "Project Plan " + DateTime.Now.ToString("dd-MMM-yyyy")
+                };
+                if (FID != 0)
+                {
+                    var Newsheet = SmartsheetAppIntegration.AccessClient().SheetResources.CopySheet(long.Parse(ProjPlanSheetID), destination, new SheetCopyInclusion[] { SheetCopyInclusion.ATTACHMENTS, SheetCopyInclusion.CELL_LINKS, SheetCopyInclusion.DATA, SheetCopyInclusion.DISCUSSIONS, SheetCopyInclusion.FILTERS, SheetCopyInclusion.FORMS, SheetCopyInclusion.RULES, SheetCopyInclusion.RULE_RECIPIENTS, SheetCopyInclusion.SHARES }, null);
+                }
+            }
             cdsRepo.BaselineSet(baselineSet, ProjPlanSheetID);
         }
 
@@ -748,7 +796,9 @@ namespace AragenSmartsheet.Web.Controllers
         {
             try
             {
-                var ProjResourcesSheetID = HttpContext.Session.GetString("ProjResourcesSheetID");
+                var ProjResourcesSheetID = configurationBuilder.Build().GetSection("ResourceSheet").Value.ToString();
+                //var ProjResourcesSheetID = HttpContext.Session.GetString("ProjResourcesSheetID");
+
                 if (!string.IsNullOrEmpty(ProjResourcesSheetID))
                 {
                     var resources = cdsRepo.GetGanttResources(ProjResourcesSheetID);

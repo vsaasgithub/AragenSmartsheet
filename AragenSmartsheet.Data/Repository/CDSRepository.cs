@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.VisualBasic;
 using Newtonsoft.Json;
+using NLog.Filters;
 using NLog.Fluent;
 using Smartsheet.Api.Models;
 using System;
@@ -1272,7 +1273,7 @@ namespace AragenSmartsheet.Data.Repository
                 }
             }
             else
-            {
+            {               
                 foreach (var task in allTask)
                 {
                     var workdays = task.Workdays;

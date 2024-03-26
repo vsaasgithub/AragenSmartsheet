@@ -25,7 +25,7 @@
     }
 
     .minbodydetails { /*
-                                        padding: 0 15px;*/
+                                            padding: 0 15px;*/
     }
 
     .minbodyview {
@@ -795,7 +795,6 @@
                 form.action = "../Home/CreateProject";
                 form.method = "post";
                 form.submit();
-                alert("Project Created Successfully");
             }
             else {
 
@@ -827,8 +826,10 @@
     }
 
     $(document).ready(function () {
-
-
+        debugger;
+        if ('@ViewBag.Success' == 'true') {
+            alert("Project Created Successfully");
+        }
 
         $("#StartDate").datepicker({
             changeMonth: true,
@@ -995,9 +996,9 @@
                 //refresh page
                 //alert(result);
                 if (result === false) {
-                    alert("WBS Code/Project Code already exists, please enter another code");                    
+                    alert("WBS Code/Project Code already exists, please enter another code");
                     $("#divSubmit").children().attr('disabled', 'disabled');
-                    document.getElementById("ProjectCode").value = ""; 
+                    document.getElementById("ProjectCode").value = "";
                 }
                 else {
                     $("#divSubmit").children().removeAttr('disabled', 'disabled');
@@ -1009,7 +1010,7 @@
             }
         });
     }
-    function checkUS(code){
+    function checkUS(code) {
         code = code.replace("_", "-");
         $("#ProjectCode").val(code);
     }

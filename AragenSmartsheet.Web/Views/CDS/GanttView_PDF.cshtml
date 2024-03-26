@@ -1150,14 +1150,32 @@
                             var actualEnd = dataItem.end
                             var currentDate = new Date();
 
-                            var statusField = dataItem.status;
-                            if (statusField === "Completed" || percentCompleted < .60) {
+                            var statusField = dataItem.status; 
+                            var isChecked = $("#planned-switch").prop("checked");
+                            var varience = updateTaskVariance(dataItem);
+                            if (!isChecked) {
+                                return '<div style="background-color: #104288; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
+                            }
+                            else if (varience > 0) {
+                                return '<div style="background-color: red; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
+                            }
+                            else if (varience === 0 && statusField === "Completed") {
                                 return '<div style="background-color: green; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
                             }
-                            else if (percentCompleted < 1) {
+                            else if (varience === 0 && statusField != "Completed" && percentCompleted <= .60) {
+                                return '<div style="background-color: green; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
+                            }
+                            else if (varience === 0 && statusField != "Completed" && percentCompleted > .60) {
                                 return '<div style="background-color: yellow; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
-                            } else {
-                                return '<div style="background-color: red; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
+                            }
+                            else if (varience < 0 && statusField === "Completed") {
+                                return '<div style="background-color: green; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
+                            }
+                            else if (varience < 0 && statusField != "Completed" && percentCompleted <= .60) {
+                                return '<div style="background-color: green; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
+                            }
+                            else if (varience < 0 && statusField != "Completed" && percentCompleted > .60) {
+                                return '<div style="background-color: yellow; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
                             }
                         }
                     },

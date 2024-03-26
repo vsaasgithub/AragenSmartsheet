@@ -302,9 +302,18 @@ namespace AragenSmartsheet.Web.Controllers
                 {
                     FolderList = cdsRepo.GetProjectList();
                 }
-
+                var dashboardLink = SmartsheetAppIntegration.AccessClient().FolderResources.GetFolder(Convert.ToInt64(HttpContext.Session.GetString("SelectedFolderID")), null);
+                string dashboard = "";
+                foreach (var sight  in dashboardLink.Sights)
+                {
+                    if (sight.Name == "Project Dashboard")
+                    {
+                        dashboard = sight.Permalink;
+                    }
+                }
                 folderSheets = FolderList.Where(x => x.FolderID == Convert.ToInt64(FolderID)).Select(y => y.FolderSheets).FirstOrDefault();
                 ViewBag.FolderLink = FolderList.Where(x => x.FolderID == Convert.ToInt64(FolderID)).FirstOrDefault().FolderLink;
+                ViewBag.DashboardLink = dashboard;
                 if (folderSheets == null)
                 {
                     FolderList = cdsRepo.GetProjectList();

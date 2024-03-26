@@ -31657,18 +31657,21 @@ kendo-label > .k-label {
     border-color: inherit;
     position: relative;
 }
-
-.k-popup-edit-form > .k-actions, .k-popup-edit-form > .k-edit-buttons,
-.k-popup-edit-form > .k-action-buttons,
-.k-popup-edit-form > .k-columnmenu-actions, .k-popup-edit-form > .k-form-buttons,
-.k-edit-form-container .k-actions,
-.k-edit-form-container .k-edit-buttons,
-.k-edit-form-container .k-action-buttons,
-.k-edit-form-container .k-columnmenu-actions,
-.k-edit-form-container .k-form-buttons {
-    margin: 16px -16px -16px;
-    display:none;
-}
+    .k-edit-form-container .k-actions,
+    .k-edit-form-container .k-edit-buttons
+    {
+        margin: 16px -16px -16px;
+        /*display:none;*/
+    }
+    .k-popup-edit-form > .k-actions, .k-popup-edit-form > .k-edit-buttons,
+    .k-popup-edit-form > .k-action-buttons,
+    .k-popup-edit-form > .k-columnmenu-actions, .k-popup-edit-form > .k-form-buttons,
+    .k-edit-form-container .k-action-buttons,
+    .k-edit-form-container .k-columnmenu-actions,
+    .k-edit-form-container .k-form-buttons {
+        margin: 16px -16px -16px;
+        display:none;
+    }
 
 .k-edit-label {
     margin: 0 0 16px 0;
@@ -37753,7 +37756,7 @@ select.k-picker-lg {
 }
 
 .k-window {
-    display:none !important;
+    /*display:none !important;*/
     border-color: rgba(0, 0, 0, 0.08);
     color: #424242;
     background-color: #ffffff;

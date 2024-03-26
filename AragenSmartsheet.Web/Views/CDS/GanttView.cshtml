@@ -59,13 +59,14 @@
 
 <div id="example">
     <div class="row">
-        <div class="col-md-9">
+        <div class="col-md-6">
             <span style="float:left; font-weight:bold; padding:5px;" class="text-primary">Project Name: @ViewBag.ProjectName</span>
         </div>
-        <div class="col-md-3 pull-right">
+        <div class="col-md-6 pull-right">
             <a class="btn btn-danger" target="_blank" style="float:right;" href="@Url.Action("GanttView_PDF", "CDS", new { FolderID = @ViewBag.FolderID, FolderName = @ViewBag.ProjectName, FolderLink = @ViewBag.ProjectFolderLink})" target="_parent">Export to PDF</a>
             <a class="btn btn-info" target="_blank" style="float:right;" href="@ViewBag.FolderLink">Project Folder</a>
-            <a class="btn btn-success" style="float:right;color:white;margin:2px;" onclick="Save();" id="btnSave">Save</a>
+            <a class="btn btn-warning" target="_blank" style="float:right;" href="@ViewBag.DashboardLink">Dashboard</a>
+            <a class="btn btn-success" style="float:right;color:white;margin:2px;" href="#" onclick="Save();" id="btnSave">Save</a>
         </div>
     </div>
     <div id="gantt" style="height:100%!important;"></div>
@@ -790,6 +791,8 @@
 
 
         $(document).ready(function () {
+            window.onbeforeunload = undefined;
+
             //var serviceRoot = "https://aragencdsgantt2.azurewebsites.net/CDS";
             var serviceRoot = '@ViewBag.serviceRoot';//"https://localhost:44380/CDS";
             //var serviceRoot = "https://localhost:5001/CDS";
@@ -1073,7 +1076,7 @@
                                 indents += indent;
                             }
                             const displayTitle = indents + task.title;
-                            return kendo.toString(displayTitle);
+                            return kendo.toString(task.id+'. '+displayTitle);
                         }
                     },
                     {
@@ -1162,7 +1165,7 @@
                             var isChecked = $("#planned-switch").prop("checked");
                             var varience = updateTaskVariance(dataItem);
                             if (!isChecked) {
-                                return '<div style="background-color: lightblue; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
+                                return '<div style="background-color: #104288; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
                             }
                             else if (varience > 0) {
                                 return '<div style="background-color: red; border: 0px solid; border-radius:10px; height:20px; width:20px;" ></div>';
@@ -1403,7 +1406,7 @@
                             }
                         }
                     },
-                    { field: "remarks", title: "Dependencies", type: "text", editable: true, width: 200 },
+                    { field: "remarks", title: "Predecessor", type: "text", editable: true, width: 200 },
                     {
                         field: "variancedays", title: "Variance", width: 50, template: function (dataItem) {
                             return updateTaskVariance(dataItem)
@@ -1528,11 +1531,12 @@
                 //height: 420,
                 listWidth: "60%",
                 snap: false,
+                selectable: { mode: 'multiple', drag: false },
                 tooltip: {
                     visible: true
                 },
                 pdf: {
-                    fileName: "Kendo UI Gantt Export.pdf"
+                    fileName: "CDS.pdf"
                 },
                 togglePlannedTasks: function (e) {
                     changeValue(e.showPlannedTasks);
@@ -1552,7 +1556,8 @@
                     // refreshGanntView();
                     // gantt.refresh();
                     $('#btnSave').addClass('blink_me');
-                    window.onbeforeunload = "You have some unsaved records, are you sure you want to leave?";
+
+                    window.onbeforeunload = 'Are you sure you want to leave?';
 
                 }
                 else if (e.type === "destroy") {
@@ -1580,7 +1585,7 @@
 
         function Save() {
             loadershow();
-
+            window.onbeforeunload = undefined;
             $('#btnSave').removeClass('blink_me');
             $.ajax({
                 url: "/CDS/SaveManually",
@@ -1602,12 +1607,15 @@
 
             });
             //alert('Saved');
-            window.onbeforeunload = null;
+
         }
         function pdf(FolderID, ProjectName, FolderLink) {
             debugger;
             window.open('@ViewBag.serviceRoot' + "/GanttView_PDF?FolderID=" + FolderID + "&FolderName=" + ProjectName + "&FolderLink=" + FolderLink + "&Views=Week"
                 , '_blank');
         }
+        $("tr .k-grid-delete", "#grid").on("click", function (e) {
+            alert("deleted pressed!");
+        })
     </script>
 </div>

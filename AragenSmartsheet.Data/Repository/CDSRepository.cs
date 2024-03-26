@@ -1680,7 +1680,7 @@ namespace AragenSmartsheet.Data.Repository
                     }
                     else //need to check this one
                     {
-                        arSpaceMain[1] = "2";
+                        arSpaceMain[1] = "1";
                     }
 
                     //set days payload
@@ -2487,7 +2487,7 @@ namespace AragenSmartsheet.Data.Repository
                 }
                 else //need to check this one
                 {
-                    arSpaceMain[1] = "2";
+                    arSpaceMain[1] = "1";
                 }
 
                 //set days payload
@@ -2715,7 +2715,7 @@ namespace AragenSmartsheet.Data.Repository
                 }
                 else //need to check this one
                 {
-                    arSpaceMain[1] = "2";
+                    arSpaceMain[1] = "1";
                 }
 
                 //set days payload

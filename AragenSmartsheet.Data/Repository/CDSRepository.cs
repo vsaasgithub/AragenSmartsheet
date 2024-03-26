@@ -1597,7 +1597,7 @@ namespace AragenSmartsheet.Data.Repository
                         new Cell
                         {
                             ColumnId = ProjectPlanColumnMap[CDSProjectPlan.TaskStatus],                            
-                            Value = task.TaskStatus == null ? string.Empty : task.TaskStatus
+                            Value = task.TaskStatus == null ? task.Status : task.TaskStatus
                         },
                         new Cell
                         {
@@ -1658,7 +1658,7 @@ namespace AragenSmartsheet.Data.Repository
                     string strType = arSpace[0].Replace(arSpaceMain[0], string.Empty);
                     if (strType.ToUpper() == "")
                     {
-                        strType = "SF";
+                        strType = "FS";
                     }
 
                     //Set types
@@ -2465,7 +2465,7 @@ namespace AragenSmartsheet.Data.Repository
                 string strType = arSpace[0].Replace(arSpaceMain[0], string.Empty);
                 if (strType.ToUpper() == "")
                 {
-                    strType = "SF";
+                    strType = "FS";
                 }
 
                 //Set types
@@ -2693,7 +2693,7 @@ namespace AragenSmartsheet.Data.Repository
                 string strType = arSpace[0].Replace(arSpaceMain[0], string.Empty);
                 if (strType.ToUpper() == "")
                 {
-                    strType = "SF";
+                    strType = "FS";
                 }
 
                 //Set types

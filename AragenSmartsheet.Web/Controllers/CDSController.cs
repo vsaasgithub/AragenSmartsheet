@@ -570,8 +570,7 @@ namespace AragenSmartsheet.Web.Controllers
                 if (models != null)
                 {
                     var GanttDependenciesSheetID = HttpContext.Session.GetString("GanttDependenciesSheetID");
-                    var ProjPlanSheetID = HttpContext.Session.GetString("ProjPlanSheetID");
-
+                    var ProjPlanSheetID = HttpContext.Session.GetString("ProjPlanSheetID");                    
                     var TasksToUpdate = JsonConvert.DeserializeObject<IEnumerable<MCDSTask>>(models);
 
                     if (!string.IsNullOrEmpty(ProjPlanSheetID))

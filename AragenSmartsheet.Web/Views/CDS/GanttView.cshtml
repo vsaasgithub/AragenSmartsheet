@@ -63,10 +63,30 @@
             <span style="float:left; font-weight:bold; padding:5px;" class="text-primary">Project Name: @ViewBag.ProjectName</span>
         </div>
         <div class="col-md-6 pull-right">
-            <a class="btn btn-danger" target="_blank" style="float:right;" href="@Url.Action("GanttView_PDF", "CDS", new { FolderID = @ViewBag.FolderID, FolderName = @ViewBag.ProjectName, FolderLink = @ViewBag.ProjectFolderLink})" target="_parent">Export to PDF</a>
-            <a class="btn btn-info" target="_blank" style="float:right;" href="@ViewBag.FolderLink">Project Folder</a>
-            <a class="btn btn-warning" target="_blank" style="float:right;" href="@ViewBag.DashboardLink">Dashboard</a>
-            <a class="btn btn-success" style="float:right;color:white;margin:2px;" href="#" onclick="Save();" id="btnSave">Save</a>
+            <a class="btn btn-danger" target="_blank" style="float:right;" href="@Url.Action("GanttView_PDF", "CDS", new { FolderID = @ViewBag.FolderID, FolderName = @ViewBag.ProjectName, FolderLink = @ViewBag.ProjectFolderLink})" target="_parent">
+                <span class="k-svg-icon k-button-icon" aria-hidden="true">
+                    <img src="~/images/pdf.png" style="height:20px;" />
+                </span>
+                <span class="k-button-text">Export to PDF</span>
+            </a>
+            <a class="btn btn-info" target="_blank" style="float:right;" href="@ViewBag.FolderLink">
+                <span class="k-svg-icon k-button-icon" aria-hidden="true">
+                    <img src="~/images/folder.png" style="height:20px;" />
+                </span>
+                <span class="k-button-text">Project Folder</span>
+            </a>
+            <a class="btn btn-warning" target="_blank" style="float:right;" href="@ViewBag.DashboardLink">
+                <span class="k-svg-icon k-button-icon" aria-hidden="true">
+                    <img src="~/images/dashboard.png" style="height:20px;" />
+                </span>
+                <span class="k-button-text">Dashboard</span>
+            </a>
+            <a class="btn btn-success" style="float:right;color:white;margin:2px;" href="#" onclick="Save();" id="btnSave">
+                <span class="k-svg-icon k-button-icon" aria-hidden="true">
+                    <img src="~/images/save.png" style="height:20px;" />
+                </span>
+                <span class="k-button-text">Save</span>
+            </a>
         </div>
     </div>
     <div id="gantt" style="height:100%!important;"></div>
@@ -1054,7 +1074,7 @@
                 columns: [
 
                     {
-                        field: "id", title: "ID", width: 40, locked: false
+                        field: "id", title: "ID", width: 0, locked: false, visible: false
                     },
                     {
                         field: "title", title: "Tasks", locked: true, editable: true, width: 300,
@@ -1075,8 +1095,8 @@
                             for (let i = 0; i < level; i++) {
                                 indents += indent;
                             }
-                            const displayTitle = indents + task.title;
-                            return kendo.toString(task.id+'. '+displayTitle);
+                            const displayTitle = indents + task.id + '. ' + task.title;
+                            return kendo.toString(displayTitle);
                         }
                     },
                     {

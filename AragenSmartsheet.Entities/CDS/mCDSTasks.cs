@@ -94,6 +94,7 @@ namespace AragenSmartsheet.Entities.CDS
         public int? DurationDays { get; set; }
         public int? VarianceDays { get; set; }
         public string TaskStatus { get; set; }
+        public string Status { get; set; }
         public string DelayReason { get; set; }
         public string DelayComments { get; set; }
         public string Remarks { get; set; }

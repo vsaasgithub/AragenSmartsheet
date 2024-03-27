@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace AragenSmartsheet.Data.Repository
 {
@@ -1543,11 +1544,11 @@ namespace AragenSmartsheet.Data.Repository
                       null
                     );
                     //var FolderId = folderObj.Id.ToString() + '+' + folderObj.Name.ToString();
+                    var fl = folder.Permalink;// FolderList.Where(x => x.FolderID == Convert.ToInt64(FolderID)).FirstOrDefault().FolderLink;
                     string strFolderLink = folderObj.Permalink;
                     string Name = folderObj.Name.ToString();
-                    string FolderID = folderObj.Id.ToString() + '+' + Name.ToString() + '+' + folderObj.Permalink;
-
-                    //Move dashboard to other work space
+                    //string FolderID = folderObj.Id.ToString() + '+' + Name.ToString() + '+' + folderObj.Permalink;
+                    string FolderID = folderObj.Id.ToString() + '+' + Name.ToString() + '+' + fl;
 
 
                     //ProjectPlan project = new ProjectPlan { URL= strFolderLink,
@@ -1909,6 +1910,7 @@ namespace AragenSmartsheet.Data.Repository
                         }
                     };
 
+
                     // Identify row and add new cell values to it
                     var rowToUpdatePlan = new Row
                     {
@@ -1916,6 +1918,33 @@ namespace AragenSmartsheet.Data.Repository
                         Cells = cellToUpdateInProjectPlanSheet
                     };
                     IList<Row> updatedRowPlan = SmartsheetAppIntegration.AccessClient().SheetResources.RowResources.UpdateRows(ProjPlanSheetID, new Row[] { rowToUpdatePlan });
+
+                    List<Cell> cellToUpdateInProjectPlanSheet_allRows = new()
+                    {
+                        new Cell
+                        {
+                            ColumnId = ProjPlanColIDActStartDate,
+                            Value = String.IsNullOrEmpty(pProjectIntake.CDSProject.CCS.StartDate.Trim()) ? string.Empty : DateTime.ParseExact(pProjectIntake.CDSProject.CCS.StartDate, "dd-MMM-yyyy", CultureInfo.InvariantCulture)
+                        },
+                        new Cell
+                        {
+                            ColumnId = ProjPlanColIDActEndDate,
+                            Value = String.IsNullOrEmpty(pProjectIntake.CDSProject.CCS.EndDate.Trim()) ? string.Empty : DateTime.ParseExact(pProjectIntake.CDSProject.CCS.EndDate, "dd-MMM-yyyy", CultureInfo.InvariantCulture)
+                        }
+                    };
+                    List<Row> liRowsToUpdate_All = new();
+                    foreach (var item in sheetProjectPlan.Rows)
+                    {
+                        item.Cells = cellToUpdateInProjectPlanSheet_allRows;
+                        row = new Row
+                        {
+                            Id = item.Id,
+                            Cells = item.Cells
+                        };
+                        liRowsToUpdate_All.Add(row);
+                    }
+
+                    IList<Row> updatedRowPlan_All = SmartsheetAppIntegration.AccessClient().SheetResources.RowResources.UpdateRows(ProjPlanSheetID, liRowsToUpdate_All);
 
                     CrossSheetReference xref = new();
                     CrossSheetReference result;

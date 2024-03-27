@@ -47255,9 +47255,11 @@ background-color:lightgrey;
     height: calc(1.4285714286em + 17px);
 }
 
-.k-gantt .k-grid-header .k-header {
-    position: static;
-}
+    .k-gantt .k-grid-header .k-header {
+        position: static;
+        font-weight: bold;
+        color: #104288;
+    }
 
 .k-gantt .k-treelist .k-grid-header .k-header {
     position: relative;

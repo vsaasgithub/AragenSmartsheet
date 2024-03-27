@@ -1274,7 +1274,7 @@ namespace AragenSmartsheet.Data.Repository
                 }
             }
             else
-            {               
+            {
                 foreach (var task in allTask)
                 {
                     var workdays = task.Workdays;
@@ -1596,7 +1596,7 @@ namespace AragenSmartsheet.Data.Repository
                         },
                         new Cell
                         {
-                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.TaskStatus],                            
+                            ColumnId = ProjectPlanColumnMap[CDSProjectPlan.TaskStatus],
                             Value = task.TaskStatus == null ? task.Status : task.TaskStatus
                         },
                         new Cell
@@ -2433,7 +2433,7 @@ namespace AragenSmartsheet.Data.Repository
             {
                 if (task.Remarks != "")
                 {
-                    var singleTask = GetArrangedTask(task, ProjPlanSheetID, GanttDependenciesSheetID, dependencies,Tasks);
+                    var singleTask = GetArrangedTask(task, ProjPlanSheetID, GanttDependenciesSheetID, dependencies, Tasks);
                     task.Start = singleTask.Start;
                     task.End = singleTask.End;
                     task.Remarks = singleTask.Remarks;
@@ -2446,7 +2446,7 @@ namespace AragenSmartsheet.Data.Repository
             }
             UpdateTask_WithoutDependency(FinalTasks, ProjPlanSheetID);
         }
-        public MCDSTask GetArrangedTask(MCDSTask task, string ProjPlanSheetID, string GanttDependenciesSheetID, List<MCDSDependency> dependencies,List<MCDSTask> allTasks)
+        public MCDSTask GetArrangedTask(MCDSTask task, string ProjPlanSheetID, string GanttDependenciesSheetID, List<MCDSDependency> dependencies, List<MCDSTask> allTasks)
         {
             //return task;
             string FinalDependencyString = string.Empty;

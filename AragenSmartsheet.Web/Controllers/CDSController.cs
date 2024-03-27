@@ -304,7 +304,7 @@ namespace AragenSmartsheet.Web.Controllers
                 }
                 var dashboardLink = SmartsheetAppIntegration.AccessClient().FolderResources.GetFolder(Convert.ToInt64(HttpContext.Session.GetString("SelectedFolderID")), null);
                 string dashboard = "";
-                foreach (var sight  in dashboardLink.Sights)
+                foreach (var sight in dashboardLink.Sights)
                 {
                     if (sight.Name == "Project Dashboard")
                     {
@@ -349,7 +349,7 @@ namespace AragenSmartsheet.Web.Controllers
             }
         }
 
-        public IActionResult GanttView_PDF(string FolderID, string FolderName, string FolderLink)
+        public IActionResult GanttView_PDF(string FolderID, string FolderName, string FolderLink, string Views, string Columns)
         {
             List<MCDSFolderSheets> folderSheets = new();
             List<MCDSFolder> FolderList;
@@ -409,6 +409,99 @@ namespace AragenSmartsheet.Web.Controllers
                 //{
                 //    ViewBag.Views = "{ type: \"day\" },\r\n { type: \"week\" },\r\n{ type: \"month\" },\r\n{ type: \"year\", selected: true },";
                 //}
+                //week
+                if (Views.ToUpper() == "WEEK")
+                {
+                    ViewBag.VWeek = true;
+                    ViewBag.VMonth = false;
+                    ViewBag.VYear = false;
+                }
+                //month
+                else if (Views.ToUpper() == "MONTH")
+                {
+                    ViewBag.VWeek = false;
+                    ViewBag.VMonth = true;
+                    ViewBag.VYear = false;
+                }
+                //year
+                else if (Views.ToUpper() == "YEAR")
+                {
+                    ViewBag.VWeek = false;
+                    ViewBag.VMonth = false;
+                    ViewBag.VYear = true;
+                }
+
+                ViewBag.chkID = ViewBag.chkTasks = ViewBag.chkWorkDays = ViewBag.chkPlanStartDate = ViewBag.chkPlanEndDate = ViewBag.chkStartDate
+                = ViewBag.chkEndDate = ViewBag.chkPredecessor = ViewBag.chkVariance = ViewBag.chkPerComplete
+                = ViewBag.chkTaskStatus = ViewBag.chkDelayReason = ViewBag.chkDelayComments = false;
+                ViewBag.chkHealth = ViewBag.chkDuration = ViewBag.chkTaskManager = false;
+                string[] cols = Columns.Split(',');
+                if (cols[0].ToLower() == "true")
+                {
+                    ViewBag.chkID = true;
+                }
+                if (cols[1].ToLower() == "true")
+                {
+                    ViewBag.chkTasks = true;
+                }
+                if (cols[2].ToLower() == "true")
+                {
+                    ViewBag.chkWorkDays = true;
+                }
+                if (cols[3].ToLower() == "true")
+                {
+                    ViewBag.chkPlanStartDate = true;
+                }
+                if (cols[4].ToLower() == "true")
+                {
+                    ViewBag.chkPlanEndDate = true;
+                }
+                if (cols[5].ToLower() == "true")
+                {
+                    ViewBag.chkStartDate = true;
+                }
+                if (cols[6].ToLower() == "true")
+                {
+                    ViewBag.chkEndDate = true;
+                }
+                if (cols[7].ToLower() == "true")
+                {
+                    ViewBag.chkPredecessor = true;
+                }
+                if (cols[8].ToLower() == "true")
+                {
+                    ViewBag.chkVariance = true;
+                }
+                if (cols[9].ToLower() == "true")
+                {
+                    ViewBag.chkPerComplete = true;
+                }
+                if (cols[10].ToLower() == "true")
+                {
+                    ViewBag.chkTaskStatus = true;
+                }
+                if (cols[11].ToLower() == "true")
+                {
+                    ViewBag.chkDelayReason = true;
+                }
+                if (cols[12].ToLower() == "true")
+                {
+                    ViewBag.chkDelayComments = true;
+                }
+                if (cols[13].ToLower() == "true")
+                {
+                    ViewBag.chkHealth = true;
+                }
+                if (cols[14].ToLower() == "true")
+                {
+                    ViewBag.chkDuration = true;
+                }
+                if (cols[15].ToLower() == "true")
+                {
+                    ViewBag.chkTaskManager = true;
+                }
+
+
 
                 var ProjPlanSheetID = folderSheets.Where(x => x.SheetName == "Project Plan").Select(y => y.SheetID).FirstOrDefault();
                 var ProjResourcesSheetID = folderSheets.Where(x => x.SheetName == "Project Resources").Select(y => y.SheetID).FirstOrDefault();
@@ -570,7 +663,7 @@ namespace AragenSmartsheet.Web.Controllers
                 if (models != null)
                 {
                     var GanttDependenciesSheetID = HttpContext.Session.GetString("GanttDependenciesSheetID");
-                    var ProjPlanSheetID = HttpContext.Session.GetString("ProjPlanSheetID");                    
+                    var ProjPlanSheetID = HttpContext.Session.GetString("ProjPlanSheetID");
                     var TasksToUpdate = JsonConvert.DeserializeObject<IEnumerable<MCDSTask>>(models);
 
                     if (!string.IsNullOrEmpty(ProjPlanSheetID))

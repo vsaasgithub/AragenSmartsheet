@@ -728,7 +728,7 @@
                                                             <span style="color:green">Project created successfully in Smartsheet.Please use below link to navigate to project folder/sheet.</span>
                                                             <br />
                                                             @* <a href="/CDS/GanttChart?FolderID=@ViewBag.FolderId&FolderName=@ViewBag.Name">@ViewBag.Name</a> *@
-                                                            <a href="@Url.Action("GanttView", "CDS", new { FolderID = @ViewBag.FolderId, FolderName = @ViewBag.Name, FolderLink = @ViewBag.FolderLink })">@ViewBag.Name</a>
+                                                            <a href="@Url.Action("GanttView", "CDS", new { FolderID = @ViewBag.FolderId, FolderName = @ViewBag.Name, FolderLink = @ViewBag.ProjectFolderLink })">@ViewBag.Name</a>
                                                         }
                                                         else if (ViewBag.Success == "false")
                                                         {

@@ -502,7 +502,6 @@ namespace AragenSmartsheet.Web.Controllers
                 }
 
 
-
                 var ProjPlanSheetID = folderSheets.Where(x => x.SheetName == "Project Plan").Select(y => y.SheetID).FirstOrDefault();
                 var ProjResourcesSheetID = folderSheets.Where(x => x.SheetName == "Project Resources").Select(y => y.SheetID).FirstOrDefault();
                 var GanttResourceAssignmentsSheetID = folderSheets.Where(x => x.SheetName == "Gantt Resource Assignments").Select(y => y.SheetID).FirstOrDefault();
